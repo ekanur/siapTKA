@@ -1,0 +1,91 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "sqlite"
+  url      = env("DATABASE_URL")
+}
+
+model Siswa {
+  id              String           @id @default(cuid())
+  nis             String           @unique
+  nama            String
+  email           String           @unique
+  jurusan         String           @default("SIJA")
+  namaIndustriPkl String           @default("Belum Ditentukan")
+  statusAkun      String           @default("BELUM_AKTIF")
+  tanggalAktivasi DateTime?
+  statusTka       String           @default("BELUM_MERESPONS")
+  mapelPilihan1   String?
+  mapelPilihan2   String?
+  createdAt       DateTime         @default(now())
+  updatedAt       DateTime         @updatedAt
+  progres         ProgresLatihan[]
+
+  @@index([email])
+  @@index([statusTka])
+}
+
+model KisiKisi {
+  id             String   @id @default(cuid())
+  mapel          String
+  topik          String
+  definisi       String
+  muatan         String
+  kompetensi     String
+  matriksAsesmen String
+  contohSoal     String
+  createdAt      DateTime @default(now())
+  updatedAt      DateTime @updatedAt
+  soalList       Soal[]
+
+  @@index([mapel])
+}
+
+model Soal {
+  id           String           @id @default(cuid())
+  mapel        String
+  kisiKisiId   String?
+  kisiKisi     KisiKisi?        @relation(fields: [kisiKisiId], references: [id], onDelete: SetNull)
+  tipeSoal     String           @default("PILIHAN_GANDA")
+  pertanyaan   String
+  opsiJawaban  String
+  kunciJawaban String
+  pembahasan   String
+  status       String           @default("MENUNGGU_VALIDASI")
+  source       String           @default("AI_GEMINI")
+  createdAt    DateTime         @default(now())
+  updatedAt    DateTime         @updatedAt
+  progres      ProgresLatihan[]
+
+  @@index([mapel, status])
+  @@index([tipeSoal])
+}
+
+model ProgresLatihan {
+  id              String   @id
+  siswaId         String
+  siswa           Siswa    @relation(fields: [siswaId], references: [id], onDelete: Cascade)
+  soalId          String
+  soal            Soal     @relation(fields: [soalId], references: [id], onDelete: Cascade)
+  jawabanSiswa    String
+  isBenar         Boolean  @default(false)
+  skor            Float    @default(0)
+  waktuPengerjaan Int      @default(0)
+  syncedAt        DateTime @default(now())
+  createdAt       DateTime @default(now())
+
+  @@index([siswaId])
+  @@index([soalId])
+  @@index([isBenar])
+}
+
+model UserAdmin {
+  id        String   @id @default(cuid())
+  username  String   @unique
+  password  String
+  nama      String
+  role      String   @default("GURU")
+  createdAt DateTime @default(now())
+}

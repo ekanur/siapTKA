@@ -1,0 +1,46 @@
+{
+  "name": "siaptka",
+  "version": "1.0.0",
+  "private": true,
+  "scripts": {
+    "dev": "next dev",
+    "build": "next build",
+    "start": "next start",
+    "lint": "next lint",
+    "prisma:generate": "prisma generate",
+    "prisma:push": "prisma db push",
+    "prisma:seed": "node --loader ts-node/esm prisma/seed.ts",
+    "type-check": "tsc --noEmit"
+  },
+  "dependencies": {
+    "@google/generative-ai": "^0.21.0",
+    "@prisma/client": "^5.21.1",
+    "canvas-confetti": "^1.9.3",
+    "clsx": "^2.1.1",
+    "crypto-js": "^4.2.0",
+    "dexie": "^4.0.8",
+    "katex": "^0.16.11",
+    "lucide-react": "^0.453.0",
+    "next": "^14.2.24",
+    "next-auth": "^4.24.8",
+    "papaparse": "^5.4.1",
+    "react": "^18.3.1",
+    "react-dom": "^18.3.1",
+    "tailwind-merge": "^2.5.4"
+  },
+  "devDependencies": {
+    "@types/canvas-confetti": "^1.9.0",
+    "@types/crypto-js": "^4.2.2",
+    "@types/katex": "^0.16.7",
+    "@types/node": "^20.17.0",
+    "@types/papaparse": "^5.3.14",
+    "@types/react": "^18.3.11",
+    "@types/react-dom": "^18.3.1",
+    "autoprefixer": "^10.4.20",
+    "postcss": "^8.4.47",
+    "prisma": "^5.21.1",
+    "tailwindcss": "^3.4.14",
+    "ts-node": "^10.9.2",
+    "typescript": "^5.6.3"
+  }
+}
