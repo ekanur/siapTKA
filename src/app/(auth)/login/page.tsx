@@ -4,7 +4,6 @@ import React, { useState, Suspense } from "react";
 import { signIn } from "next-auth/react";
 import { useRouter, useSearchParams } from "next/navigation";
 import {
-  WifiOff,
   ShieldCheck,
   Lock,
   User,
@@ -23,7 +22,7 @@ function LoginForm() {
   const [isLoading, setIsLoading] = useState(false);
   const [errorMessage, setErrorMessage] = useState(
     errorParam === "EmailBelumTerdaftar"
-      ? "Email Google Workspace Anda belum terdaftar dalam basis data 72 siswa SIJA sekolah. Silakan hubungi guru pembimbing."
+      ? "Email Google Workspace Anda belum terdaftar dalam basis data siswa sekolah. Silakan hubungi guru pembimbing."
       : ""
   );
 
@@ -95,19 +94,13 @@ function LoginForm() {
 
   return (
     <div className="w-full max-w-md">
-      {/* App Logo & Badge */}
+      {/* App Logo & Header */}
       <div className="text-center mb-6">
-        <div className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full bg-blue-500/10 border border-blue-400/30 text-blue-300 text-xs font-semibold mb-3">
-          <WifiOff className="w-3.5 h-3.5 text-cyan-400" />
-          <span>PWA Offline-First • Pilot 72 Siswa PKL SIJA</span>
-        </div>
-        <h1 className="text-3xl font-extrabold text-white tracking-tight flex items-center justify-center gap-2">
-          <span className="bg-gradient-to-r from-blue-400 via-cyan-300 to-teal-300 bg-clip-text text-transparent">
-            siapTKA
-          </span>
+        <h1 className="text-3xl font-extrabold text-white tracking-tight">
+          SiapTKA
         </h1>
-        <p className="text-slate-400 text-xs mt-1">
-          Platform Latihan TKA Offline & Diagnostik Butir Soal AI
+        <p className="text-slate-300 text-xs sm:text-sm mt-1">
+          Platform Latihan dan persiapan TKA
         </p>
       </div>
 
@@ -127,7 +120,7 @@ function LoginForm() {
                 : "text-slate-600 hover:text-slate-900"
             }`}
           >
-            Portal Siswa PKL
+            Login Siswa
           </button>
           <button
             type="button"
@@ -141,7 +134,7 @@ function LoginForm() {
                 : "text-slate-600 hover:text-slate-900"
             }`}
           >
-            Guru & Sekolah
+            Guru & Admin
           </button>
         </div>
 
@@ -160,7 +153,7 @@ function LoginForm() {
                 <span>Aktivasi Tanpa Password (Google SSO)</span>
               </div>
               <p className="text-slate-600 leading-relaxed">
-                Siswa cukup masuk menggunakan akun Google Workspace sekolah. Sistem otomatis mencocokkan email dengan daftar 72 siswa SIJA.
+                Siswa cukup masuk menggunakan akun Google Workspace sekolah. Sistem otomatis mencocokkan email dengan data siswa.
               </p>
             </div>
 
@@ -294,8 +287,8 @@ function LoginForm() {
       </div>
 
       {/* Footer info */}
-      <div className="text-center mt-6 text-slate-500 text-xs">
-        © 2026 siapTKA • SMKN SIJA PKL Offline Assessment Engine
+      <div className="text-center mt-6 text-slate-400 text-xs">
+        @ 2026 SiapTKA. SMKN 2 Depok Sleman.
       </div>
     </div>
   );
