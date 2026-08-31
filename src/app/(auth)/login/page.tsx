@@ -56,11 +56,11 @@ function LoginForm() {
     }
   };
 
-  const handleQuickDemoLogin = async (demoType: "SISWA_KALIMANTAN" | "GURU_MTK" | "GURU_PPLG" | "ADMIN") => {
+  const handleQuickDemoLogin = async (demoType: "SISWA_DEMO" | "GURU_MTK" | "GURU_PPLG" | "ADMIN") => {
     setIsLoading(true);
     setErrorMessage("");
 
-    if (demoType === "SISWA_KALIMANTAN") {
+    if (demoType === "SISWA_DEMO") {
       const res = await signIn("credentials", {
         redirect: false,
         emailOrUsername: "22231001",
@@ -199,13 +199,13 @@ function LoginForm() {
             {/* Demo Instant Button */}
             <button
               type="button"
-              onClick={() => handleQuickDemoLogin("SISWA_KALIMANTAN")}
+              onClick={() => handleQuickDemoLogin("SISWA_DEMO")}
               disabled={isLoading}
               className="w-full py-2.5 px-3 bg-slate-900 hover:bg-slate-800 text-white font-semibold text-xs rounded-xl transition-all flex items-center justify-between cursor-pointer"
             >
               <div className="flex items-center gap-2">
                 <User className="w-4 h-4 text-cyan-400" />
-                <span>Login Siswa Demo (PKL Kalimantan)</span>
+                <span>Login Siswa Demo</span>
               </div>
               <ArrowRight className="w-3.5 h-3.5 text-slate-400" />
             </button>

@@ -110,7 +110,7 @@ export default function OnboardingTkaPage() {
               <Building2 className="w-3.5 h-3.5 text-slate-400" />
               <span>Lokasi Industri PKL: </span>
               <span className="font-medium text-slate-700">
-                {(session?.user as any)?.namaIndustriPkl || "PT Kalimantan Prima Coal (Kalimantan)"}
+                {(session?.user as any)?.namaIndustriPkl || "PT Telkom Akses"}
               </span>
             </div>
           </div>

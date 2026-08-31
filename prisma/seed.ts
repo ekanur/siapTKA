@@ -42,8 +42,8 @@ async function main() {
     "PT Len Industri (Persero)",
     "PT Pindad (Persero)",
     "Dinas Komunikasi dan Informatika",
-    "PT Kalimantan Prima Coal (Kalimantan)",
-    "PT Berau Coal Energy (Kalimantan)",
+    "PT Kalimantan Prima Coal ",
+    "PT Berau Coal Energy ",
     "PT Astra Graphia Information Technology",
     "PT Bank Central Asia Tbk",
     "PT Medco Energi Internasional",
@@ -95,14 +95,14 @@ async function main() {
       tanggalAktivasi = new Date(Date.now() - (72 - i) * 3600000);
     }
 
-    // Siswa Demo #1 (Siswa PKL Kalimantan)
+    // Siswa Demo #1
     if (i === 1) {
       siswaData.push({
         nis: "22231001",
-        nama: "Aditya Pratama (Siswa PKL Kalimantan)",
+        nama: "Aditya Pratama",
         email: "siswa.demo@gmail.com",
         jurusan: "SIJA",
-        namaIndustriPkl: "PT Kalimantan Prima Coal (Kalimantan)",
+        namaIndustriPkl: "PT Kalimantan Prima Coal ",
         statusAkun: "AKTIF",
         tanggalAktivasi: new Date(),
         statusTka: "IKUT",

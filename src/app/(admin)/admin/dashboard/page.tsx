@@ -158,13 +158,13 @@ export default async function AdminDashboardPage() {
             <span>Pemantauan Siswa PKL Daerah Terbatas</span>
           </div>
           <h3 className="text-lg font-bold leading-snug">
-            Kesiapan Siswa PKL Kalimantan (Akses Internet Minim)
+            Kesiapan Siswa PKL Luar Kota / Akses Internet Minim
           </h3>
           <p className="text-xs text-slate-300 leading-relaxed">
-            Siswa yang menjalani PKL di lokasi dengan sinyal terbatas (seperti di Kalimantan) telah mengunduh bank soal secara mandiri dan mengerjakan latihan secara offline.
+            Siswa yang menjalani PKL di lokasi dengan sinyal terbatas telah mengunduh bank soal secara mandiri dan mengerjakan latihan secara offline.
           </p>
           <div className="pt-2 border-t border-white/10 flex items-center justify-between text-xs">
-            <span className="text-slate-400">Siswa Terdata di Kalimantan:</span>
+            <span className="text-slate-400">Siswa Terdata di Lokasi Terpencil:</span>
             <span className="font-extrabold text-cyan-300 text-sm">{pklKalimantan} Siswa</span>
           </div>
         </div>

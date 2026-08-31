@@ -179,7 +179,7 @@ export default function LatihanHubPage() {
                 <span>•</span>
                 <span className="flex items-center gap-1.5">
                   <Building2 className="w-3.5 h-3.5 text-cyan-400" />
-                  {(session?.user as any)?.namaIndustriPkl || "PT Kalimantan Prima Coal (Kalimantan)"}
+                  {(session?.user as any)?.namaIndustriPkl || "PT Telkom Akses"}
                 </span>
               </div>
             </div>

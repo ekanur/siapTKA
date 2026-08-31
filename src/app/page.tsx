@@ -238,7 +238,7 @@ export default async function LandingPage() {
               </div>
               <h3 className="text-base font-bold text-on-background mb-2">Offline Sync untuk PKL</h3>
               <p className="text-xs sm:text-sm text-on-surface-variant leading-relaxed">
-                Unduh paket soal saat terhubung internet, kerjakan di mana saja tanpa kuota. Jawaban otomatis tersinkronisasi saat Anda kembali online. Sangat ideal bagi siswa di lokasi PKL minim sinyal (seperti luar pulau / Kalimantan).
+                Unduh paket soal saat terhubung internet, kerjakan di mana saja tanpa kuota. Jawaban otomatis tersinkronisasi saat Anda kembali online. Sangat ideal bagi siswa di lokasi PKL minim sinyal (seperti di industri atau area dengan akses internet terbatas).
               </p>
             </div>
 
