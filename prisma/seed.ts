@@ -1,23 +1,23 @@
-﻿import { PrismaClient } from "@prisma/client";
+import { PrismaClient } from "@prisma/client";
 
 const prisma = new PrismaClient();
 
 async function main() {
-  console.log("Seeding database siapTKA...");
+  console.log("Seeding database siapTKA dengan Kurikulum Resmi TKA...");
 
-  // 1. Clean existing records
+  // 1. Bersihkan database
   await prisma.progresLatihan.deleteMany();
   await prisma.soal.deleteMany();
   await prisma.kisiKisi.deleteMany();
   await prisma.siswa.deleteMany();
   await prisma.userAdmin.deleteMany();
 
-  // 2. Seed Admin Users
+  // 2. Akun Guru & Admin
   await prisma.userAdmin.createMany({
     data: [
       {
         username: "admin",
-        password: "adminpassword2026", // For dashboard login
+        password: "adminpassword2026",
         nama: "Administrator Sekolah",
         role: "ADMIN",
       },
@@ -30,18 +30,18 @@ async function main() {
       {
         username: "guru_pplg",
         password: "gurupplg2026",
-        nama: "Ahmad Fauzi, S.Kom., M.T. (Guru PPLG)",
+        nama: "Ahmad Fauzi, S.Kom., M.T. (Guru Kejuruan PPLG)",
         role: "GURU",
       },
     ],
   });
 
-  // 3. Seed 72 Siswa SIJA with PKL Industries
+  // 3. 72 Siswa SIJA dengan Industri PKL
   const industriList = [
     "PT Telkom Akses",
     "PT Len Industri (Persero)",
     "PT Pindad (Persero)",
-    "Dinas Kominfo Kota",
+    "Dinas Komunikasi dan Informatika",
     "PT Kalimantan Prima Coal (Kalimantan)",
     "PT Berau Coal Energy (Kalimantan)",
     "PT Astra Graphia Information Technology",
@@ -73,42 +73,41 @@ async function main() {
     const email = `sija.${nis}@sekolah.sch.id`;
     const industri = industriList[(i - 1) % industriList.length];
 
-    // Status variation for realistic testing
     let statusAkun = "BELUM_AKTIF";
     let statusTka = "BELUM_MERESPONS";
     let mapelPilihan1 = null;
     let mapelPilihan2 = null;
     let tanggalAktivasi = null;
 
-    if (i <= 20) {
+    if (i <= 35) {
       statusAkun = "AKTIF";
       statusTka = "IKUT";
       mapelPilihan1 = "PPLG";
-      mapelPilihan2 = "Teknik Komputer & Jaringan";
+      mapelPilihan2 = i % 2 === 0 ? "B_INGGRIS_LANJUT" : "PKK";
       tanggalAktivasi = new Date(Date.now() - (72 - i) * 3600000);
-    } else if (i <= 25) {
+    } else if (i <= 45) {
       statusAkun = "AKTIF";
       statusTka = "TIDAK_IKUT";
       tanggalAktivasi = new Date(Date.now() - (72 - i) * 3600000);
-    } else if (i <= 30) {
+    } else if (i <= 55) {
       statusAkun = "AKTIF";
       statusTka = "BELUM_MERESPONS";
       tanggalAktivasi = new Date(Date.now() - (72 - i) * 3600000);
     }
 
-    // Add demo test student for easy instant login
+    // Siswa Demo #1 (Siswa PKL Kalimantan)
     if (i === 1) {
       siswaData.push({
         nis: "22231001",
         nama: "Aditya Pratama (Siswa PKL Kalimantan)",
-        email: "siswa.demo@gmail.com", // For instant testing with any Google login
+        email: "siswa.demo@gmail.com",
         jurusan: "SIJA",
         namaIndustriPkl: "PT Kalimantan Prima Coal (Kalimantan)",
         statusAkun: "AKTIF",
         tanggalAktivasi: new Date(),
         statusTka: "IKUT",
         mapelPilihan1: "PPLG",
-        mapelPilihan2: "Bahasa Inggris Lanjutan",
+        mapelPilihan2: "B_INGGRIS_LANJUT",
       });
       continue;
     }
@@ -129,61 +128,164 @@ async function main() {
 
   await prisma.siswa.createMany({ data: siswaData });
 
-  // 4. Seed Official 5-Pillar Kisi-Kisi TKA
-  const kisiKisiMatematika = await prisma.kisiKisi.create({
-    data: {
-      mapel: "MATEMATIKA",
-      topik: "Aljabar, Fungsi Kuadrat & Matriks",
-      definisi: "Mengukur kemampuan analisis aljabar, pemecahan persamaan fungsi kuadrat, dan operasi matriks dalam pemodelan masalah nyata.",
-      muatan: "Persamaan dan Pertidaksamaan Linear/Kuadrat, Determinan & Invers Matriks 2x2 dan 3x3, Sistem Persamaan Linear Tiga Variabel (SPLTV).",
-      kompetensi: "Peserta mampu mengidentifikasi sifat-sifat determinan matriks, menentukan nilai ekstrem fungsi kuadrat, dan menyelesaikan masalah optimasi sederhana.",
-      matriksAsesmen: "Level Kognitif L2 (Penerapan) dan L3 (Penalaran): Peserta didik dapat mengkombinasikan sifat aljabar untuk menyelesaikan studi kasus.",
-      contohSoal: "Diketahui matriks A = [[2, 1], [3, 4]] dan B = [[1, 0], [2, 3]]. Tentukan nilai determinan dari (A * B^T).",
-    },
-  });
-
-  const kisiKisiKalkulus = await prisma.kisiKisi.create({
-    data: {
-      mapel: "MATEMATIKA",
-      topik: "Kalkulus (Turunan & Integral Tentu)",
-      definisi: "Mengukur pemahaman konsep laju perubahan sesaat, gradien garis singgung kurva, dan luas daerah dengan integral tentu.",
-      muatan: "Turunan Fungsi Aljabar & Trigonometri, Titik Stasioner, Integral Tentu dan Luas Daerah di bawah kurva.",
-      kompetensi: "Mampu menentukan interval fungsi naik/turun, titik maksimum/minimum, dan menghitung luas daerah yang dibatasi oleh dua kurva.",
-      matriksAsesmen: "Level Kognitif L3 (Penalaran): Menghitung luas daerah antara parabola y = x^2 dan garis linear y = 2x + 3.",
-      contohSoal: "Luas daerah yang dibatasi kurva y = x^2 - 4x + 3 dan sumbu-X pada interval 1 <= x <= 3 adalah...",
-    },
-  });
-
-  const kisiKisiPplg = await prisma.kisiKisi.create({
+  // 4. 5 PILAR RESMI KISI-KISI TKA: PPLG (Sesuai Keputusan Kepala BSKAP No. 046/H/KR/2025)
+  const kisiKisiPplgResmi = await prisma.kisiKisi.create({
     data: {
       mapel: "PPLG",
-      topik: "Pemrograman Web, REST API & Arsitektur Backend",
-      definisi: "Mengukur pemahaman struktur backend, protokol HTTP, siklus request-response, status code, dan pengolahan data JSON.",
-      muatan: "RESTful API Best Practices, HTTP Methods (GET, POST, PUT, DELETE), Status Code (200, 201, 400, 401, 403, 404, 500), JSON Serialization, Middleware Keamanan.",
-      kompetensi: "Mampu merancang endpoint API yang aman, menentukan HTTP method dan status code yang tepat, serta menguji respon API.",
-      matriksAsesmen: "Level Kognitif L2 (Aplikasi) & L3 (Analisis): Menganalisis skenario request API dengan autentikasi Bearer Token dan penanganan error.",
-      contohSoal: "Sebuah request POST ke /api/v1/users berhasil membuat record baru. Status code HTTP yang paling tepat dikembalikan adalah 201 Created.",
+      topik: "Pengembangan Perangkat Lunak dan Gim (PPLG Fase E & F)",
+      definisi: `Tes Kemampuan Akademik (TKA) pada Program Keahlian Pengembangan Perangkat Lunak dan Gim (PPLG) bertujuan mengukur penguasaan konsep, penalaran, dan penerapan pengetahuan dasar kejuruan dalam bidang pengembangan perangkat lunak dan gim. Ruang lingkup asesmen mencakup proses bisnis pengembangan perangkat lunak dan gim, perkembangan teknologi dan dunia kerja, profesi serta Kewirausahaan bidang PPLG, K3LH dan budaya kerja industri, penggunaan perangkat dan tools pengembangan, dasar basis data, pengelolaan aset dan antarmuka pengguna, algoritma, pemrograman terstruktur, serta pemrograman berorientasi objek pada konteks proyek perangkat lunak dan gim.`,
+      muatan: `Muatan TKA PPLG disusun dengan merujuk pada elemen dan materi esensial dalam Capaian Pembelajaran Program Keahlian Pengembangan Perangkat Lunak dan Gim Fase E sebagaimana tercantum dalam Salinan Keputusan Kepala BSKAP Nomor 046/H/KR/2025:
+1. Wawasan dunia kerja bidang pengembangan perangkat lunak dan gim: pemahaman terhadap proses bisnis pengembangan perangkat lunak dan gim, perkembangan teknologi, peluang usaha, manajemen proyek, HAKI, serta budaya industri.
+2. Kecakapan kerja dasar (basic job skills), K3, dan budaya kerja: penerapan terhadap keselamatan kerja, penggunaan perangkat kerja, pengelolaan aset fisik dan digital, etika kerja, budaya kerja profesional, serta prosedur kerja di lingkungan pengembangan perangkat lunak dan gim.
+3. Teknologi Jaringan Komputer: pemahaman konsep dasar jaringan komputer dalam konteks pengembangan perangkat lunak dan gim, meliputi konfigurasi dasar lingkungan pengembangan berbasis jaringan, alamat IP dan konektivitas antar perangkat, komunikasi client-server, penggunaan protokol aplikasi seperti HTTP/HTTPS, akses basis data atau layanan API melalui jaringan, serta analisis terhadap kendala koneksi yang mempengaruhi proses pengembangan, pengujian, dan distribusi aplikasi atau gim.
+4. Pemrograman Terstruktur: pemahaman dan analisis penggunaan tipe data, struktur data, struktur kontrol percabangan dan perulangan, fungsi, prosedur, serta desain modular program untuk merancang solusi berbasis algoritma pada permasalahan kontekstual dalam pengembangan perangkat lunak atau gim.
+5. Pemrograman Berorientasi Objek: pemahaman dan penerapan konsep class dan object, prinsip dasar OOP, access modifier, enkapsulasi, inheritance, dan polymorphism untuk merancang struktur program yang modular, terorganisasi, dan sesuai kebutuhan pada pengembangan perangkat lunak atau gim.`,
+      kompetensi: `Kemampuan PPLG yang diukur meliputi:
+- Pemahaman konseptual: memahami konsep dasar proses bisnis pengembangan perangkat lunak dan gim, lingkungan kerja PPLG, K3LH, teknologi penunjang, pemrograman terstruktur, dan pemrograman berorientasi objek.
+- Penerapan konsep: menggunakan konsep dasar PPLG untuk menyelesaikan masalah kontekstual pada lingkungan pengembangan perangkat lunak atau gim.
+- Analisis dan evaluasi: menganalisis efektivitas solusi, struktur program, desain modular, penerapan OOP, serta penggunaan teknologi jaringan penunjang dalam proses pengembangan, pengujian, atau distribusi aplikasi/gim.
+- Keterampilan berpikir komputasional: memahami dan menggunakan logika program, struktur data, dekomposisi masalah, pola algoritmik, serta penyelesaian masalah berbasis algoritma.
+
+Level Kognitif yang Diukur:
+1. Pengetahuan dan Pemahaman (Knowing & Understanding): Mengidentifikasi profesi & tahapan manajemen proyek, Menjelaskan K3LH & kewirausahaan, Melaksanakan pengelolaan file/direktori, Menerapkan konfigurasi dasar & OOP.
+2. Penerapan dan Implementasi (Applying & Implementation): Mengimplementasikan konfigurasi jaringan dasar, komunikasi data aplikasi, enkapsulasi, dan polymorphism.
+3. Penalaran (Reasoning): Menganalisis kendala konektivitas & struktur data, Mengevaluasi efektivitas struktur kontrol & desain modular, Mengklasifikasi ketepatan access modifier & inheritance.`,
+      matriksAsesmen: `Matriks Asesmen PPLG:
+1. Wawasan dunia kerja PPLG: Profesi, tugas utama (UI/UX, Backend, QA, Devops), Technopreneurship, Manajemen proyek Agile/Scrum, Budaya mutu.
+2. Kecakapan kerja dasar & K3: Prinsip K3LH teknologi informasi, Etika kerja profesional, Pengelolaan aset fisik & digital (source code, database, dokumentasi).
+3. Teknologi jaringan komputer: Konfigurasi sistem operasi web server, izin akses (permission denied / chmod), protokol TCP/IP, HTTP/HTTPS, REST API.
+4. Pemrograman Terstruktur: Tipe data primitif & komposit, Percabangan (if-else, switch), Perulangan (for, while), Fungsi & Prosedur, Modularitas.
+5. Pemrograman Berorientasi Objek: Class & Object, Access Modifier (public, private, protected), Enkapsulasi getter-setter, Pewarisan (extends), Polymorphism (overriding).`,
+      contohSoal: `Contoh Soal Resmi TKA Kemendikbud:
+- Soal 1 (PG): Tugas utama UI/UX Designer -> Merancang tampilan antarmuka dan pengalaman pengguna aplikasi.
+- Soal 2 (PG): Error Linux Server 'Permission denied: /var/www/html/index.php' -> Mengubah hak akses pada file atau direktori proyek.
+- Soal 5 (PGK Kategori): Potongan kode Python perulangan 'if n >= 75: jumlah_lulus += 1' -> Menentukan status Benar/Salah untuk 3 pernyataan logika.`,
     },
   });
 
-  const kisiKisiDatabase = await prisma.kisiKisi.create({
+  // 5. 5 PILAR RESMI KISI-KISI TKA: MATEMATIKA (Mapel Wajib)
+  const kisiKisiMatematikaResmi = await prisma.kisiKisi.create({
     data: {
-      mapel: "PPLG",
-      topik: "Basis Data Relasional & Optimasi Kueri SQL",
-      definisi: "Mengukur kemampuan normalisasi database, relasi tabel (1-N, N-N), JOIN kueri, indexing, dan transaksi ACID.",
-      muatan: "DDL & DML SQL, Normalisasi 1NF-3NF, Foreign Key & Cascading, Indexing (B-Tree), Perbedaan INNER JOIN, LEFT JOIN, FULL JOIN.",
-      kompetensi: "Mampu menulis kueri SQL kompleks untuk agregasi data dan menganalisis performa kueri menggunakan indeks.",
-      matriksAsesmen: "Level Kognitif L2 & L3: Menganalisis hasil dari perintah LEFT JOIN ketika data di tabel kanan tidak memiliki pasangan yang cocok.",
-      contohSoal: "SELECT s.nama, COUNT(p.id) FROM siswa s LEFT JOIN progres p ON s.id = p.siswa_id GROUP BY s.id.",
+      mapel: "MATEMATIKA",
+      topik: "Aljabar, Fungsi Kuadrat & Kalkulus TKA",
+      definisi: `Mengukur kemampuan berpikir logis, penalaran matematis, analisis aljabar, dan kalkulus terapan dalam pemodelan masalah kontekstual kejuruan dan sains.`,
+      muatan: `1. Aljabar & Fungsi Kuadrat: Persamaan kuadrat, diskriminan, titik puncak ekstrem fungsi, pemodelan parabola.
+2. Matriks & Transformasi: Operasi matriks, determinan, invers matriks 2x2 dan 3x3, transpos matriks.
+3. Kalkulus Dasar: Turunan fungsi aljabar, titik stasioner, garis singgung kurva, integral tentu, dan luas daerah di bawah kurva.
+4. Statistika & Peluang: Ukuran pemusatan data (Mean, Median, Modus), simpangan baku, kaidah pencacahan, peluang kejadian majemuk.`,
+      kompetensi: `Level Kognitif:
+- L1 (Pemahaman): Menentukan nilai variabel pada persamaan aljabar dan rumus dasar integral/turunan.
+- L2 (Aplikasi): Menghitung luas daerah kurva dan menerapkan sifat matriks pada sistem persamaan linear.
+- L3 (Penalaran): Menganalisis titik ekstrem optimum dan memecahkan studi kasus optimasi matematis.`,
+      matriksAsesmen: `1. Fungsi Kuadrat: Koordinat titik puncak x_p = -b/(2a), y_p = f(x_p).
+2. Determinan Matriks: Det(A) = ad - bc, Invers A^-1 = (1/det) * Adj(A).
+3. Integral Tentu: Integral f(x) dx dari a ke b = F(b) - F(a).`,
+      contohSoal: `Diketahui fungsi kuadrat f(x) = -2x^2 + 8x - 3. Titik puncak grafik adalah (2, 5). Integral tentu dari 1 ke 3 (3x^2 - 4x + 2) dx bernilai 14.`,
     },
   });
 
-  // 5. Seed Questions for all 3 official TKA Formats (PILIHAN_GANDA, MCMA, PGK_KATEGORI)
-  const sampleSoal = [
-    // Soal 1: Matematika - Pilihan Ganda (Formula KaTeX)
+  // 6. BANK SOAL AKTIF RESMI TKA (Termasuk 3 Butir Soal Resmi dari Web TKA)
+  const bankSoalData = [
+    // Soal 1: PPLG Resmi Kemendikbud (Profesi UI/UX Designer)
+    {
+      mapel: "PPLG",
+      kisiKisiId: kisiKisiPplgResmi.id,
+      tipeSoal: "PILIHAN_GANDA",
+      pertanyaan: "Dalam sebuah tim pengembangan perangkat lunak terdapat beberapa profesi dengan tugas yang berbeda. Tugas utama dari **UI/UX Designer** dalam proses pengembangan aplikasi adalah…",
+      opsiJawaban: JSON.stringify([
+        { id: "A", label: "Mengelola server agar aplikasi dapat berjalan stabil" },
+        { id: "B", label: "Merancang tampilan antarmuka dan pengalaman pengguna aplikasi" },
+        { id: "C", label: "Menulis kode program untuk memproses data pada sisi server" },
+        { id: "D", label: "Melakukan pengujian keamanan terhadap sistem aplikasi" },
+        { id: "E", label: "Mengatur proses distribusi aplikasi ke pengguna" }
+      ]),
+      kunciJawaban: "B",
+      pembahasan: "Profesi dalam tim rekayasa perangkat lunak memiliki spesialisasi:\n- **UI/UX Designer**: Bertugas merancang *User Interface* (tampilan visual/antarmuka) dan *User Experience* (kemudahan dan pengalaman alur pengguna).\n- Backend Developer: Menulis kode sisi server dan database (Opsi C).\n- DevOps / SysAdmin: Mengelola server dan infrastruktur (Opsi A).\n- QA / Security Engineer: Pengujian sistem dan keamanan (Opsi D).\nMaka jawaban yang tepat adalah **Opsi B**.",
+      status: "AKTIF",
+      source: "KEMENDIKBUD_RESMI",
+    },
+    // Soal 2: PPLG Resmi Kemendikbud (Linux Server Permission Denied)
+    {
+      mapel: "PPLG",
+      kisiKisiId: kisiKisiPplgResmi.id,
+      tipeSoal: "PILIHAN_GANDA",
+      pertanyaan: `Seorang pengembang aplikasi web sedang menyiapkan proyek pada server lokal untuk keperluan pengujian. Saat aplikasi diakses melalui browser, muncul pesan kesalahan berikut:
+
+\`\`\`bash
+Permission denied: /var/www/html/index.php
+\`\`\`
+
+Agar aplikasi web dapat diakses dengan normal, tindakan yang paling tepat adalah ....`,
+      opsiJawaban: JSON.stringify([
+        { id: "A", label: "Mengaktifkan layanan web server agar dapat memproses file PHP" },
+        { id: "B", label: "Mengubah hak akses pada file atau direktori proyek" },
+        { id: "C", label: "Memasang bahasa pemrograman PHP pada sistem server" },
+        { id: "D", label: "Mengatur ulang port yang digunakan oleh web server" },
+        { id: "E", label: "Memindahkan file aplikasi ke direktori lain pada sistem" }
+      ]),
+      kunciJawaban: "B",
+      pembahasan: "Pesan kesalahan `Permission denied` pada sistem operasi Linux/Unix terjadi karena proses web server (misal `www-data` atau `nginx`) tidak memiliki hak izin baca/eksekusi (*read/execute permission*) terhadap file atau direktori target. Tindakan yang tepat adalah **mengubah hak akses/kepemilikan file** (misal menggunakan perintah `chmod` atau `chown`) agar web server dapat membaca file tersebut (Opsi B).",
+      status: "AKTIF",
+      source: "KEMENDIKBUD_RESMI",
+    },
+    // Soal 3: PPLG Resmi Kemendikbud (PGK Kategori Python Loop & Logic)
+    {
+      mapel: "PPLG",
+      kisiKisiId: kisiKisiPplgResmi.id,
+      tipeSoal: "PGK_KATEGORI",
+      pertanyaan: `Perhatikan potongan program Python berikut:
+
+\`\`\`python
+nilai = [70, 85, 60, 90]
+jumlah_lulus = 0
+
+for n in nilai:
+    if n >= 75:
+        jumlah_lulus += 1
+
+print(jumlah_lulus)
+\`\`\`
+
+Tentukan kategori (**Benar** atau **Salah**) untuk setiap pernyataan berikut berdasarkan program tersebut:`,
+      opsiJawaban: JSON.stringify({
+        categories: ["Benar", "Salah"],
+        statements: [
+          { id: 1, text: "Perulangan `for n in nilai:` digunakan untuk memeriksa setiap elemen nilai dalam daftar `nilai`" },
+          { id: 2, text: "Nilai 75 masuk kategori kondisi Lulus (`n >= 75`)" },
+          { id: 3, text: "Pada akhir program, isi variabel `jumlah_lulus` yang dicetak adalah 3" }
+        ]
+      }),
+      kunciJawaban: JSON.stringify([
+        { id: 1, answer: "Benar" },
+        { id: 2, answer: "Benar" },
+        { id: 3, answer: "Salah" }
+      ]),
+      pembahasan: "Analisis eksekusi program:\n- Pernyataan 1: **BENAR** (Perulangan `for` melakukan iterasi memeriksa tiap elemen dalam list `[70, 85, 60, 90]`).\n- Pernyataan 2: **BENAR** (Operator `>=` berarti nilai 75 memenuhi kondisi).\n- Pernyataan 3: **SALAH** (Nilai yang memenuhi `n >= 75` adalah 85 dan 90, sehingga total `jumlah_lulus` adalah **2**, bukan 3).",
+      status: "AKTIF",
+      source: "KEMENDIKBUD_RESMI",
+    },
+    // Soal 4: PPLG - MCMA (OOP Principles)
+    {
+      mapel: "PPLG",
+      kisiKisiId: kisiKisiPplgResmi.id,
+      tipeSoal: "MCMA",
+      pertanyaan: "Dalam konsep Pemrograman Berorientasi Objek (OOP) pada pengembangan aplikasi perangkat lunak dan gim, manakah pernyataan-pernyataan berikut yang bernilai **BENAR**? *(Pilih lebih dari satu)*",
+      opsiJawaban: JSON.stringify([
+        { id: "A", label: "Enkapsulasi bertujuan menyembunyikan data internal objek dan hanya mengizinkan akses melalui method/accessor" },
+        { id: "B", label: "Access modifier 'private' membuat atribut hanya dapat diakses dari dalam class itu sendiri" },
+        { id: "C", label: "Inheritance memungkinkan class turunan (subclass) mewarisi atribut dan method dari class induk (superclass)" },
+        { id: "D", label: "Polymorphism method overriding mengharuskan nama method dan tipe parameter diubah total dari class induk" },
+        { id: "E", label: "Sebuah class hanya dapat membuat maksimal satu objek saja di dalam memori" }
+      ]),
+      kunciJawaban: JSON.stringify(["A", "B", "C"]),
+      pembahasan: "- A, B, C adalah prinsip fundamental OOP.\n- D salah karena method overriding mempertahankan nama dan signature method.\n- E salah karena satu class bisa diinstansiasi menjadi banyak objek.",
+      status: "AKTIF",
+      source: "AI_GEMINI",
+    },
+    // Soal 5: Matematika - Pilihan Ganda (Fungsi Kuadrat)
     {
       mapel: "MATEMATIKA",
-      kisiKisiId: kisiKisiMatematika.id,
+      kisiKisiId: kisiKisiMatematikaResmi.id,
       tipeSoal: "PILIHAN_GANDA",
       pertanyaan: "Diketahui fungsi kuadrat $f(x) = -2x^2 + 8x - 3$. Koordinat titik puncak (ekstrem) dari grafik fungsi tersebut adalah...",
       opsiJawaban: JSON.stringify([
@@ -194,14 +296,14 @@ async function main() {
         { id: "E", label: "$(-4, -3)$" }
       ]),
       kunciJawaban: "A",
-      pembahasan: "Untuk fungsi $f(x) = ax^2 + bx + c$ dengan $a = -2$, $b = 8$, $c = -3$:\n- Absis titik puncak: $x_p = -\\frac{b}{2a} = -\\frac{8}{2(-2)} = 2$\n- Ordinat titik puncak: $y_p = f(2) = -2(2)^2 + 8(2) - 3 = -8 + 16 - 3 = 5$\nJadi, koordinat titik puncak adalah **$(2, 5)$** (Opsi A).",
+      pembahasan: "Untuk fungsi $f(x) = ax^2 + bx + c$ dengan $a = -2, b = 8, c = -3$:\n- $x_p = -\\frac{b}{2a} = -\\frac{8}{2(-2)} = 2$\n- $y_p = f(2) = -2(2)^2 + 8(2) - 3 = -8 + 16 - 3 = 5$\nKoordinat titik puncak adalah **$(2, 5)$** (Opsi A).",
       status: "AKTIF",
       source: "AI_GEMINI",
     },
-    // Soal 2: Matematika - Kalkulus (Pilihan Ganda LaTeX)
+    // Soal 6: Matematika - Pilihan Ganda (Integral Tentu)
     {
       mapel: "MATEMATIKA",
-      kisiKisiId: kisiKisiKalkulus.id,
+      kisiKisiId: kisiKisiMatematikaResmi.id,
       tipeSoal: "PILIHAN_GANDA",
       pertanyaan: "Nilai dari integral tentu $\\int_{1}^{3} (3x^2 - 4x + 2) \\, dx$ adalah...",
       opsiJawaban: JSON.stringify([
@@ -212,16 +314,16 @@ async function main() {
         { id: "E", label: "$20$" }
       ]),
       kunciJawaban: "B",
-      pembahasan: "Cari antiturunan fungsi:\n$$\\int (3x^2 - 4x + 2) \\, dx = x^3 - 2x^2 + 2x$$\nEvaluasi batas dari $1$ sampai $3$:\n$$F(3) = (3)^3 - 2(3)^2 + 2(3) = 27 - 18 + 6 = 15$$\n$$F(1) = (1)^3 - 2(1)^2 + 2(1) = 1 - 2 + 2 = 1$$\n$$F(3) - F(1) = 15 - 1 = 14$$\nJadi nilainya adalah **$14$** (Opsi B).",
+      pembahasan: "$$\\int (3x^2 - 4x + 2) \\, dx = [x^3 - 2x^2 + 2x]_1^3$$\n$$F(3) = 27 - 18 + 6 = 15$$\n$$F(1) = 1 - 2 + 2 = 1$$\n$$F(3) - F(1) = 15 - 1 = 14$$ (Opsi B).",
       status: "AKTIF",
       source: "AI_GEMINI",
     },
-    // Soal 3: Matematika - MCMA (Multiple Choice Multiple Answer)
+    // Soal 7: Matematika - MCMA (Matriks & Determinan)
     {
       mapel: "MATEMATIKA",
-      kisiKisiId: kisiKisiMatematika.id,
+      kisiKisiId: kisiKisiMatematikaResmi.id,
       tipeSoal: "MCMA",
-      pertanyaan: "Diberikan matriks $A = \\begin{pmatrix} 2 & 1 \\\\ 4 & 3 \\end{pmatrix}$. Manakah pernyataan-pernyataan berikut yang bernilai **BENAR**? *(Pilih lebih dari satu jawaban yang sesuai)*",
+      pertanyaan: "Diberikan matriks $A = \\begin{pmatrix} 2 & 1 \\\\ 4 & 3 \\end{pmatrix}$. Manakah pernyataan-pernyataan berikut yang bernilai **BENAR**? *(Pilih lebih dari satu)*",
       opsiJawaban: JSON.stringify([
         { id: "A", label: "Determinan dari matriks $A$ adalah $|A| = 2$" },
         { id: "B", label: "Matriks $A$ memiliki invers karena determinannya tidak sama dengan nol" },
@@ -230,131 +332,40 @@ async function main() {
         { id: "E", label: "Determinan dari $A^T$ bernilai $-2$" }
       ]),
       kunciJawaban: JSON.stringify(["A", "B", "C"]),
-      pembahasan: "Analisis setiap pernyataan:\n1. $|A| = (2)(3) - (1)(4) = 6 - 4 = 2$ -> **BENAR (A)**\n2. Karena $|A| = 2 \\neq 0$, matriks memiliki invers -> **BENAR (B)**\n3. $A^{-1} = \\frac{1}{2} \\begin{pmatrix} 3 & -1 \\\\ -4 & 2 \\end{pmatrix}$ -> **BENAR (C)**\n4. $A^T = \\begin{pmatrix} 2 & 4 \\\\ 1 & 3 \\end{pmatrix}$ -> Salah (D)\n5. $|A^T| = |A| = 2$ -> Salah (E)\nJadi pernyataan benar adalah **A, B, dan C**.",
-      status: "AKTIF",
-      source: "AI_GEMINI",
-    },
-    // Soal 4: Matematika - PGK Kategori (Pilihan Ganda Kompleks Matriks Pernyataan)
-    {
-      mapel: "MATEMATIKA",
-      kisiKisiId: kisiKisiKalkulus.id,
-      tipeSoal: "PGK_KATEGORI",
-      pertanyaan: "Perhatikan kurva fungsi $f(x) = x^3 - 3x^2 - 9x + 5$. Tentukan kategori kebenaran (*Benar* atau *Salah*) untuk setiap pernyataan berikut:",
-      opsiJawaban: JSON.stringify({
-        categories: ["Benar", "Salah"],
-        statements: [
-          { id: 1, text: "Turunan pertama fungsi adalah $f'(x) = 3x^2 - 6x - 9$" },
-          { id: 2, text: "Titik stasioner fungsi tercapai pada saat $x = -1$ dan $x = 3$" },
-          { id: 3, text: "Fungsi $f(x)$ selalu naik pada interval $-1 < x < 3$" },
-          { id: 4, text: "Nilai maksimum lokal fungsi terjadi pada $x = -1$ dengan nilai $f(-1) = 10$" }
-        ]
-      }),
-      kunciJawaban: JSON.stringify([
-        { id: 1, answer: "Benar" },
-        { id: 2, answer: "Benar" },
-        { id: 3, answer: "Salah" },
-        { id: 4, answer: "Benar" }
-      ]),
-      pembahasan: "- $f'(x) = 3x^2 - 6x - 9$ (Pernyataan 1: **Benar**)\n- $3(x^2 - 2x - 3) = 0 \\implies 3(x - 3)(x + 1) = 0 \\implies x = 3$ atau $x = -1$ (Pernyataan 2: **Benar**)\n- Untuk $-1 < x < 3$, nilai $f'(x) < 0$, artinya fungsi **turun**, bukan naik (Pernyataan 3: **Salah**)\n- $f(-1) = (-1)^3 - 3(-1)^2 - 9(-1) + 5 = -1 - 3 + 9 + 5 = 10$ adalah titik balik maksimum (Pernyataan 4: **Benar**)",
-      status: "AKTIF",
-      source: "AI_GEMINI",
-    },
-    // Soal 5: PPLG - Pilihan Ganda (REST API & Status Code)
-    {
-      mapel: "PPLG",
-      kisiKisiId: kisiKisiPplg.id,
-      tipeSoal: "PILIHAN_GANDA",
-      pertanyaan: "Dalam perancangan REST API, seorang developer ingin mengembalikan respon saat klien mengirimkan request data JSON yang tidak valid (misal: format email salah atau field wajib kosong). Status Code HTTP yang paling sesuai standar adalah...",
-      opsiJawaban: JSON.stringify([
-        { id: "A", label: "200 OK" },
-        { id: "B", label: "400 Bad Request" },
-        { id: "C", label: "401 Unauthorized" },
-        { id: "D", label: "403 Forbidden" },
-        { id: "E", label: "500 Internal Server Error" }
-      ]),
-      kunciJawaban: "B",
-      pembahasan: "- **400 Bad Request**: Digunakan saat terjadi kesalahan input/validasi di sisi klien (klien mengirim data yang tidak sesuai skema).\n- 401: Belum login / token tidak ada.\n- 403: Sudah login tapi tidak punya hak akses.\n- 500: Terjadi error/crash di sisi server.\nMaka jawaban yang paling tepat adalah **400 Bad Request** (Opsi B).",
-      status: "AKTIF",
-      source: "AI_GEMINI",
-    },
-    // Soal 6: PPLG - MCMA (Multiple Choice Multiple Answer)
-    {
-      mapel: "PPLG",
-      kisiKisiId: kisiKisiPplg.id,
-      tipeSoal: "MCMA",
-      pertanyaan: "Manakah praktik-praktik berikut yang termasuk ke dalam standar keamanan (*security best practices*) dalam pengembangan REST API modern? *(Pilih lebih dari satu)*",
-      opsiJawaban: JSON.stringify([
-        { id: "A", label: "Menggunakan HTTPS untuk mengenkripsi data payload selama transmisi" },
-        { id: "B", label: "Menyimpan password pengguna dalam database menggunakan hashing satu arah (misal: bcrypt/argon2) ber-salt" },
-        { id: "C", label: "Menerapkan Rate Limiting untuk mencegah serangan Brute Force dan Denial of Service (DoS)" },
-        { id: "D", label: "Menampilkan stack trace error database secara lengkap ke respon klien agar mudah di-debug pengguna umum" },
-        { id: "E", label: "Menyimpan API Secret Key dan Database Password langsung di dalam file Javascript frontend (client-side bundle)" }
-      ]),
-      kunciJawaban: JSON.stringify(["A", "B", "C"]),
-      pembahasan: "- A (HTTPS), B (Password Hashing), dan C (Rate Limiting) adalah pilar keamanan API.\n- D salah karena stack trace error mengekspos struktur internal database ke penyerang.\n- E salah fatal karena secret key tidak boleh diekspos di sisi klien.\nJawaban yang benar adalah **A, B, dan C**.",
-      status: "AKTIF",
-      source: "AI_GEMINI",
-    },
-    // Soal 7: PPLG - PGK Kategori (Database SQL Matrix Statements)
-    {
-      mapel: "PPLG",
-      kisiKisiId: kisiKisiDatabase.id,
-      tipeSoal: "PGK_KATEGORI",
-      pertanyaan: "Berikut adalah pernyataan mengenai konsep Basis Data Relasional dan SQL. Tentukan kategori (*Sesuai* atau *Tidak Sesuai*) untuk setiap pernyataan:",
-      opsiJawaban: JSON.stringify({
-        categories: ["Sesuai", "Tidak Sesuai"],
-        statements: [
-          { id: 1, text: "Klausa 'WHERE' digunakan untuk memfilter baris data sebelum dilakukan pengelompokan ('GROUP BY')" },
-          { id: 2, text: "Klausa 'HAVING' dapat menggunakan fungsi agregasi seperti COUNT(), SUM(), atau AVG()" },
-          { id: 3, text: "Operasi 'INNER JOIN' akan tetap menampilkan record dari tabel kiri meskipun tidak memiliki kecocokan di tabel kanan" },
-          { id: 4, text: "Pemberian Index (B-Tree) pada kolom yang sering digunakan di klausa WHERE dapat mempercepat performa pencarian query SELECT" }
-        ]
-      }),
-      kunciJawaban: JSON.stringify([
-        { id: 1, answer: "Sesuai" },
-        { id: 2, answer: "Sesuai" },
-        { id: 3, answer: "Tidak Sesuai" },
-        { id: 4, answer: "Sesuai" }
-      ]),
-      pembahasan: "- Pernyataan 1: Sesuai (WHERE memfilter baris individual sebelum GROUP BY).\n- Pernyataan 2: Sesuai (HAVING memfilter hasil setelah fungsi agregasi).\n- Pernyataan 3: Tidak Sesuai (Itu adalah sifat LEFT JOIN, INNER JOIN hanya menampilkan data yang cocok di kedua tabel).\n- Pernyataan 4: Sesuai (Indeks mengoptimalkan lookup data).",
+      pembahasan: "1. $|A| = (2)(3) - (1)(4) = 6 - 4 = 2$ -> **BENAR (A)**\n2. Karena $|A| = 2 \\neq 0$, matriks memiliki invers -> **BENAR (B)**\n3. $A^{-1} = \\frac{1}{2} \\begin{pmatrix} 3 & -1 \\\\ -4 & 2 \\end{pmatrix}$ -> **BENAR (C)**\nPernyataan benar: **A, B, dan C**.",
       status: "AKTIF",
       source: "AI_GEMINI",
     }
   ];
 
-  for (const item of sampleSoal) {
-    await prisma.soal.create({ data: item });
+  for (const s of bankSoalData) {
+    await prisma.soal.create({ data: s });
   }
 
-  // 6. Seed mock Progres Latihan for item difficulty analysis demonstration
+  // 7. Seed mock progres latihan siswa
   const allActiveSoal = await prisma.soal.findMany({ where: { status: "AKTIF" } });
-  const activeSiswa = await prisma.siswa.findMany({ where: { statusAkun: "AKTIF" }, take: 15 });
+  const activeSiswa = await prisma.siswa.findMany({ where: { statusAkun: "AKTIF" }, take: 20 });
 
   for (let sIdx = 0; sIdx < activeSiswa.length; sIdx++) {
     const siswa = activeSiswa[sIdx];
     for (let qIdx = 0; qIdx < allActiveSoal.length; qIdx++) {
       const q = allActiveSoal[qIdx];
-      // Simulate realistic correctness rate:
-      // Soal 1 (Aljabar): 80% correct (Mudah)
-      // Soal 2 (Kalkulus): 35% correct (Sulit)
-      // Soal 3 (MCMA Math): 50% correct (Sedang)
-      // Soal 5 (REST API): 85% correct (Mudah)
-      // Soal 7 (SQL PGK): 45% correct (Sedang)
       let isBenar = false;
       let userAns = "";
 
       if (q.tipeSoal === "PILIHAN_GANDA") {
         const correct = q.kunciJawaban;
-        if (qIdx === 0) isBenar = (sIdx % 5 !== 0); // 80%
-        else if (qIdx === 1) isBenar = (sIdx % 3 === 0); // 33%
-        else isBenar = (sIdx % 6 !== 0); // 83%
+        if (qIdx === 0) isBenar = (sIdx % 4 !== 0); // 75%
+        else if (qIdx === 1) isBenar = (sIdx % 3 !== 0); // 66%
+        else if (qIdx === 4) isBenar = (sIdx % 5 !== 0); // 80%
+        else isBenar = (sIdx % 3 === 0); // 33%
         userAns = isBenar ? correct : (correct === "A" ? "B" : "C");
       } else if (q.tipeSoal === "MCMA") {
         isBenar = (sIdx % 2 === 0);
         userAns = isBenar ? q.kunciJawaban : JSON.stringify(["A", "D"]);
       } else if (q.tipeSoal === "PGK_KATEGORI") {
         isBenar = (sIdx % 2 !== 0);
-        userAns = isBenar ? q.kunciJawaban : JSON.stringify([{ id: 1, answer: "Salah" }, { id: 2, answer: "Salah" }, { id: 3, answer: "Sesuai" }, { id: 4, answer: "Sesuai" }]);
+        userAns = isBenar ? q.kunciJawaban : JSON.stringify([{ id: 1, answer: "Salah" }, { id: 2, answer: "Salah" }, { id: 3, answer: "Sesuai" }]);
       }
 
       await prisma.progresLatihan.create({
@@ -365,14 +376,14 @@ async function main() {
           jawabanSiswa: typeof userAns === "string" ? userAns : JSON.stringify(userAns),
           isBenar,
           skor: isBenar ? 100 : 0,
-          waktuPengerjaan: Math.floor(Math.random() * 90) + 30,
+          waktuPengerjaan: Math.floor(Math.random() * 80) + 25,
           syncedAt: new Date(Date.now() - Math.floor(Math.random() * 86400000)),
         },
       });
     }
   }
 
-  console.log("Seeding selesai! 72 Siswa, Kisi-kisi 5 Pilar, Bank Soal 3 Tipe, dan Progres Latihan awal berhasil dibuat.");
+  console.log("Seeding selesai dengan Kurikulum dan Soal Resmi TKA Kemendikbud!");
 }
 
 main()

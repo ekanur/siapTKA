@@ -11,15 +11,18 @@ import {
   X,
   Calculator,
   Code2,
+  FolderTree,
 } from "lucide-react";
+import { MAPEL_WAJIB, MAPEL_PILIHAN_GROUPS, getAllSubjectsList } from "@/lib/constants/subjects";
 
 export default function KisiKisiPage() {
   const [kisiKisiList, setKisiKisiList] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   const [isModalOpen, setIsModalOpen] = useState(false);
+  const [selectedFilterMapel, setSelectedFilterMapel] = useState("ALL");
 
   // Form states
-  const [mapel, setMapel] = useState("MATEMATIKA");
+  const [mapel, setMapel] = useState("PPLG");
   const [topik, setTopik] = useState("");
   const [definisi, setDefinisi] = useState("");
   const [muatan, setMuatan] = useState("");
@@ -32,7 +35,8 @@ export default function KisiKisiPage() {
   const loadKisiKisi = async () => {
     setLoading(true);
     try {
-      const res = await fetch("/api/admin/kisi-kisi");
+      const url = selectedFilterMapel !== "ALL" ? `/api/admin/kisi-kisi?mapel=${selectedFilterMapel}` : `/api/admin/kisi-kisi`;
+      const res = await fetch(url);
       const data = await res.json();
       if (data.success) {
         setKisiKisiList(data.kisiKisi);
@@ -46,7 +50,7 @@ export default function KisiKisiPage() {
 
   useEffect(() => {
     loadKisiKisi();
-  }, []);
+  }, [selectedFilterMapel]);
 
   const handleCreate = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -69,7 +73,6 @@ export default function KisiKisiPage() {
       if (data.success) {
         setStatusMsg("Kisi-kisi 5 pilar resmi berhasil ditambahkan.");
         setIsModalOpen(false);
-        // Reset form
         setTopik("");
         setDefinisi("");
         setMuatan("");
@@ -85,6 +88,8 @@ export default function KisiKisiPage() {
     }
   };
 
+  const allSubjects = getAllSubjectsList();
+
   return (
     <div className="space-y-6">
       {/* Header */}
@@ -92,13 +97,13 @@ export default function KisiKisiPage() {
         <div>
           <div className="inline-flex items-center gap-2 px-3 py-1 bg-blue-50 border border-blue-200 text-blue-700 rounded-full text-xs font-bold mb-1">
             <BookMarked className="w-3.5 h-3.5 text-blue-600" />
-            <span>Basis Data Kurikulum Resmi TKA</span>
+            <span>Basis Data Kurikulum Resmi 5-Pilar TKA</span>
           </div>
           <h1 className="text-2xl font-extrabold text-slate-900">
             5 Pilar Kisi-Kisi TKA Kemendikbud
           </h1>
           <p className="text-xs text-slate-500 mt-1">
-            Data acuan terstruktur: Definisi, Muatan, Kompetensi, Matriks Asesmen, dan Contoh Soal sebagai basis kecerdasan Gemini AI.
+            Pusat acuan kurikulum resmi (Definisi, Muatan, Kompetensi, Matriks Asesmen, Contoh Soal) yang menjadi basis prompting deterministik Gemini AI.
           </p>
         </div>
 
@@ -107,7 +112,7 @@ export default function KisiKisiPage() {
           className="px-4 py-2.5 bg-blue-600 hover:bg-blue-700 text-white rounded-xl text-xs font-bold shadow-md shadow-blue-500/20 transition-all flex items-center gap-2 cursor-pointer"
         >
           <Plus className="w-4 h-4" />
-          <span>Tambah Kisi-Kisi 5 Pilar</span>
+          <span>Tambah 5-Pilar Kisi-Kisi Baru</span>
         </button>
       </div>
 
@@ -119,6 +124,26 @@ export default function KisiKisiPage() {
           </button>
         </div>
       )}
+
+      {/* Filter Tabs */}
+      <div className="flex flex-wrap items-center gap-2 bg-white p-2 rounded-2xl border border-slate-200 shadow-sm">
+        <span className="text-xs font-bold text-slate-500 px-2 flex items-center gap-1.5">
+          <FolderTree className="w-3.5 h-3.5" /> Filter Mapel:
+        </span>
+        {["ALL", "MATEMATIKA", "PPLG", "TKJ", "PKK"].map((m) => (
+          <button
+            key={m}
+            onClick={() => setSelectedFilterMapel(m)}
+            className={`px-3 py-1.5 rounded-xl text-xs font-bold transition-all cursor-pointer ${
+              selectedFilterMapel === m
+                ? "bg-blue-600 text-white shadow-sm"
+                : "bg-slate-50 text-slate-600 hover:bg-slate-100"
+            }`}
+          >
+            {m === "ALL" ? "Semua Mapel" : m}
+          </button>
+        ))}
+      </div>
 
       {/* Grid of Kisi-Kisi Cards */}
       <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
@@ -138,10 +163,13 @@ export default function KisiKisiPage() {
                     <Code2 className="w-4 h-4" />
                   </div>
                 )}
-                <span className="text-xs font-extrabold text-slate-900">{item.topik}</span>
+                <div>
+                  <span className="text-xs font-extrabold text-slate-900 block">{item.topik}</span>
+                  <span className="text-[10px] text-blue-600 font-bold uppercase">{item.mapel}</span>
+                </div>
               </div>
               <span className="text-[11px] font-bold px-2 py-0.5 bg-slate-100 text-slate-600 rounded">
-                {item._count?.soalList || 0} Soal Dibuat
+                {item._count?.soalList || 0} Soal Aktif
               </span>
             </div>
 
@@ -152,23 +180,23 @@ export default function KisiKisiPage() {
               </div>
 
               <div className="p-3 bg-slate-50 rounded-xl border border-slate-100">
-                <span className="font-bold text-blue-900 block mb-0.5">2. Muatan:</span>
-                <p className="text-slate-600 leading-relaxed">{item.muatan}</p>
+                <span className="font-bold text-blue-900 block mb-0.5">2. Muatan Materi Pokok:</span>
+                <div className="text-slate-600 whitespace-pre-line leading-relaxed">{item.muatan}</div>
               </div>
 
               <div className="p-3 bg-slate-50 rounded-xl border border-slate-100">
                 <span className="font-bold text-blue-900 block mb-0.5">3. Kompetensi:</span>
-                <p className="text-slate-600 leading-relaxed">{item.kompetensi}</p>
+                <div className="text-slate-600 whitespace-pre-line leading-relaxed">{item.kompetensi}</div>
               </div>
 
               <div className="p-3 bg-slate-50 rounded-xl border border-slate-100">
                 <span className="font-bold text-blue-900 block mb-0.5">4. Matriks Asesmen:</span>
-                <p className="text-slate-600 leading-relaxed">{item.matriksAsesmen}</p>
+                <div className="text-slate-600 whitespace-pre-line leading-relaxed">{item.matriksAsesmen}</div>
               </div>
 
               <div className="p-3 bg-slate-50 rounded-xl border border-slate-100">
-                <span className="font-bold text-blue-900 block mb-0.5">5. Contoh Soal:</span>
-                <p className="text-slate-600 italic leading-relaxed">{item.contohSoal}</p>
+                <span className="font-bold text-blue-900 block mb-0.5">5. Contoh Soal Acuan:</span>
+                <div className="text-slate-600 italic whitespace-pre-line leading-relaxed">{item.contohSoal}</div>
               </div>
             </div>
           </div>
@@ -195,32 +223,44 @@ export default function KisiKisiPage() {
                   <select
                     value={mapel}
                     onChange={(e) => setMapel(e.target.value)}
-                    className="w-full p-2.5 bg-slate-50 border border-slate-300 rounded-xl"
+                    className="w-full p-2.5 bg-slate-50 border border-slate-300 rounded-xl font-bold"
                   >
-                    <option value="MATEMATIKA">Matematika</option>
-                    <option value="PPLG">PPLG (Kejuruan)</option>
+                    <optgroup label="⭐ Mapel Wajib">
+                      <option value="MATEMATIKA">Matematika</option>
+                      <option value="BAHASA_INDONESIA">Bahasa Indonesia</option>
+                      <option value="BAHASA_INGGRIS">Bahasa Inggris</option>
+                    </optgroup>
+                    <optgroup label="💻 Rumpun TIK (Kejuruan)">
+                      <option value="PPLG">PPLG (Pengembangan Perangkat Lunak & Gim)</option>
+                      <option value="TKJ">TKJ (Teknik Jaringan Komputer)</option>
+                      <option value="SIJA">SIJA (Sistem Informatika Jaringan & Aplikasi)</option>
+                      <option value="DKV">DKV (Desain Komunikasi Visual)</option>
+                    </optgroup>
+                    <optgroup label="🏭 Rumpun Lain & SMK">
+                      <option value="PKK">Produk Kreatif & Kewirausahaan (PKK)</option>
+                      <option value="B_INGGRIS_LANJUT">Bahasa Inggris Lanjutan</option>
+                    </optgroup>
                   </select>
                 </div>
                 <div>
-                  <label className="block font-bold text-slate-700 mb-1">Nama Topik / Materi</label>
+                  <label className="block font-bold text-slate-700 mb-1">Nama Topik / Elemen Capaian</label>
                   <input
                     type="text"
                     required
-                    placeholder="mis: Statistika & Peluang"
+                    placeholder="mis: Pemrograman Berorientasi Objek"
                     value={topik}
                     onChange={(e) => setTopik(e.target.value)}
-                    className="w-full p-2.5 bg-slate-50 border border-slate-300 rounded-xl"
-                  >
-                  </input>
+                    className="w-full p-2.5 bg-slate-50 border border-slate-300 rounded-xl font-medium"
+                  />
                 </div>
               </div>
 
               <div>
                 <label className="block font-bold text-slate-700 mb-1">1. Definisi</label>
                 <textarea
-                  rows={2}
+                  rows={3}
                   required
-                  placeholder="Ruang lingkup materi..."
+                  placeholder="Penjelasan ruang lingkup asesmen mapel..."
                   value={definisi}
                   onChange={(e) => setDefinisi(e.target.value)}
                   className="w-full p-2.5 bg-slate-50 border border-slate-300 rounded-xl"
@@ -228,11 +268,11 @@ export default function KisiKisiPage() {
               </div>
 
               <div>
-                <label className="block font-bold text-slate-700 mb-1">2. Muatan</label>
+                <label className="block font-bold text-slate-700 mb-1">2. Muatan Materi Pokok</label>
                 <textarea
-                  rows={2}
+                  rows={3}
                   required
-                  placeholder="Materi pokok..."
+                  placeholder="Elemen-elemen materi esensial..."
                   value={muatan}
                   onChange={(e) => setMuatan(e.target.value)}
                   className="w-full p-2.5 bg-slate-50 border border-slate-300 rounded-xl"
@@ -240,11 +280,11 @@ export default function KisiKisiPage() {
               </div>
 
               <div>
-                <label className="block font-bold text-slate-700 mb-1">3. Kompetensi</label>
+                <label className="block font-bold text-slate-700 mb-1">3. Kompetensi & Level Kognitif</label>
                 <textarea
-                  rows={2}
+                  rows={3}
                   required
-                  placeholder="Keterampilan yang diuji..."
+                  placeholder="Kemampuan yang diukur & level kognitif (Knowing, Applying, Reasoning)..."
                   value={kompetensi}
                   onChange={(e) => setKompetensi(e.target.value)}
                   className="w-full p-2.5 bg-slate-50 border border-slate-300 rounded-xl"
@@ -252,11 +292,11 @@ export default function KisiKisiPage() {
               </div>
 
               <div>
-                <label className="block font-bold text-slate-700 mb-1">4. Matriks Asesmen & Level</label>
+                <label className="block font-bold text-slate-700 mb-1">4. Matriks Asesmen</label>
                 <textarea
-                  rows={2}
+                  rows={3}
                   required
-                  placeholder="Indikator dan level kognitif L1/L2/L3..."
+                  placeholder="Sub elemen dan batasan kompetensi..."
                   value={matriksAsesmen}
                   onChange={(e) => setMatriksAsesmen(e.target.value)}
                   className="w-full p-2.5 bg-slate-50 border border-slate-300 rounded-xl"
@@ -264,11 +304,11 @@ export default function KisiKisiPage() {
               </div>
 
               <div>
-                <label className="block font-bold text-slate-700 mb-1">5. Contoh Soal Acuan</label>
+                <label className="block font-bold text-slate-700 mb-1">5. Contoh Soal Acuan Resmi</label>
                 <textarea
-                  rows={2}
+                  rows={3}
                   required
-                  placeholder="Contoh soal resmi acuan bahasa..."
+                  placeholder="Sampel soal acuan format dan gaya bahasa..."
                   value={contohSoal}
                   onChange={(e) => setContohSoal(e.target.value)}
                   className="w-full p-2.5 bg-slate-50 border border-slate-300 rounded-xl"
@@ -288,7 +328,7 @@ export default function KisiKisiPage() {
                   disabled={isSubmitting}
                   className="px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-xl font-bold shadow-md"
                 >
-                  {isSubmitting ? "Menyimpan..." : "Simpan Kisi-Kisi"}
+                  {isSubmitting ? "Menyimpan..." : "Simpan Kisi-Kisi 5-Pilar"}
                 </button>
               </div>
             </form>

@@ -10,9 +10,11 @@ import {
   Building2,
   ArrowRight,
   ShieldCheck,
-  ChevronRight,
   Sparkles,
+  Info,
+  GraduationCap,
 } from "lucide-react";
+import { MAPEL_PILIHAN_GROUPS, getSubjectDisplayName } from "@/lib/constants/subjects";
 
 export default function OnboardingTkaPage() {
   const { data: session, update } = useSession();
@@ -20,20 +22,11 @@ export default function OnboardingTkaPage() {
 
   const [statusTka, setStatusTka] = useState<"IKUT" | "TIDAK_IKUT" | "">("IKUT");
   const [mapel1, setMapel1] = useState("PPLG");
-  const [mapel2, setMapel2] = useState("Bahasa Inggris Lanjutan");
+  const [mapel2, setMapel2] = useState("B_INGGRIS_LANJUT");
   const [isAgreementChecked, setIsAgreementChecked] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [errorMsg, setErrorMsg] = useState("");
   const [isSuccess, setIsSuccess] = useState(false);
-
-  const availableMapel = [
-    { id: "PPLG", name: "Pengembangan Perangkat Lunak & Gim (PPLG)" },
-    { id: "TKJ", name: "Teknik Komputer & Jaringan (TKJ)" },
-    { id: "SIJA", name: "Sistem Informatika, Jaringan & Aplikasi (SIJA)" },
-    { id: "DKV", name: "Desain Komunikasi Visual (DKV)" },
-    { id: "B_INGGRIS", name: "Bahasa Inggris Lanjutan" },
-    { id: "PKK", name: "Produk Kreatif & Kewirausahaan (PKK)" },
-  ];
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -88,19 +81,19 @@ export default function OnboardingTkaPage() {
 
   return (
     <div className="min-h-screen bg-slate-50 py-10 px-4">
-      <div className="max-w-2xl mx-auto">
+      <div className="max-w-3xl mx-auto">
         {/* Header */}
         <div className="text-center mb-8">
-          <div className="inline-flex items-center gap-2 px-3 py-1 bg-blue-100 text-blue-700 rounded-full text-xs font-bold mb-3">
-            <Sparkles className="w-3.5 h-3.5" />
-            <span>Aktivasi Akun & Konfirmasi TKA Resmi</span>
+          <div className="inline-flex items-center gap-2 px-3.5 py-1 bg-blue-100 text-blue-800 rounded-full text-xs font-bold mb-3">
+            <Sparkles className="w-3.5 h-3.5 text-blue-600" />
+            <span>Aktivasi Akun & Konfirmasi Pendaftaran TKA</span>
           </div>
           <h1 className="text-2xl sm:text-3xl font-extrabold text-slate-900 tracking-tight">
-            Konfirmasi Keikutsertaan TKA
+            Konfirmasi Keikutsertaan & Mapel Pilihan TKA
           </h1>
-          <p className="text-slate-600 text-sm mt-1.5 max-w-md mx-auto">
+          <p className="text-slate-600 text-xs sm:text-sm mt-1.5 max-w-xl mx-auto">
             Selamat datang, <span className="font-semibold text-slate-900">{session?.user?.name || "Siswa SIJA"}</span>!
-            Lengkapi konfirmasi keikutsertaan TKA Kemendikbud sebagai pengganti surat fisik.
+            Form digital ini menggantikan surat fisik wali kelas untuk pengumpulan data resmi pendaftaran TKA Kemendikbud.
           </p>
         </div>
 
@@ -123,14 +116,14 @@ export default function OnboardingTkaPage() {
           </div>
           <span className="px-2.5 py-1 bg-emerald-50 text-emerald-700 border border-emerald-200 text-xs font-bold rounded-lg flex items-center gap-1.5">
             <CheckCircle2 className="w-3.5 h-3.5" />
-            Akun Teraktivasi
+            Akun Teraktivasi via SSO
           </span>
         </div>
 
         {/* Form Card */}
-        <div className="bg-white rounded-2xl border border-slate-200 shadow-sm p-6 sm:p-8">
+        <div className="bg-white rounded-3xl border border-slate-200 shadow-sm p-6 sm:p-8 space-y-6">
           {errorMsg && (
-            <div className="mb-6 p-4 rounded-xl bg-rose-50 border border-rose-200 text-rose-800 text-sm flex items-start gap-3">
+            <div className="p-4 rounded-xl bg-rose-50 border border-rose-200 text-rose-800 text-xs flex items-start gap-3">
               <AlertCircle className="w-5 h-5 text-rose-600 shrink-0 mt-0.5" />
               <div>
                 <p className="font-bold">Gagal Menyimpan</p>
@@ -140,9 +133,9 @@ export default function OnboardingTkaPage() {
           )}
 
           {isSuccess && (
-            <div className="mb-6 p-4 rounded-xl bg-emerald-50 border border-emerald-200 text-emerald-800 text-sm flex items-center gap-3">
+            <div className="p-4 rounded-xl bg-emerald-50 border border-emerald-200 text-emerald-800 text-xs flex items-center gap-3">
               <CheckCircle2 className="w-5 h-5 text-emerald-600 shrink-0" />
-              <p className="font-bold">Konfirmasi berhasil disimpan! Mengarahkan ke menu latihan...</p>
+              <p className="font-bold">Konfirmasi berhasil disimpan! Mengarahkan ke dashboard latihan...</p>
             </div>
           )}
 
@@ -156,7 +149,7 @@ export default function OnboardingTkaPage() {
                 <button
                   type="button"
                   onClick={() => setStatusTka("IKUT")}
-                  className={`p-4 rounded-xl border-2 text-left transition-all flex items-center justify-between ${
+                  className={`p-4 rounded-2xl border-2 text-left transition-all flex items-center justify-between ${
                     statusTka === "IKUT"
                       ? "border-blue-600 bg-blue-50/70 text-blue-950 font-bold ring-1 ring-blue-500"
                       : "border-slate-200 bg-white hover:border-slate-300 text-slate-700"
@@ -170,14 +163,17 @@ export default function OnboardingTkaPage() {
                     >
                       {statusTka === "IKUT" && <div className="w-2 h-2 rounded-full bg-white" />}
                     </div>
-                    <span>Ya, Saya Bersedia Mengikuti TKA</span>
+                    <div>
+                      <div className="text-xs sm:text-sm font-bold">Ya, Saya Bersedia Mengikuti TKA</div>
+                      <div className="text-[11px] text-slate-500 font-normal">Wajib (Matematika, B. Indo, B. Inggris) + 2 Pilihan</div>
+                    </div>
                   </div>
                 </button>
 
                 <button
                   type="button"
                   onClick={() => setStatusTka("TIDAK_IKUT")}
-                  className={`p-4 rounded-xl border-2 text-left transition-all flex items-center justify-between ${
+                  className={`p-4 rounded-2xl border-2 text-left transition-all flex items-center justify-between ${
                     statusTka === "TIDAK_IKUT"
                       ? "border-amber-600 bg-amber-50/70 text-amber-950 font-bold ring-1 ring-amber-500"
                       : "border-slate-200 bg-white hover:border-slate-300 text-slate-700"
@@ -191,49 +187,80 @@ export default function OnboardingTkaPage() {
                     >
                       {statusTka === "TIDAK_IKUT" && <div className="w-2 h-2 rounded-full bg-white" />}
                     </div>
-                    <span>Tidak Mengikuti TKA</span>
+                    <div>
+                      <div className="text-xs sm:text-sm font-bold">Tidak Mengikuti TKA</div>
+                      <div className="text-[11px] text-slate-500 font-normal">Dapat diubah kembali sebelum pendaftaran ditutup</div>
+                    </div>
                   </div>
                 </button>
               </div>
             </div>
 
-            {/* Step 2: Subject Choices if IKUT */}
+            {/* Step 2: Subject Selection & Official Rules */}
             {statusTka === "IKUT" && (
-              <div className="space-y-4 pt-2 border-t border-slate-100">
+              <div className="space-y-4 pt-4 border-t border-slate-100">
+                {/* Official Rules Box */}
+                <div className="p-4 bg-blue-50/80 border border-blue-200 rounded-2xl text-xs space-y-2">
+                  <div className="flex items-center gap-2 font-bold text-blue-950">
+                    <Info className="w-4 h-4 text-blue-600 shrink-0" />
+                    <span>Ketentuan Penting Pemilihan Mapel Pilihan TKA:</span>
+                  </div>
+                  <ul className="text-slate-700 space-y-1 pl-5 list-disc leading-relaxed">
+                    <li>
+                      <strong>Nilai Rapor:</strong> Pilih mata pelajaran yang nilainya tercantum di buku rapor Anda (semester kelas 10 s.d. kelas 12).
+                    </li>
+                    <li>
+                      <strong>Kriteria Prodi Kuliah:</strong> Sesuaikan pilihan dengan jurusan/program studi perguruan tinggi yang diincar agar mendukung jalur seleksi PTN/PTS (SNBP, SNBT, atau Mandiri).
+                    </li>
+                    <li className="text-blue-900 font-semibold">
+                      <em>Catatan Pilot: Pada tahap awal ini, bank soal aktif yang tersedia untuk latihan offline adalah <strong>Matematika (Wajib)</strong> dan <strong>Kejuruan PPLG (Pilihan)</strong>.</em>
+                    </li>
+                  </ul>
+                </div>
+
                 <label className="block text-sm font-bold text-slate-900">
-                  2. Pilih 2 Mata Pelajaran Pilihan TKA
+                  2. Pilih 2 Mata Pelajaran Pilihan TKA (Dari Spektrum Resmi)
                 </label>
+
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                   <div>
-                    <label className="block text-xs font-semibold text-slate-600 mb-1.5">
-                      Mapel Pilihan 1 (Kejuruan Utama)
+                    <label className="block text-xs font-bold text-slate-700 mb-1.5">
+                      Mapel Pilihan 1 (Kejuruan / Akademik Utama)
                     </label>
                     <select
                       value={mapel1}
                       onChange={(e) => setMapel1(e.target.value)}
-                      className="w-full px-3.5 py-2.5 bg-slate-50 border border-slate-300 rounded-xl text-sm font-medium text-slate-900 focus:bg-white focus:outline-none focus:ring-2 focus:ring-blue-500"
+                      className="w-full px-3.5 py-2.5 bg-slate-50 border border-slate-300 rounded-xl text-xs font-semibold text-slate-900 focus:bg-white focus:outline-none focus:ring-2 focus:ring-blue-500"
                     >
-                      {availableMapel.map((m) => (
-                        <option key={m.id} value={m.id}>
-                          {m.name}
-                        </option>
+                      {MAPEL_PILIHAN_GROUPS.map((group) => (
+                        <optgroup key={group.groupName} label={`📂 ${group.groupName}`}>
+                          {group.subjects.map((sub) => (
+                            <option key={sub.id} value={sub.id}>
+                              {sub.name}
+                            </option>
+                          ))}
+                        </optgroup>
                       ))}
                     </select>
                   </div>
 
                   <div>
-                    <label className="block text-xs font-semibold text-slate-600 mb-1.5">
+                    <label className="block text-xs font-bold text-slate-700 mb-1.5">
                       Mapel Pilihan 2 (Pilihan Tambahan)
                     </label>
                     <select
                       value={mapel2}
                       onChange={(e) => setMapel2(e.target.value)}
-                      className="w-full px-3.5 py-2.5 bg-slate-50 border border-slate-300 rounded-xl text-sm font-medium text-slate-900 focus:bg-white focus:outline-none focus:ring-2 focus:ring-blue-500"
+                      className="w-full px-3.5 py-2.5 bg-slate-50 border border-slate-300 rounded-xl text-xs font-semibold text-slate-900 focus:bg-white focus:outline-none focus:ring-2 focus:ring-blue-500"
                     >
-                      {availableMapel.map((m) => (
-                        <option key={m.id} value={m.id}>
-                          {m.name}
-                        </option>
+                      {MAPEL_PILIHAN_GROUPS.map((group) => (
+                        <optgroup key={group.groupName} label={`📂 ${group.groupName}`}>
+                          {group.subjects.map((sub) => (
+                            <option key={sub.id} value={sub.id}>
+                              {sub.name}
+                            </option>
+                          ))}
+                        </optgroup>
                       ))}
                     </select>
                   </div>
@@ -242,14 +269,14 @@ export default function OnboardingTkaPage() {
             )}
 
             {/* Summary & Agreement */}
-            <div className="p-4 bg-slate-50 border border-slate-200 rounded-xl space-y-3">
-              <div className="flex items-center gap-2 text-xs font-bold text-slate-700 uppercase tracking-wider">
+            <div className="p-5 bg-slate-50 border border-slate-200 rounded-2xl space-y-3 text-xs">
+              <div className="flex items-center gap-2 font-bold text-slate-800 uppercase tracking-wider">
                 <FileCheck className="w-4 h-4 text-blue-600" />
-                <span>Ringkasan Konfirmasi Anda</span>
+                <span>Ringkasan Konfirmasi Pendaftaran Anda</span>
               </div>
-              <ul className="text-xs text-slate-600 space-y-1.5">
+              <ul className="text-slate-600 space-y-1.5">
                 <li>
-                  • Status:{" "}
+                  • Status Keikutsertaan:{" "}
                   <strong className="text-slate-900">
                     {statusTka === "IKUT" ? "Bersedia Mengikuti TKA" : "Tidak Mengikuti TKA"}
                   </strong>
@@ -257,27 +284,27 @@ export default function OnboardingTkaPage() {
                 {statusTka === "IKUT" && (
                   <>
                     <li>
-                      • Mapel Wajib: <strong className="text-slate-900">Matematika & Bahasa Indonesia</strong>
+                      • Mapel Wajib TKA: <strong className="text-slate-900">Matematika, Bahasa Indonesia, Bahasa Inggris</strong>
                     </li>
                     <li>
-                      • Mapel Pilihan 1: <strong className="text-slate-900">{mapel1}</strong>
+                      • Mapel Pilihan 1: <strong className="text-blue-900">{getSubjectDisplayName(mapel1)}</strong>
                     </li>
                     <li>
-                      • Mapel Pilihan 2: <strong className="text-slate-900">{mapel2}</strong>
+                      • Mapel Pilihan 2: <strong className="text-blue-900">{getSubjectDisplayName(mapel2)}</strong>
                     </li>
                   </>
                 )}
               </ul>
 
-              <label className="flex items-start gap-2.5 pt-2 border-t border-slate-200 cursor-pointer">
+              <label className="flex items-start gap-2.5 pt-3 border-t border-slate-200 cursor-pointer">
                 <input
                   type="checkbox"
                   checked={isAgreementChecked}
                   onChange={(e) => setIsAgreementChecked(e.target.checked)}
-                  className="mt-0.5 w-4 h-4 text-blue-600 rounded border-slate-300 focus:ring-blue-500"
+                  className="mt-0.5 w-4 h-4 text-blue-600 rounded border-slate-300 focus:ring-blue-500 cursor-pointer"
                 />
-                <span className="text-xs text-slate-700 font-medium">
-                  Saya menyatakan bahwa data pilihan ini telah sesuai dengan pilihan resmi saya dan siap didaftarkan oleh sekolah ke sistem TKA Kemendikbud.
+                <span className="text-slate-700 font-medium leading-relaxed">
+                  Saya menyatakan dengan sadar bahwa pilihan mata pelajaran ini telah sesuai dengan nilai rapor saya dan kriteria program studi tujuan kuliah, serta siap didaftarkan sekolah ke sistem resmi TKA Kemendikbud.
                 </span>
               </label>
             </div>
@@ -286,9 +313,9 @@ export default function OnboardingTkaPage() {
             <button
               type="submit"
               disabled={isSubmitting || !isAgreementChecked}
-              className="w-full py-3.5 px-4 bg-blue-600 hover:bg-blue-700 text-white font-bold rounded-xl shadow-md transition-all flex items-center justify-center gap-2 disabled:bg-slate-300 disabled:cursor-not-allowed cursor-pointer"
+              className="w-full py-3.5 px-4 bg-blue-600 hover:bg-blue-700 text-white font-bold text-xs sm:text-sm rounded-2xl shadow-lg shadow-blue-600/25 transition-all flex items-center justify-center gap-2 disabled:bg-slate-300 disabled:shadow-none disabled:cursor-not-allowed cursor-pointer"
             >
-              <span>{isSubmitting ? "Menyimpan Konfirmasi..." : "Kirim Konfirmasi & Mulai Latihan"}</span>
+              <span>{isSubmitting ? "Menyimpan Konfirmasi..." : "Kirim Konfirmasi & Buka Dashboard Latihan"}</span>
               <ArrowRight className="w-4 h-4" />
             </button>
           </form>

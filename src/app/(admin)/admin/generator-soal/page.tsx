@@ -12,11 +12,13 @@ import {
   Code2,
   Layers,
   Wand2,
+  Settings2,
 } from "lucide-react";
 import MathRenderer from "@/components/math/MathRenderer";
+import { MAPEL_WAJIB, MAPEL_PILIHAN_GROUPS } from "@/lib/constants/subjects";
 
 export default function GeneratorSoalPage() {
-  const [mapel, setMapel] = useState("MATEMATIKA");
+  const [mapel, setMapel] = useState("PPLG");
   const [kisiKisiList, setKisiKisiList] = useState<any[]>([]);
   const [selectedKisiKisiId, setSelectedKisiKisiId] = useState("");
   const [tipeSoal, setTipeSoal] = useState<"PILIHAN_GANDA" | "MCMA" | "PGK_KATEGORI">("PILIHAN_GANDA");
@@ -35,6 +37,8 @@ export default function GeneratorSoalPage() {
         setKisiKisiList(data.kisiKisi);
         if (data.kisiKisi.length > 0) {
           setSelectedKisiKisiId(data.kisiKisi[0].id);
+        } else {
+          setSelectedKisiKisiId("");
         }
       }
     } catch (err) {
@@ -51,7 +55,7 @@ export default function GeneratorSoalPage() {
   const handleGenerate = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!selectedKisiKisiId) {
-      setErrorMsg("Pilih salah satu kisi-kisi resmi terlebih dahulu.");
+      setErrorMsg("Pilih salah satu kisi-kisi 5 pilar resmi terlebih dahulu (atau buat di menu Kisi-Kisi jika belum ada).");
       return;
     }
 
@@ -99,7 +103,7 @@ export default function GeneratorSoalPage() {
             Generator Soal AI (5 Pilar Kisi-Kisi)
           </h1>
           <p className="text-xs text-slate-500 mt-1">
-            Generate variasi butir soal latihan otomatis berbasis AI (Gemini) menggunakan 5 Pilar kurikulum resmi TKA.
+            Generate variasi butir soal latihan otomatis berbasis AI (Gemini) menggunakan 5 Pilar kurikulum resmi TKA (Definisi, Muatan, Kompetensi, Matriks Asesmen, dan Contoh Soal).
           </p>
         </div>
 
@@ -139,57 +143,68 @@ export default function GeneratorSoalPage() {
         {/* Left Form: Parameters (5 cols) */}
         <div className="lg:col-span-5 space-y-5">
           <form onSubmit={handleGenerate} className="bg-white rounded-3xl border border-slate-200 shadow-sm p-6 space-y-5">
-            <h2 className="font-extrabold text-slate-900 text-sm">Parameter Pembuatan Soal</h2>
+            <div className="flex items-center justify-between">
+              <h2 className="font-extrabold text-slate-900 text-sm">Parameter Pembuatan Soal</h2>
+              <span className="text-[11px] text-blue-600 font-bold">5-Pilar AI Engine</span>
+            </div>
 
-            {/* 1. Mapel Selection */}
+            {/* 1. Mapel Selection from School Spectrum */}
             <div>
               <label className="block text-xs font-bold text-slate-700 mb-1.5">
-                Mata Pelajaran TKA
+                Mata Pelajaran TKA (Sesuai Spektrum Kejuruan Sekolah)
               </label>
-              <div className="grid grid-cols-2 gap-2">
-                <button
-                  type="button"
-                  onClick={() => setMapel("MATEMATIKA")}
-                  className={`p-3 rounded-xl border text-xs font-bold transition-all flex items-center gap-2 ${
-                    mapel === "MATEMATIKA"
-                      ? "border-blue-600 bg-blue-50 text-blue-900 ring-1 ring-blue-500"
-                      : "border-slate-200 bg-slate-50 text-slate-600 hover:bg-white"
-                  }`}
-                >
-                  <Calculator className="w-4 h-4" />
-                  <span>Matematika</span>
-                </button>
-                <button
-                  type="button"
-                  onClick={() => setMapel("PPLG")}
-                  className={`p-3 rounded-xl border text-xs font-bold transition-all flex items-center gap-2 ${
-                    mapel === "PPLG"
-                      ? "border-teal-600 bg-teal-50 text-teal-900 ring-1 ring-teal-500"
-                      : "border-slate-200 bg-slate-50 text-slate-600 hover:bg-white"
-                  }`}
-                >
-                  <Code2 className="w-4 h-4" />
-                  <span>PPLG</span>
-                </button>
-              </div>
+              <select
+                value={mapel}
+                onChange={(e) => setMapel(e.target.value)}
+                className="w-full px-3.5 py-2.5 bg-slate-50 border border-slate-300 rounded-xl text-xs font-bold text-slate-900 focus:bg-white focus:outline-none focus:ring-2 focus:ring-blue-500"
+              >
+                <optgroup label="⭐ Mapel Wajib TKA">
+                  <option value="MATEMATIKA">Matematika (Wajib)</option>
+                  <option value="BAHASA_INDONESIA">Bahasa Indonesia (Wajib)</option>
+                  <option value="BAHASA_INGGRIS">Bahasa Inggris (Wajib)</option>
+                </optgroup>
+                <optgroup label="💻 Rumpun TIK (Kejuruan)">
+                  <option value="PPLG">PPLG (Pengembangan Perangkat Lunak & Gim)</option>
+                  <option value="TKJ">TKJ (Teknik Jaringan Komputer)</option>
+                  <option value="SIJA">SIJA (Sistem Informatika Jaringan & Aplikasi)</option>
+                  <option value="DKV">DKV (Desain Komunikasi Visual)</option>
+                </optgroup>
+                <optgroup label="🏭 Khusus SMK & Kejuruan Lain">
+                  <option value="PKK">Produk Kreatif & Kewirausahaan (PKK)</option>
+                  <option value="B_INGGRIS_LANJUT">Bahasa Inggris Tingkat Lanjut</option>
+                  <option value="MTK_LANJUT">Matematika Tingkat Lanjut</option>
+                </optgroup>
+              </select>
             </div>
 
             {/* 2. Topik Kisi-Kisi */}
             <div>
-              <label className="block text-xs font-bold text-slate-700 mb-1.5">
-                Topik Acuan 5-Pilar Kisi-Kisi Resmi
-              </label>
-              <select
-                value={selectedKisiKisiId}
-                onChange={(e) => setSelectedKisiKisiId(e.target.value)}
-                className="w-full px-3.5 py-2.5 bg-slate-50 border border-slate-300 rounded-xl text-xs font-medium text-slate-900 focus:bg-white focus:outline-none focus:ring-2 focus:ring-blue-500"
-              >
-                {kisiKisiList.map((k) => (
-                  <option key={k.id} value={k.id}>
-                    {k.topik}
-                  </option>
-                ))}
-              </select>
+              <div className="flex items-center justify-between mb-1.5">
+                <label className="text-xs font-bold text-slate-700">
+                  Topik Acuan 5-Pilar Kisi-Kisi
+                </label>
+                <Link href="/admin/kisi-kisi" className="text-[11px] text-blue-600 font-bold hover:underline">
+                  + Kelola Kisi-Kisi
+                </Link>
+              </div>
+
+              {kisiKisiList.length === 0 ? (
+                <div className="p-3 bg-amber-50 border border-amber-200 rounded-xl text-[11px] text-amber-900">
+                  Belum ada kisi-kisi 5 pilar untuk mapel ini. Silakan tambahkan di menu <strong>5 Pilar Kisi-Kisi</strong>.
+                </div>
+              ) : (
+                <select
+                  value={selectedKisiKisiId}
+                  onChange={(e) => setSelectedKisiKisiId(e.target.value)}
+                  className="w-full px-3.5 py-2.5 bg-slate-50 border border-slate-300 rounded-xl text-xs font-medium text-slate-900 focus:bg-white focus:outline-none focus:ring-2 focus:ring-blue-500"
+                >
+                  {kisiKisiList.map((k) => (
+                    <option key={k.id} value={k.id}>
+                      {k.topik}
+                    </option>
+                  ))}
+                </select>
+              )}
             </div>
 
             {/* 3. Tipe Soal */}
@@ -199,9 +214,9 @@ export default function GeneratorSoalPage() {
               </label>
               <div className="space-y-2">
                 {[
-                  { id: "PILIHAN_GANDA", label: "Pilihan Ganda (Single A-E)", desc: "1 jawaban benar" },
-                  { id: "MCMA", label: "MCMA (Multiple Choice Multiple Answer)", desc: "Lebih dari 1 jawaban benar" },
-                  { id: "PGK_KATEGORI", label: "PGK Kategori (Matriks Benar/Salah)", desc: "Tabel pernyataan kategori" },
+                  { id: "PILIHAN_GANDA", label: "Pilihan Ganda (Single A-E)", desc: "1 pilihan paling tepat (A–E)" },
+                  { id: "MCMA", label: "MCMA (Multiple Choice Multiple Answer)", desc: "Pilih lebih dari 1 jawaban yang benar" },
+                  { id: "PGK_KATEGORI", label: "PGK Kategori (Matriks Benar/Salah)", desc: "Tabel pernyataan kategori (Benar/Salah)" },
                 ].map((t) => (
                   <label
                     key={t.id}
@@ -238,7 +253,7 @@ export default function GeneratorSoalPage() {
                 onChange={(e) => setJumlahSoal(Number(e.target.value))}
                 className="w-full px-3.5 py-2.5 bg-slate-50 border border-slate-300 rounded-xl text-xs font-medium text-slate-900 focus:bg-white focus:outline-none focus:ring-2 focus:ring-blue-500"
               >
-                <option value={1}>1 Soal (Pratinjau Cepat)</option>
+                <option value={1}>1 Soal (Uji Coba Cepat)</option>
                 <option value={3}>3 Soal (Rekomendasi Standar)</option>
                 <option value={5}>5 Soal</option>
               </select>
@@ -247,7 +262,7 @@ export default function GeneratorSoalPage() {
             {/* Submit Button */}
             <button
               type="submit"
-              disabled={isLoading}
+              disabled={isLoading || !selectedKisiKisiId}
               className="w-full py-3.5 px-4 bg-gradient-to-r from-blue-600 via-indigo-600 to-blue-700 hover:from-blue-700 hover:to-indigo-700 text-white font-extrabold text-xs rounded-xl shadow-lg shadow-blue-600/25 transition-all flex items-center justify-center gap-2 cursor-pointer disabled:opacity-50"
             >
               <Wand2 className="w-4 h-4" />
@@ -259,39 +274,44 @@ export default function GeneratorSoalPage() {
         {/* Right Area: 5-Pillar Inspector & Generated Previews (7 cols) */}
         <div className="lg:col-span-7 space-y-5">
           {/* 5-Pillar Inspector Card */}
-          {selectedKisiKisi && (
+          {selectedKisiKisi ? (
             <div className="bg-white rounded-3xl border border-slate-200 shadow-sm p-6 space-y-4">
               <div className="flex items-center gap-2 text-xs font-bold text-slate-900 uppercase tracking-wider">
                 <BookMarked className="w-4 h-4 text-blue-600" />
-                <span>5 Pilar Acuan Resmi Web TKA Kemendikbud</span>
+                <span>5 Pilar Acuan Resmi Web TKA: {selectedKisiKisi.topik}</span>
               </div>
 
               <div className="space-y-3 text-xs">
                 <div className="p-3 bg-slate-50 rounded-xl border border-slate-100">
                   <span className="font-bold text-blue-900 block mb-0.5">1. Definisi:</span>
-                  <p className="text-slate-700">{selectedKisiKisi.definisi}</p>
+                  <p className="text-slate-700 leading-relaxed">{selectedKisiKisi.definisi}</p>
                 </div>
 
                 <div className="p-3 bg-slate-50 rounded-xl border border-slate-100">
-                  <span className="font-bold text-blue-900 block mb-0.5">2. Muatan Materi Pokok:</span>
-                  <p className="text-slate-700">{selectedKisiKisi.muatan}</p>
+                  <span className="font-bold text-blue-900 block mb-0.5">2. Muatan Materi Pokok (Fase E & F):</span>
+                  <div className="text-slate-700 whitespace-pre-line leading-relaxed">{selectedKisiKisi.muatan}</div>
                 </div>
 
                 <div className="p-3 bg-slate-50 rounded-xl border border-slate-100">
-                  <span className="font-bold text-blue-900 block mb-0.5">3. Kompetensi yang Diukur:</span>
-                  <p className="text-slate-700">{selectedKisiKisi.kompetensi}</p>
+                  <span className="font-bold text-blue-900 block mb-0.5">3. Kompetensi & Level Kognitif:</span>
+                  <div className="text-slate-700 whitespace-pre-line leading-relaxed">{selectedKisiKisi.kompetensi}</div>
                 </div>
 
                 <div className="p-3 bg-slate-50 rounded-xl border border-slate-100">
-                  <span className="font-bold text-blue-900 block mb-0.5">4. Matriks Asesmen & Level:</span>
-                  <p className="text-slate-700">{selectedKisiKisi.matriksAsesmen}</p>
+                  <span className="font-bold text-blue-900 block mb-0.5">4. Matriks Asesmen:</span>
+                  <div className="text-slate-700 whitespace-pre-line leading-relaxed">{selectedKisiKisi.matriksAsesmen}</div>
                 </div>
 
                 <div className="p-3 bg-slate-50 rounded-xl border border-slate-100">
-                  <span className="font-bold text-blue-900 block mb-0.5">5. Contoh Soal Acuan:</span>
-                  <p className="text-slate-700 italic">{selectedKisiKisi.contohSoal}</p>
+                  <span className="font-bold text-blue-900 block mb-0.5">5. Contoh Soal Acuan Resmi:</span>
+                  <div className="text-slate-700 italic whitespace-pre-line leading-relaxed">{selectedKisiKisi.contohSoal}</div>
                 </div>
               </div>
+            </div>
+          ) : (
+            <div className="bg-white rounded-3xl border border-slate-200 p-8 text-center text-xs text-slate-500 space-y-2">
+              <BookMarked className="w-8 h-8 text-slate-300 mx-auto" />
+              <p className="font-bold text-slate-700">Pilih mata pelajaran untuk melihat 5 pilar kisi-kisi acuan AI.</p>
             </div>
           )}
 
