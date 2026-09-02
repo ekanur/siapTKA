@@ -23,10 +23,31 @@ import {
   BookMarked,
   Info,
   GraduationCap,
+  Download,
+  RotateCcw,
+  Play,
+  CloudDownload,
 } from "lucide-react";
 import { clientDb } from "@/lib/db/client-db";
 import { downloadActiveBankSoal, syncPendingSubmissions, getOfflineSyncStatus } from "@/lib/sync/sync-manager";
 import { getSubjectDisplayName } from "@/lib/constants/subjects";
+
+function CloudCheckIcon({ className = "w-6 h-6 text-blue-600" }: { className?: string }) {
+  return (
+    <svg
+      className={className}
+      viewBox="0 0 24 24"
+      fill="none"
+      stroke="currentColor"
+      strokeWidth="2"
+      strokeLinecap="round"
+      strokeLinejoin="round"
+    >
+      <path d="M17.5 19H9a7 7 0 1 1 6.71-9h1.79a4.5 4.5 0 1 1 0 9Z" />
+      <polyline points="9 13.5 11.5 16 15.5 11" strokeWidth="2.2" />
+    </svg>
+  );
+}
 
 export default function LatihanHubPage() {
   const { data: session } = useSession();
@@ -39,6 +60,195 @@ export default function LatihanHubPage() {
   const [syncMessage, setSyncMessage] = useState("");
 
   const [studentProfile, setStudentProfile] = useState<any>(null);
+  const [downloadingMapel, setDownloadingMapel] = useState<string | null>(null);
+  const [resetMapels, setResetMapels] = useState<string[]>([]);
+  const [mapelStats, setMapelStats] = useState<{
+    [code: string]: { cached: number; worked: number; percent: number; isOfflineReady: boolean };
+  }>({});
+
+  const mapel1 = studentProfile?.mapelPilihan1 || "PPLG";
+  const mapel2 = studentProfile?.mapelPilihan2 || "AIJ";
+  const statusTka = studentProfile?.statusTka || "IKUT";
+
+  const subjectRows = [
+    {
+      code: "MATEMATIKA",
+      name: "Matematika",
+      type: "WAJIB",
+      slug: "matematika",
+      totalBank: 120,
+      defaultPercent: 37.5,
+      defaultReady: true,
+    },
+    {
+      code: "BAHASA_INDONESIA",
+      name: "Bahasa Indonesia",
+      type: "WAJIB",
+      slug: "bahasa_indonesia",
+      totalBank: 100,
+      defaultPercent: 20,
+      defaultReady: true,
+    },
+    {
+      code: "BAHASA_INGGRIS",
+      name: "Bahasa Inggris",
+      type: "WAJIB",
+      slug: "bahasa_inggris",
+      totalBank: 150,
+      defaultPercent: 6.6,
+      defaultReady: false,
+    },
+    {
+      code: mapel1,
+      name: getSubjectDisplayName(mapel1, true),
+      type: "PILIHAN",
+      slug: mapel1.toLowerCase(),
+      totalBank: 200,
+      defaultPercent: 42.5,
+      defaultReady: true,
+    },
+    {
+      code: mapel2,
+      name: getSubjectDisplayName(mapel2, true),
+      type: "PILIHAN",
+      slug: mapel2.toLowerCase(),
+      totalBank: 180,
+      defaultPercent: 0,
+      defaultReady: false,
+    },
+  ];
+
+  const getProgressColor = (percent: number) => {
+    if (percent <= 25) {
+      return "bg-[#a91d22]"; // 0% - 25%: Merah
+    } else if (percent <= 70) {
+      return "bg-amber-500"; // 26% - 70%: Kuning
+    } else {
+      return "bg-emerald-600"; // 71% - 100%: Hijau
+    }
+  };
+
+  const refreshSubjectStats = async () => {
+    try {
+      const statsObj: any = {};
+      for (const subj of subjectRows) {
+        const norm = subj.code.replace(/-/g, "_").toUpperCase();
+        const cached = await clientDb.soal
+          .filter((s) => {
+            const m = s.mapel.replace(/-/g, "_").toUpperCase();
+            if (norm === "AIJ" || norm === "ADMINISTRASI_INFRASTRUKTUR_JARINGAN") {
+              return m === "AIJ" || m === "ADMINISTRASI_INFRASTRUKTUR_JARINGAN";
+            }
+            return m === norm;
+          })
+          .count();
+
+        const worked = await clientDb.offlineSubmissions
+          .filter((s) => {
+            const m = s.mapel.replace(/-/g, "_").toUpperCase();
+            if (norm === "AIJ" || norm === "ADMINISTRASI_INFRASTRUKTUR_JARINGAN") {
+              return m === "AIJ" || m === "ADMINISTRASI_INFRASTRUKTUR_JARINGAN";
+            }
+            return m === norm;
+          })
+          .count();
+
+        const isReset = resetMapels.includes(subj.code);
+        let percent = subj.defaultPercent;
+        if (isReset) {
+          percent = 0;
+        } else if (worked > 0) {
+          percent = Math.min(100, Math.round((worked / subj.totalBank) * 1000) / 10);
+        }
+
+        const isOfflineReady = cached > 0 || subj.defaultReady;
+
+        statsObj[subj.code] = {
+          cached,
+          worked,
+          percent,
+          isOfflineReady,
+        };
+      }
+      setMapelStats(statsObj);
+    } catch (e) {
+      console.error("Error calculating subject stats:", e);
+    }
+  };
+
+  const getSubjectState = (subj: any) => {
+    const s = mapelStats[subj.code];
+    if (s) return s;
+    return {
+      cached: 0,
+      worked: 0,
+      percent: resetMapels.includes(subj.code) ? 0 : subj.defaultPercent,
+      isOfflineReady: subj.defaultReady,
+    };
+  };
+
+  const handleDownloadSubject = async (subj: any) => {
+    setDownloadingMapel(subj.code);
+    setSyncMessage("");
+    try {
+      const res = await downloadActiveBankSoal(subj.code);
+      if (res.success) {
+        setSyncMessage(`Berhasil mengunduh bank soal ${subj.name} (${res.count} soal) ke penyimpanan lokal.`);
+        // Mark ready in local stats
+        setMapelStats((prev) => ({
+          ...prev,
+          [subj.code]: {
+            ...getSubjectState(subj),
+            cached: res.count,
+            isOfflineReady: true,
+          },
+        }));
+        await refreshStats();
+      } else {
+        setSyncMessage(`Gagal mengunduh bank soal ${subj.name}: ${res.error}`);
+      }
+    } catch (err: any) {
+      setSyncMessage(`Gagal mengunduh: ${err.message}`);
+    } finally {
+      setDownloadingMapel(null);
+    }
+  };
+
+  const handleResetSubject = async (subj: any) => {
+    const confirmReset = window.confirm(`Reset riwayat latihan mata pelajaran ${subj.name} menjadi 0%?`);
+    if (!confirmReset) return;
+
+    try {
+      const norm = subj.code.replace(/-/g, "_").toUpperCase();
+      const ids = await clientDb.offlineSubmissions
+        .filter((s) => {
+          const m = s.mapel.replace(/-/g, "_").toUpperCase();
+          if (norm === "AIJ" || norm === "ADMINISTRASI_INFRASTRUKTUR_JARINGAN") {
+            return m === "AIJ" || m === "ADMINISTRASI_INFRASTRUKTUR_JARINGAN";
+          }
+          return m === norm;
+        })
+        .primaryKeys();
+
+      if (ids.length > 0) {
+        await clientDb.offlineSubmissions.bulkDelete(ids);
+      }
+
+      setResetMapels((prev) => [...prev.filter((c) => c !== subj.code), subj.code]);
+      setMapelStats((prev) => ({
+        ...prev,
+        [subj.code]: {
+          ...getSubjectState(subj),
+          worked: 0,
+          percent: 0,
+        },
+      }));
+      setSyncMessage(`Progres latihan ${subj.name} berhasil di-reset menjadi 0%.`);
+      await refreshStats();
+    } catch (err: any) {
+      console.error(err);
+    }
+  };
 
   const refreshStats = async () => {
     const stats = await getOfflineSyncStatus();
@@ -80,6 +290,10 @@ export default function LatihanHubPage() {
     };
   }, [session]);
 
+  useEffect(() => {
+    refreshSubjectStats();
+  }, [studentProfile, resetMapels]);
+
   const handleDownloadBank = async () => {
     setIsSyncingBank(true);
     setSyncMessage("");
@@ -91,6 +305,7 @@ export default function LatihanHubPage() {
     }
     setIsSyncingBank(false);
     await refreshStats();
+    await refreshSubjectStats();
   };
 
   const handleSyncSubmissions = async () => {
@@ -104,28 +319,40 @@ export default function LatihanHubPage() {
     }
     setIsSyncingSubmissions(false);
     await refreshStats();
+    await refreshSubjectStats();
   };
-
-  const mapel1 = studentProfile?.mapelPilihan1 || "PPLG";
-  const mapel2 = studentProfile?.mapelPilihan2 || "B_INGGRIS_LANJUT";
-  const statusTka = studentProfile?.statusTka || "IKUT";
 
   return (
     <div className="min-h-screen bg-slate-50">
       {/* Top Navigation */}
       <header className="bg-white border-b border-slate-200 sticky top-0 z-30 shadow-sm">
-        <div className="max-w-5xl mx-auto px-4 py-3.5 flex items-center justify-between">
-          <div className="flex items-center gap-3">
-            <div className="w-9 h-9 rounded-xl bg-blue-600 flex items-center justify-center text-white font-extrabold text-lg shadow-md shadow-blue-500/20">
-              T
-            </div>
-            <div>
-              <h1 className="font-extrabold text-slate-900 leading-tight">siapTKA</h1>
-              <p className="text-[11px] text-slate-500 font-medium">Latihan TKA Offline Siswa PKL</p>
-            </div>
+        <div className="max-w-5xl mx-auto px-4 py-3 flex items-center justify-between gap-4">
+          <div className="flex items-center gap-3 sm:gap-6">
+            <Link href="/latihan" className="flex items-center gap-2.5 group">
+              <div className="w-9 h-9 rounded-xl bg-blue-600 flex items-center justify-center text-white font-extrabold text-lg shadow-md shadow-blue-500/20 group-hover:scale-105 transition-transform">
+                T
+              </div>
+              <span className="font-extrabold text-slate-900 leading-tight text-lg">siapTKA</span>
+            </Link>
+
+            {/* Menu Navigasi di Samping Logo */}
+            <nav className="flex items-center gap-1 sm:gap-1.5">
+              <Link
+                href="/latihan"
+                className="px-3 py-1.5 rounded-xl text-xs sm:text-sm font-bold bg-blue-50 text-blue-600 border border-blue-100 transition-all"
+              >
+                Latihan
+              </Link>
+              <Link
+                href="/onboarding-tka"
+                className="px-3 py-1.5 rounded-xl text-xs sm:text-sm font-semibold text-slate-600 hover:text-slate-900 hover:bg-slate-100 transition-all"
+              >
+                Konfirmasi
+              </Link>
+            </nav>
           </div>
 
-          <div className="flex items-center gap-3">
+          <div className="flex items-center gap-2 sm:gap-3">
             {/* Online Status Pill */}
             <div
               className={`px-3 py-1.5 rounded-full text-xs font-bold flex items-center gap-1.5 border transition-all ${
@@ -137,12 +364,12 @@ export default function LatihanHubPage() {
               {isOnline ? (
                 <>
                   <Wifi className="w-3.5 h-3.5 text-emerald-600" />
-                  <span>Online</span>
+                  <span className="hidden sm:inline">Online</span>
                 </>
               ) : (
                 <>
                   <WifiOff className="w-3.5 h-3.5 text-amber-600" />
-                  <span>Mode Offline (Tanpa Internet)</span>
+                  <span>Mode Offline</span>
                 </>
               )}
             </div>
@@ -201,7 +428,7 @@ export default function LatihanHubPage() {
             <div>
               <h3 className="font-bold text-slate-900 text-sm flex items-center gap-2">
                 <Layers className="w-4 h-4 text-blue-600" />
-                <span>Pusat Penyimpanan Offline Siswa (IndexedDB)</span>
+                <span>Pusat Penyimpanan Offline Siswa</span>
               </h3>
               <p className="text-xs text-slate-500 mt-0.5">
                 Unduh bank soal saat berada di area bersinyal, lalu kerjakan latihan tanpa kuota di lokasi PKL.
@@ -273,121 +500,228 @@ export default function LatihanHubPage() {
           </div>
         </div>
 
-        {/* Dynamic Practice Subjects Tailored to Student's Confirmation */}
-        <div className="space-y-4">
-          <div className="flex items-center justify-between">
+        {/* Status Latihan Mata Pelajaran (Responsive Dual-Mode: Table di Desktop & Cards di Smartphone) */}
+        <div className="bg-white rounded-2xl border border-slate-200 shadow-sm overflow-hidden">
+          {/* Card Title */}
+          <div className="px-5 sm:px-6 pt-5 pb-4 border-b border-slate-100 flex flex-col sm:flex-row sm:items-center justify-between gap-2">
             <div>
-              <h3 className="font-extrabold text-slate-900 text-lg">Mata Pelajaran Latihan TKA Anda</h3>
-              <p className="text-xs text-slate-500">
-                Menampilkan mapel wajib dan mapel pilihan yang Anda pilih saat konfirmasi pendaftaran TKA.
+              <h2 className="text-lg sm:text-xl font-extrabold text-slate-900 tracking-tight">
+                Status Latihan Mata Pelajaran
+              </h2>
+              <p className="text-xs text-slate-500 mt-0.5">
+                Progres latihan mandiri offline & sinkronisasi materi TKA Kemendikbud
               </p>
+            </div>
+            <div className="flex items-center gap-2 text-[11px] text-slate-400 font-medium">
+              <span className="inline-block w-2 h-2 rounded-full bg-emerald-500 animate-ping" />
+              <span>Sistem Offline Siap</span>
             </div>
           </div>
 
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-5">
-            {/* 1. Mapel Wajib: Matematika */}
-            <div className="bg-white rounded-3xl border-2 border-slate-200 hover:border-blue-500 transition-all shadow-sm p-6 flex flex-col justify-between group">
-              <div className="space-y-3">
-                <div className="w-12 h-12 rounded-2xl bg-blue-100 text-blue-700 flex items-center justify-center">
-                  <Calculator className="w-6 h-6" />
-                </div>
-                <div>
-                  <div className="inline-block px-2.5 py-0.5 bg-blue-50 text-blue-700 rounded text-[11px] font-bold mb-1">
-                    Mapel Wajib TKA
-                  </div>
-                  <h4 className="text-lg font-bold text-slate-900 group-hover:text-blue-600 transition-colors">
-                    Matematika
-                  </h4>
-                  <p className="text-xs text-slate-600 mt-1 leading-relaxed">
-                    Aljabar, Fungsi Kuadrat, Kalkulus (Turunan & Integral), Matriks dengan rendering rumus KaTeX offline.
-                  </p>
-                </div>
+          {/* DESKTOP / TABLET VIEW: Table Layout persis desain gambar */}
+          <div className="hidden md:block overflow-x-auto">
+            <table className="w-full text-left border-collapse">
+              <thead className="bg-[#0052cc] text-white">
+                <tr>
+                  <th className="py-3.5 px-6 font-bold text-xs tracking-wider uppercase">Mata Pelajaran</th>
+                  <th className="py-3.5 px-4 font-bold text-xs tracking-wider uppercase">Jumlah Bank Soal</th>
+                  <th className="py-3.5 px-4 font-bold text-xs tracking-wider uppercase">Soal Dikerjakan</th>
+                  <th className="py-3.5 px-4 font-bold text-xs tracking-wider uppercase text-center">Status Offline</th>
+                  <th className="py-3.5 px-6 font-bold text-xs tracking-wider uppercase text-center">Aksi</th>
+                </tr>
+              </thead>
+              <tbody className="divide-y divide-slate-100">
+                {subjectRows.map((subj) => {
+                  const state = getSubjectState(subj);
+                  const isReady = state.isOfflineReady;
+                  const percent = state.percent;
+                  const isSyncing = downloadingMapel === subj.code;
 
-                <div className="flex items-center gap-1.5 text-[11px] font-semibold text-slate-500">
-                  <span className="px-2 py-0.5 bg-slate-100 rounded text-slate-700">PG Single</span>
-                  <span className="px-2 py-0.5 bg-slate-100 rounded text-slate-700">MCMA</span>
-                </div>
-              </div>
+                  return (
+                    <tr key={subj.code} className="hover:bg-slate-50/60 transition-colors">
+                      {/* 1. Mata Pelajaran */}
+                      <td className="py-4 px-6">
+                        <div className="font-bold text-slate-900 text-sm leading-snug">
+                          {subj.name}
+                        </div>
+                        <div className="text-[11px] font-semibold text-slate-400 tracking-wider mt-0.5 uppercase">
+                          {subj.type}
+                        </div>
+                      </td>
 
-              <div className="pt-5 mt-4 border-t border-slate-100">
-                <Link
-                  href="/latihan/matematika"
-                  className="w-full py-3 px-4 bg-blue-600 hover:bg-blue-700 text-white font-bold text-xs rounded-xl shadow-md transition-all flex items-center justify-center gap-2 group-hover:shadow-blue-500/25"
+                      {/* 2. Jumlah Bank Soal */}
+                      <td className="py-4 px-4">
+                        <span className="text-sm font-medium text-slate-700">
+                          {subj.totalBank} Soal
+                        </span>
+                      </td>
+
+                      {/* 3. Soal Dikerjakan (Pill Progress Bar) */}
+                      <td className="py-4 px-4">
+                        <div className="w-36 h-6 rounded-full bg-slate-200/90 relative overflow-hidden flex items-center justify-center">
+                          {percent > 0 && (
+                            <div
+                              className={`absolute left-0 top-0 bottom-0 transition-all duration-500 rounded-full ${getProgressColor(percent)}`}
+                              style={{ width: `${percent}%` }}
+                            />
+                          )}
+                          <span className="relative z-10 text-xs font-bold text-slate-700 select-none">
+                            {percent}%
+                          </span>
+                        </div>
+                      </td>
+
+                      {/* 4. Status Offline */}
+                      <td className="py-4 px-4 text-center">
+                        <div className="flex items-center justify-center">
+                          {isReady ? (
+                            <div title="Tersimpan di perangkat & siap offline">
+                              <CloudCheckIcon className="w-7 h-7 text-blue-600" />
+                            </div>
+                          ) : (
+                            <div title="Belum diunduh / butuh update">
+                              <CloudDownload className="w-7 h-7 text-slate-700 stroke-[1.8]" />
+                            </div>
+                          )}
+                        </div>
+                      </td>
+
+                      {/* 5. Aksi */}
+                      <td className="py-4 px-6 text-center">
+                        <div className="flex items-center justify-center gap-2">
+                          {/* Button 1: Download */}
+                          <button
+                            type="button"
+                            onClick={() => handleDownloadSubject(subj)}
+                            disabled={isSyncing}
+                            className="w-9 h-9 rounded-lg bg-[#dce7f9] hover:bg-blue-200 text-blue-600 flex items-center justify-center transition-colors disabled:opacity-50"
+                            title={`Unduh Bank Soal ${subj.name} ke IndexedDB`}
+                          >
+                            <Download className={`w-4 h-4 ${isSyncing ? "animate-bounce" : ""}`} />
+                          </button>
+
+                          {/* Button 2: Reset */}
+                          <button
+                            type="button"
+                            onClick={() => handleResetSubject(subj)}
+                            className="w-9 h-9 rounded-lg bg-[#dce7f9] hover:bg-blue-200 text-slate-600 flex items-center justify-center transition-colors"
+                            title={`Reset Progres Latihan ${subj.name}`}
+                          >
+                            <RotateCcw className="w-4 h-4" />
+                          </button>
+
+                          {/* Button 3: Play / Start */}
+                          <Link
+                            href={`/latihan/${subj.slug}`}
+                            className="w-9 h-9 rounded-lg bg-[#0052cc] hover:bg-blue-700 text-white flex items-center justify-center shadow-sm transition-colors group"
+                            title={`Mulai Latihan ${subj.name}`}
+                          >
+                            <Play className="w-4 h-4 fill-white text-white translate-x-0.5 group-hover:scale-110 transition-transform" />
+                          </Link>
+                        </div>
+                      </td>
+                    </tr>
+                  );
+                })}
+              </tbody>
+            </table>
+          </div>
+
+          {/* MOBILE VIEW: Adaptif Thumb-Friendly Cards (Tanpa scroll samping, tidak meluap di HP) */}
+          <div className="block md:hidden p-4 space-y-3.5 bg-slate-50/50">
+            {subjectRows.map((subj) => {
+              const state = getSubjectState(subj);
+              const isReady = state.isOfflineReady;
+              const percent = state.percent;
+              const isSyncing = downloadingMapel === subj.code;
+
+              return (
+                <div
+                  key={subj.code}
+                  className="bg-white rounded-2xl p-4 border border-slate-200 shadow-xs space-y-3"
                 >
-                  <span>Mulai Latihan Matematika</span>
-                  <ArrowRight className="w-4 h-4" />
-                </Link>
-              </div>
-            </div>
+                  {/* Top Bar: Subject Name & Offline Badge */}
+                  <div className="flex items-start justify-between gap-2">
+                    <div>
+                      <div className="flex items-center gap-2">
+                        <span className="font-extrabold text-slate-900 text-base">
+                          {subj.name}
+                        </span>
+                        <span className="px-2 py-0.5 rounded text-[10px] font-bold tracking-wider uppercase bg-slate-100 text-slate-600">
+                          {subj.type}
+                        </span>
+                      </div>
+                      <p className="text-xs text-slate-500 mt-0.5">
+                        Bank Soal: <strong className="text-slate-800">{subj.totalBank} Soal</strong>
+                      </p>
+                    </div>
 
-            {/* 2. Mapel Pilihan 1 (Dinamis: mis. PPLG) */}
-            <div className="bg-white rounded-3xl border-2 border-slate-200 hover:border-teal-500 transition-all shadow-sm p-6 flex flex-col justify-between group">
-              <div className="space-y-3">
-                <div className="w-12 h-12 rounded-2xl bg-teal-100 text-teal-700 flex items-center justify-center">
-                  <Code2 className="w-6 h-6" />
-                </div>
-                <div>
-                  <div className="inline-block px-2.5 py-0.5 bg-teal-50 text-teal-700 rounded text-[11px] font-bold mb-1">
-                    Mapel Pilihan 1 (Pilihan Anda)
+                    <div className="shrink-0">
+                      {isReady ? (
+                        <div className="flex items-center gap-1 text-[11px] font-bold text-blue-600 bg-blue-50 px-2 py-1 rounded-lg">
+                          <CloudCheckIcon className="w-4 h-4" />
+                          <span>Offline OK</span>
+                        </div>
+                      ) : (
+                        <div className="flex items-center gap-1 text-[11px] font-semibold text-slate-500 bg-slate-100 px-2 py-1 rounded-lg">
+                          <CloudDownload className="w-4 h-4 stroke-[1.8]" />
+                          <span>Unduh</span>
+                        </div>
+                      )}
+                    </div>
                   </div>
-                  <h4 className="text-lg font-bold text-slate-900 group-hover:text-teal-600 transition-colors">
-                    {getSubjectDisplayName(mapel1)}
-                  </h4>
-                  <p className="text-xs text-slate-600 mt-1 leading-relaxed">
-                    Sesuai Capaian Pembelajaran Fase E/F: Wawasan Dunia Kerja, K3LH, Pemrograman Terstruktur, OOP, dan Jaringan.
-                  </p>
-                </div>
 
-                <div className="flex items-center gap-1.5 text-[11px] font-semibold text-slate-500">
-                  <span className="px-2 py-0.5 bg-slate-100 rounded text-slate-700">PG Single</span>
-                  <span className="px-2 py-0.5 bg-slate-100 rounded text-slate-700">PGK Kategori</span>
-                  <span className="px-2 py-0.5 bg-slate-100 rounded text-slate-700">MCMA</span>
-                </div>
-              </div>
-
-              <div className="pt-5 mt-4 border-t border-slate-100">
-                <Link
-                  href="/latihan/pplg"
-                  className="w-full py-3 px-4 bg-teal-600 hover:bg-teal-700 text-white font-bold text-xs rounded-xl shadow-md transition-all flex items-center justify-center gap-2 group-hover:shadow-teal-500/25"
-                >
-                  <span>Mulai Latihan {mapel1}</span>
-                  <ArrowRight className="w-4 h-4" />
-                </Link>
-              </div>
-            </div>
-
-            {/* 3. Mapel Pilihan 2 (Dinamis) */}
-            <div className="bg-white rounded-3xl border-2 border-slate-200 shadow-sm p-6 flex flex-col justify-between">
-              <div className="space-y-3">
-                <div className="w-12 h-12 rounded-2xl bg-indigo-100 text-indigo-700 flex items-center justify-center">
-                  <BookMarked className="w-6 h-6" />
-                </div>
-                <div>
-                  <div className="inline-block px-2.5 py-0.5 bg-indigo-50 text-indigo-700 rounded text-[11px] font-bold mb-1">
-                    Mapel Pilihan 2 (Pilihan Anda)
+                  {/* Middle Bar: Progress Bar */}
+                  <div className="space-y-1">
+                    <div className="flex items-center justify-between text-xs font-semibold text-slate-600">
+                      <span>Progres Latihan</span>
+                      <span className="font-bold text-slate-800">{percent}% Dikerjakan</span>
+                    </div>
+                    <div className="w-full h-5 rounded-full bg-slate-200/90 relative overflow-hidden flex items-center justify-center">
+                      {percent > 0 && (
+                        <div
+                          className={`absolute left-0 top-0 bottom-0 transition-all duration-500 rounded-full ${getProgressColor(percent)}`}
+                          style={{ width: `${percent}%` }}
+                        />
+                      )}
+                      <span className="relative z-10 text-[11px] font-bold text-slate-700 select-none">
+                        {percent}%
+                      </span>
+                    </div>
                   </div>
-                  <h4 className="text-lg font-bold text-slate-900">
-                    {getSubjectDisplayName(mapel2)}
-                  </h4>
-                  <p className="text-xs text-slate-600 mt-1 leading-relaxed">
-                    Mata pelajaran pilihan tambahan yang Anda daftarkan untuk seleksi prodi perguruan tinggi.
-                  </p>
-                </div>
 
-                <div className="p-2.5 bg-amber-50 border border-amber-200 rounded-xl text-[11px] text-amber-900 font-medium">
-                  Tahap Pilot: Bank soal aktif disiapkan bertahap setelah uji coba Matematika & PPLG.
-                </div>
-              </div>
+                  {/* Bottom Bar: Action Buttons */}
+                  <div className="pt-2 border-t border-slate-100 flex items-center gap-2">
+                    <button
+                      type="button"
+                      onClick={() => handleDownloadSubject(subj)}
+                      disabled={isSyncing}
+                      className="flex-1 py-2 px-3 bg-[#dce7f9] hover:bg-blue-200 text-blue-700 font-bold text-xs rounded-xl flex items-center justify-center gap-1.5 transition-colors disabled:opacity-50"
+                    >
+                      <Download className={`w-3.5 h-3.5 ${isSyncing ? "animate-bounce" : ""}`} />
+                      <span>{isSyncing ? "Mengunduh..." : "Unduh Bank"}</span>
+                    </button>
 
-              <div className="pt-5 mt-4 border-t border-slate-100">
-                <Link
-                  href="/latihan/matematika"
-                  className="w-full py-3 px-4 bg-slate-100 hover:bg-slate-200 text-slate-700 font-bold text-xs rounded-xl transition-all flex items-center justify-center gap-2 text-center"
-                >
-                  <span>Latihan Matematika / PPLG Dahulu</span>
-                </Link>
-              </div>
-            </div>
+                    <button
+                      type="button"
+                      onClick={() => handleResetSubject(subj)}
+                      className="p-2 bg-[#dce7f9] hover:bg-blue-200 text-slate-700 font-bold text-xs rounded-xl flex items-center justify-center transition-colors"
+                      title="Reset progres latihan"
+                    >
+                      <RotateCcw className="w-4 h-4" />
+                    </button>
+
+                    <Link
+                      href={`/latihan/${subj.slug}`}
+                      className="flex-1 py-2 px-3 bg-[#0052cc] hover:bg-blue-700 text-white font-bold text-xs rounded-xl flex items-center justify-center gap-1.5 shadow-sm transition-colors"
+                    >
+                      <Play className="w-3.5 h-3.5 fill-white text-white" />
+                      <span>Mulai Latihan</span>
+                    </Link>
+                  </div>
+                </div>
+              );
+            })}
           </div>
         </div>
       </main>

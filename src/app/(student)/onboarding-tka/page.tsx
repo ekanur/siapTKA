@@ -1,8 +1,9 @@
 "use client";
 
 import React, { useState } from "react";
-import { useSession } from "next-auth/react";
+import { useSession, signOut } from "next-auth/react";
 import { useRouter } from "next/navigation";
+import Link from "next/link";
 import {
   CheckCircle2,
   AlertCircle,
@@ -13,6 +14,7 @@ import {
   Sparkles,
   Info,
   GraduationCap,
+  LogOut,
 } from "lucide-react";
 import { MAPEL_PILIHAN_GROUPS, getSubjectDisplayName } from "@/lib/constants/subjects";
 
@@ -80,8 +82,48 @@ export default function OnboardingTkaPage() {
   };
 
   return (
-    <div className="min-h-screen bg-slate-50 py-10 px-4">
-      <div className="max-w-3xl mx-auto">
+    <div className="min-h-screen bg-slate-50 flex flex-col">
+      {/* Top Navigation */}
+      <header className="bg-white border-b border-slate-200 sticky top-0 z-30 shadow-sm">
+        <div className="max-w-5xl mx-auto px-4 py-3 flex items-center justify-between gap-4">
+          <div className="flex items-center gap-3 sm:gap-6">
+            <Link href="/latihan" className="flex items-center gap-2.5 group">
+              <div className="w-9 h-9 rounded-xl bg-blue-600 flex items-center justify-center text-white font-extrabold text-lg shadow-md shadow-blue-500/20 group-hover:scale-105 transition-transform">
+                T
+              </div>
+              <span className="font-extrabold text-slate-900 leading-tight text-lg">siapTKA</span>
+            </Link>
+
+            {/* Menu Navigasi di Samping Logo */}
+            <nav className="flex items-center gap-1 sm:gap-1.5">
+              <Link
+                href="/latihan"
+                className="px-3 py-1.5 rounded-xl text-xs sm:text-sm font-semibold text-slate-600 hover:text-slate-900 hover:bg-slate-100 transition-all"
+              >
+                Latihan
+              </Link>
+              <Link
+                href="/onboarding-tka"
+                className="px-3 py-1.5 rounded-xl text-xs sm:text-sm font-bold bg-blue-50 text-blue-600 border border-blue-100 transition-all"
+              >
+                Konfirmasi
+              </Link>
+            </nav>
+          </div>
+
+          <div className="flex items-center gap-3">
+            <button
+              onClick={() => signOut({ callbackUrl: "/login" })}
+              className="p-2 text-slate-400 hover:text-rose-600 hover:bg-rose-50 rounded-xl transition-all"
+              title="Keluar"
+            >
+              <LogOut className="w-4 h-4" />
+            </button>
+          </div>
+        </div>
+      </header>
+
+      <div className="max-w-3xl mx-auto w-full py-8 px-4 flex-1">
         {/* Header */}
         <div className="text-center mb-8">
           <div className="inline-flex items-center gap-2 px-3.5 py-1 bg-blue-100 text-blue-800 rounded-full text-xs font-bold mb-3">

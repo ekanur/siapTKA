@@ -3,8 +3,8 @@ import "./globals.css";
 import Providers from "@/components/layout/Providers";
 
 export const metadata: Metadata = {
-  title: "siapTKA - Latihan TKA Offline Siswa PKL",
-  description: "Platform Latihan TKA Offline-First & Diagnostik Butir Soal AI untuk Siswa PKL SIJA",
+  title: "siapTKA",
+  description: "Platform Latihan TKA & Diagnostik Butir Soal untuk Siswa SMK",
   manifest: "/manifest.json",
   icons: {
     icon: "/icon.png",

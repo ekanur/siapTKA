@@ -335,6 +335,57 @@ Tentukan kategori (**Benar** atau **Salah**) untuk setiap pernyataan berikut ber
       pembahasan: "1. $|A| = (2)(3) - (1)(4) = 6 - 4 = 2$ -> **BENAR (A)**\n2. Karena $|A| = 2 \\neq 0$, matriks memiliki invers -> **BENAR (B)**\n3. $A^{-1} = \\frac{1}{2} \\begin{pmatrix} 3 & -1 \\\\ -4 & 2 \\end{pmatrix}$ -> **BENAR (C)**\nPernyataan benar: **A, B, dan C**.",
       status: "AKTIF",
       source: "AI_GEMINI",
+    },
+    // Soal 8: Bahasa Indonesia - Pilihan Ganda (Ide Pokok Teks Ilmiah Industri)
+    {
+      mapel: "BAHASA_INDONESIA",
+      tipeSoal: "PILIHAN_GANDA",
+      pertanyaan: "Bacalah kutipan teks berikut:\n\n*Transformasi digital pada lini manufaktur dan industri modern tidak sekadar berfokus pada pergantian perangkat keras analog menjadi otomatisasi robotik. Keberhasilan integrasi sistem siber-fisik sangat ditentukan oleh kesiapan sumber daya manusia dalam mengolah dan menginterpretasikan arus data analitik secara tepat waktu untuk pengambilan keputusan preventif.*\n\nIde pokok paragraf di atas adalah...",
+      opsiJawaban: JSON.stringify([
+        { id: "A", label: "Pergantian perangkat keras analog menjadi mesin robotik di pabrik" },
+        { id: "B", label: "Faktor penentu utama keberhasilan integrasi transformasi digital industri" },
+        { id: "C", label: "Kelemahan tenaga kerja industri dalam mengoperasikan perangkat lunak analitik" },
+        { id: "D", label: "Biaya investasi teknologi siber-fisik pada industri manufaktur modern" },
+        { id: "E", label: "Tantangan kecepatan pengiriman data sensor pada sistem jaringan pabrik" }
+      ]),
+      kunciJawaban: "B",
+      pembahasan: "Paragraf tersebut menegaskan bahwa transformasi digital tidak hanya soal mesin fisik, melainkan ditentukan oleh kesiapan SDM dalam interpretasi data (faktor penentu keberhasilan integrasi). Maka ide pokok yang tepat adalah **Opsi B**.",
+      status: "AKTIF",
+      source: "KEMENDIKBUD_RESMI",
+    },
+    // Soal 9: Bahasa Inggris - Pilihan Ganda (Technical Context & Passive Voice)
+    {
+      mapel: "BAHASA_INGGRIS",
+      tipeSoal: "PILIHAN_GANDA",
+      pertanyaan: "Read the technical notice below:\n\n*\"Before deploying the newly built microservice to the staging cluster, all automated regression tests ______ by the continuous integration pipeline to ensure zero downtime.\"*\n\nChoose the most appropriate phrase to complete the sentence:",
+      opsiJawaban: JSON.stringify([
+        { id: "A", label: "must be executed" },
+        { id: "B", label: "has been executing" },
+        { id: "C", label: "was executed" },
+        { id: "D", label: "is executing" },
+        { id: "E", label: "to execute" }
+      ]),
+      kunciJawaban: "A",
+      pembahasan: "Subjek kalimat adalah 'all automated regression tests' (jamak/plural) yang menerima tindakan (pasif) dengan modal keharusan 'must'. Bentuk pasif modal yang benar adalah 'must be + V3' -> **must be executed** (Opsi A).",
+      status: "AKTIF",
+      source: "KEMENDIKBUD_RESMI",
+    },
+    // Soal 10: Administrasi Infrastruktur Jaringan - Pilihan Ganda (VLAN & Subnetting)
+    {
+      mapel: "ADMINISTRASI_INFRASTRUKTUR_JARINGAN",
+      tipeSoal: "PILIHAN_GANDA",
+      pertanyaan: "Pada topologi jaringan berbasis switch manageable, administrator ingin melewatkan beberapa VLAN ID (VLAN 10, VLAN 20, dan VLAN 30) melalui satu kabel uplink fisik menuju router gateway. Konfigurasi mode port switch yang wajib diterapkan pada antarmuka uplink tersebut adalah...",
+      opsiJawaban: JSON.stringify([
+        { id: "A", label: "Mode Access dengan PVID default 1" },
+        { id: "B", label: "Mode Trunk dengan enkapsulasi IEEE 802.1Q" },
+        { id: "C", label: "Mode Dynamic Auto tanpa tagging frame" },
+        { id: "D", label: "Mode Port Security dengan batasan single MAC" },
+        { id: "E", label: "Mode Loop Protect broadcast storm" }
+      ]),
+      kunciJawaban: "B",
+      pembahasan: "Untuk melewatkan beberapa traffic VLAN (*multiple VLANs*) melalui satu sambungan fisik inter-switch atau switch-ke-router, port harus dikonfigurasi dalam mode **Trunk** menggunakan standar tagging frame **IEEE 802.1Q** (Opsi B).",
+      status: "AKTIF",
+      source: "KEMENDIKBUD_RESMI",
     }
   ];
 

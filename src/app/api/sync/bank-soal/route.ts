@@ -12,7 +12,12 @@ export async function GET(request: Request) {
       status: "AKTIF",
     };
     if (mapel) {
-      whereClause.mapel = mapel.toUpperCase();
+      const norm = mapel.replace(/-/g, "_").toUpperCase();
+      if (norm === "AIJ" || norm === "ADMINISTRASI_INFRASTRUKTUR_JARINGAN") {
+        whereClause.mapel = { in: ["ADMINISTRASI_INFRASTRUKTUR_JARINGAN", "AIJ"] };
+      } else {
+        whereClause.mapel = norm;
+      }
     }
 
     const questions = await prisma.soal.findMany({
