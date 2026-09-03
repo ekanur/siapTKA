@@ -17,6 +17,7 @@ export async function GET(request: Request) {
 
     const { searchParams } = new URL(request.url);
     let mapel = searchParams.get("mapel") || "ALL";
+    const kelas = searchParams.get("kelas") || "ALL";
 
     if (userRole === "GURU" && userMapel) {
       mapel = userMapel;
@@ -32,6 +33,12 @@ export async function GET(request: Request) {
       }
     }
 
+    if (kelas !== "ALL") {
+      progressWhere.siswa = {
+        OR: [{ kelasId: kelas }, { namaKelas: kelas }],
+      };
+    }
+
     const records = await prisma.progresLatihan.findMany({
       where: progressWhere,
       include: {
@@ -42,6 +49,8 @@ export async function GET(request: Request) {
             nama: true,
             email: true,
             jurusan: true,
+            kelasId: true,
+            namaKelas: true,
             namaIndustriPkl: true,
             statusTka: true,
             mapelPilihan1: true,
@@ -72,6 +81,7 @@ export async function GET(request: Request) {
           id: s.id,
           nis: s.nis,
           nama: s.nama,
+          namaKelas: s.namaKelas || "Tanpa Kelas",
           industri: s.namaIndustriPkl,
           totalPengerjaan: 0,
           totalBenar: 0,
@@ -93,6 +103,29 @@ export async function GET(request: Request) {
         ...st,
         avgScore,
         status: avgScore >= 75 ? "Tuntas" : avgScore >= 50 ? "Cukup" : "Perlu Bimbingan",
+      };
+    });
+
+    // Compute progress comparison per class
+    const classMap: { [className: string]: { totalSkor: number; totalPengerjaan: number; students: Set<string> } } = {};
+    records.forEach((r) => {
+      const className = r.siswa.namaKelas || "Tanpa Kelas";
+      if (!classMap[className]) {
+        classMap[className] = { totalSkor: 0, totalPengerjaan: 0, students: new Set() };
+      }
+      classMap[className].totalSkor += r.skor;
+      classMap[className].totalPengerjaan++;
+      classMap[className].students.add(r.siswa.id);
+    });
+
+    const classProgressSummary = Object.entries(classMap).map(([namaKelas, val]) => {
+      const avgScore = val.totalPengerjaan > 0 ? Math.round(val.totalSkor / val.totalPengerjaan) : 0;
+      return {
+        namaKelas,
+        totalSiswaAktif: val.students.size,
+        totalPengerjaan: val.totalPengerjaan,
+        avgScore,
+        status: avgScore >= 75 ? "BAIK" : avgScore >= 55 ? "CUKUP" : "PROGRES_LAMBAT",
       };
     });
 
@@ -119,16 +152,19 @@ export async function GET(request: Request) {
       topicMap[t].count++;
     });
 
-    const topicChartData = Object.entries(topicMap).map(([topik, val]) => ({
-      topik: topik.length > 20 ? topik.slice(0, 18) + "..." : topik,
-      fullTopik: topik,
-      avgScore: Math.round(val.totalScore / val.count),
-      count: val.count,
-    })).slice(0, 7);
+    const topicChartData = Object.entries(topicMap)
+      .map(([topik, val]) => ({
+        topik: topik.length > 20 ? topik.slice(0, 18) + "..." : topik,
+        fullTopik: topik,
+        avgScore: Math.round(val.totalScore / val.count),
+        count: val.count,
+      }))
+      .slice(0, 7);
 
     return NextResponse.json({
       success: true,
       currentMapel: mapel,
+      currentKelas: kelas,
       isGuru: userRole === "GURU",
       summary: {
         totalSubmissions,
@@ -138,6 +174,7 @@ export async function GET(request: Request) {
         scoreMid,
         scoreLow,
       },
+      classProgressSummary,
       scoreDistributionChart,
       topicChartData,
       students: studentList,

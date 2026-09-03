@@ -95,7 +95,34 @@ async function main() {
     },
   });
 
-  // 3. 72 Siswa SIJA dengan Industri PKL
+  // 2c. Master Kelas SMKN 2 Depok Sleman
+  const kelasSijaA = await prisma.kelas.upsert({
+    where: { nama: "13 SIJA A" },
+    create: { nama: "13 SIJA A", tingkat: 13, jurusan: "SIJA" },
+    update: {},
+  });
+  const kelasSijaB = await prisma.kelas.upsert({
+    where: { nama: "13 SIJA B" },
+    create: { nama: "13 SIJA B", tingkat: 13, jurusan: "SIJA" },
+    update: {},
+  });
+  await prisma.kelas.upsert({
+    where: { nama: "13 KA A" },
+    create: { nama: "13 KA A", tingkat: 13, jurusan: "KA" },
+    update: {},
+  });
+  await prisma.kelas.upsert({
+    where: { nama: "13 KI A" },
+    create: { nama: "13 KI A", tingkat: 13, jurusan: "KI" },
+    update: {},
+  });
+  await prisma.kelas.upsert({
+    where: { nama: "13 GP A" },
+    create: { nama: "13 GP A", tingkat: 13, jurusan: "GP" },
+    update: {},
+  });
+
+  // 3. 72 Siswa SIJA dengan Industri PKL & Kelas
   const industriList = [
     "PT Telkom Akses",
     "PT Len Industri (Persero)",
@@ -123,7 +150,6 @@ async function main() {
     "Nugroho", "Santoso", "Firmansyah", "Pangestu", "Gunawan", "Mahendra", "Wibowo", "Syahputra"
   ];
 
-  const siswaData = [];
   for (let i = 1; i <= 72; i++) {
     const nis = `2223${String(1000 + i)}`;
     const fName = namaDepan[(i - 1) % namaDepan.length];
@@ -131,6 +157,7 @@ async function main() {
     const nama = `${fName} ${lName} (${i})`;
     const email = `sija.${nis}@sekolah.sch.id`;
     const industri = industriList[(i - 1) % industriList.length];
+    const assignedKelas = i <= 36 ? kelasSijaA : kelasSijaB;
 
     let statusAkun = "BELUM_AKTIF";
     let statusTka = "BELUM_MERESPONS";
@@ -156,36 +183,52 @@ async function main() {
 
     // Siswa Demo #1
     if (i === 1) {
-      siswaData.push({
-        nis: "22231001",
-        nama: "Aditya Pratama",
-        email: "siswa.demo@gmail.com",
-        jurusan: "SIJA",
-        namaIndustriPkl: "PT Kalimantan Prima Coal ",
-        statusAkun: "AKTIF",
-        tanggalAktivasi: new Date(),
-        statusTka: "IKUT",
-        mapelPilihan1: "PPLG",
-        mapelPilihan2: "B_INGGRIS_LANJUT",
+      await prisma.siswa.upsert({
+        where: { nis: "22231001" },
+        create: {
+          nis: "22231001",
+          nama: "Aditya Pratama",
+          email: "siswa.demo@gmail.com",
+          jurusan: "SIJA",
+          kelasId: kelasSijaA.id,
+          namaKelas: "13 SIJA A",
+          namaIndustriPkl: "PT Kalimantan Prima Coal ",
+          statusAkun: "AKTIF",
+          tanggalAktivasi: new Date(),
+          statusTka: "IKUT",
+          mapelPilihan1: "PPLG",
+          mapelPilihan2: "B_INGGRIS_LANJUT",
+        },
+        update: {
+          kelasId: kelasSijaA.id,
+          namaKelas: "13 SIJA A",
+        },
       });
       continue;
     }
 
-    siswaData.push({
-      nis,
-      nama,
-      email,
-      jurusan: "SIJA",
-      namaIndustriPkl: industri,
-      statusAkun,
-      tanggalAktivasi,
-      statusTka,
-      mapelPilihan1,
-      mapelPilihan2,
+    await prisma.siswa.upsert({
+      where: { nis },
+      create: {
+        nis,
+        nama,
+        email,
+        jurusan: "SIJA",
+        kelasId: assignedKelas.id,
+        namaKelas: assignedKelas.nama,
+        namaIndustriPkl: industri,
+        statusAkun,
+        tanggalAktivasi,
+        statusTka,
+        mapelPilihan1,
+        mapelPilihan2,
+      },
+      update: {
+        kelasId: assignedKelas.id,
+        namaKelas: assignedKelas.nama,
+      },
     });
   }
-
-  await prisma.siswa.createMany({ data: siswaData });
 
   // 4. 5 PILAR RESMI KISI-KISI TKA: PPLG (Sesuai Keputusan Kepala BSKAP No. 046/H/KR/2025)
   const kisiKisiPplgResmi = await prisma.kisiKisi.create({

@@ -7,12 +7,28 @@ datasource db {
   url      = env("DATABASE_URL")
 }
 
+model Kelas {
+  id        String   @id @default(cuid())
+  nama      String   @unique
+  tingkat   Int      @default(13)
+  jurusan   String   @default("SIJA")
+  siswa     Siswa[]
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([nama])
+  @@index([jurusan])
+}
+
 model Siswa {
   id              String           @id @default(cuid())
   nis             String           @unique
   nama            String
   email           String           @unique
   jurusan         String           @default("SIJA")
+  kelasId         String?
+  kelas           Kelas?           @relation(fields: [kelasId], references: [id], onDelete: SetNull)
+  namaKelas       String?
   namaIndustriPkl String           @default("Belum Ditentukan")
   statusAkun      String           @default("BELUM_AKTIF")
   tanggalAktivasi DateTime?
@@ -25,6 +41,8 @@ model Siswa {
 
   @@index([email])
   @@index([statusTka])
+  @@index([kelasId])
+  @@index([namaKelas])
 }
 
 model KisiKisi {
@@ -102,11 +120,19 @@ model PengaturanTka {
   tanggalMulai         DateTime?
   tanggalSelesai       DateTime?
   pesanPengumuman      String?
-  batasSuratPernyataan String?   @default("10 September 2026")
-  pendaftaranSistemTka String?   @default("27 Juli – 27 September 2026")
-  simulasiTka          String?   @default("21 – 27 September 2026")
-  gladiBersihTka       String?   @default("5 – 18 Oktober 2026")
-  pelaksanaanGel1      String?   @default("26 – 29 Oktober 2026")
-  pelaksanaanGel2      String?   @default("2 – 5 November 2026")
+
+  // 6 Agenda Resmi Sekolah Berbasis Tanggal (DateTime)
+  batasSuratPernyataan DateTime?
+  pendaftaranMulai     DateTime?
+  pendaftaranSelesai   DateTime?
+  simulasiMulai        DateTime?
+  simulasiSelesai      DateTime?
+  gladiMulai           DateTime?
+  gladiSelesai         DateTime?
+  gelombang1Mulai      DateTime?
+  gelombang1Selesai    DateTime?
+  gelombang2Mulai      DateTime?
+  gelombang2Selesai    DateTime?
+
   updatedAt            DateTime  @updatedAt
 }

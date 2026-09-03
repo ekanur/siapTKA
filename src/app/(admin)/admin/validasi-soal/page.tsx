@@ -16,6 +16,8 @@ import {
   GraduationCap,
   Sparkles,
   BookOpen,
+  ChevronLeft,
+  ChevronRight,
 } from "lucide-react";
 import MathRenderer from "@/components/math/MathRenderer";
 
@@ -31,6 +33,10 @@ export default function ValidasiSoalPage() {
   const [editingItem, setEditingItem] = useState<any | null>(null);
   const [isManualModalOpen, setIsManualModalOpen] = useState(false);
   const [statusMsg, setStatusMsg] = useState("");
+
+  // Pagination (10 butir soal per halaman)
+  const [currentPage, setCurrentPage] = useState(1);
+  const itemsPerPage = 10;
 
   // Manual input form state
   const [manualMapel, setManualMapel] = useState(userMapel || "MATEMATIKA");
@@ -62,6 +68,7 @@ export default function ValidasiSoalPage() {
       const data = await res.json();
       if (data.success) {
         setSoalList(data.soal);
+        setCurrentPage(1);
       }
     } catch (err) {
       console.error(err);
@@ -286,111 +293,179 @@ export default function ValidasiSoalPage() {
         </div>
       ) : (
         <div className="space-y-4">
-          {soalList.map((item, idx) => {
-            let parsedOpsi: any = [];
-            try {
-              parsedOpsi = typeof item.opsiJawaban === "string" ? JSON.parse(item.opsiJawaban) : item.opsiJawaban;
-            } catch (e) {
-              parsedOpsi = [];
-            }
+          {(() => {
+            const totalItems = soalList.length;
+            const totalPages = Math.ceil(totalItems / itemsPerPage) || 1;
+            const startIndex = (currentPage - 1) * itemsPerPage;
+            const endIndex = Math.min(startIndex + itemsPerPage, totalItems);
+            const paginatedSoal = soalList.slice(startIndex, endIndex);
 
             return (
-              <div
-                key={item.id}
-                className="bg-white rounded-3xl border border-slate-200 p-6 shadow-sm space-y-4 hover:border-slate-300 transition-all"
-              >
-                {/* Meta Header */}
-                <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 border-b border-slate-100 pb-3">
-                  <div className="flex items-center gap-2 flex-wrap">
-                    <span className="text-xs font-black text-blue-700 bg-blue-50 px-2.5 py-1 rounded-lg">
-                      #{idx + 1} • {item.mapel}
-                    </span>
-                    <span className="text-[11px] font-bold text-slate-600 bg-slate-100 px-2.5 py-1 rounded-lg">
-                      {item.tipeSoal}
-                    </span>
-                    <span className="text-[11px] text-slate-400">
-                      Sumber: {item.source || "MANUAL"}
-                    </span>
-                  </div>
+              <>
+                {paginatedSoal.map((item, idx) => {
+                  let parsedOpsi: any = [];
+                  try {
+                    parsedOpsi = typeof item.opsiJawaban === "string" ? JSON.parse(item.opsiJawaban) : item.opsiJawaban;
+                  } catch (e) {
+                    parsedOpsi = [];
+                  }
 
-                  <div className="flex items-center gap-2">
-                    {item.status === "MENUNGGU_VALIDASI" && (
-                      <>
-                        <button
-                          onClick={() => handleUpdateStatus(item.id, "AKTIF")}
-                          className="px-3 py-1.5 bg-emerald-600 hover:bg-emerald-700 text-white rounded-xl text-xs font-bold flex items-center gap-1 shadow-sm cursor-pointer"
-                        >
-                          <Check className="w-3.5 h-3.5" />
-                          <span>Setujui (Terbitkan)</span>
-                        </button>
-                        <button
-                          onClick={() => handleUpdateStatus(item.id, "DITOLAK")}
-                          className="px-3 py-1.5 bg-rose-50 hover:bg-rose-100 text-rose-700 rounded-xl text-xs font-bold flex items-center gap-1 cursor-pointer"
-                        >
-                          <X className="w-3.5 h-3.5" />
-                          <span>Tolak</span>
-                        </button>
-                      </>
-                    )}
-
-                    <button
-                      onClick={() => setEditingItem(item)}
-                      className="p-2 text-slate-500 hover:text-blue-600 hover:bg-blue-50 rounded-xl transition-all"
-                      title="Edit Soal"
+                  return (
+                    <div
+                      key={item.id}
+                      className="bg-white rounded-3xl border border-slate-200 p-6 shadow-xs space-y-4 hover:border-slate-300 transition-all"
                     >
-                      <Edit3 className="w-4 h-4" />
-                    </button>
+                      {/* Meta Header */}
+                      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 border-b border-slate-100 pb-3">
+                        <div className="flex items-center gap-2 flex-wrap">
+                          <span className="text-xs font-black text-blue-700 bg-blue-50 px-2.5 py-1 rounded-lg">
+                            #{startIndex + idx + 1} • {item.mapel}
+                          </span>
+                          <span className="text-[11px] font-bold text-slate-600 bg-slate-100 px-2.5 py-1 rounded-lg">
+                            {item.tipeSoal}
+                          </span>
+                          <span className="text-[11px] text-slate-400">
+                            Sumber: {item.source || "MANUAL"}
+                          </span>
+                        </div>
 
-                    <button
-                      onClick={() => handleDelete(item.id)}
-                      className="p-2 text-slate-400 hover:text-rose-600 hover:bg-rose-50 rounded-xl transition-all"
-                      title="Hapus Soal"
-                    >
-                      <Trash2 className="w-4 h-4" />
-                    </button>
-                  </div>
-                </div>
+                        <div className="flex items-center gap-2">
+                          {item.status === "MENUNGGU_VALIDASI" && (
+                            <>
+                              <button
+                                onClick={() => handleUpdateStatus(item.id, "AKTIF")}
+                                className="px-3 py-1.5 bg-emerald-600 hover:bg-emerald-700 text-white rounded-xl text-xs font-bold flex items-center gap-1 shadow-xs cursor-pointer"
+                              >
+                                <Check className="w-3.5 h-3.5" />
+                                <span>Setujui (Terbitkan)</span>
+                              </button>
+                              <button
+                                onClick={() => handleUpdateStatus(item.id, "DITOLAK")}
+                                className="px-3 py-1.5 bg-rose-50 hover:bg-rose-100 text-rose-700 rounded-xl text-xs font-bold flex items-center gap-1 cursor-pointer"
+                              >
+                                <X className="w-3.5 h-3.5" />
+                                <span>Tolak</span>
+                              </button>
+                            </>
+                          )}
 
-                {/* Question Content */}
-                <div className="text-xs text-slate-900 leading-relaxed font-medium">
-                  <MathRenderer content={item.pertanyaan} />
-                </div>
+                          <button
+                            onClick={() => setEditingItem(item)}
+                            className="p-2 text-slate-500 hover:text-blue-600 hover:bg-blue-50 rounded-xl transition-all"
+                            title="Edit Soal"
+                          >
+                            <Edit3 className="w-4 h-4" />
+                          </button>
 
-                {/* Options Preview */}
-                {Array.isArray(parsedOpsi) && (
-                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 pt-2">
-                    {parsedOpsi.map((op: any, oIdx: number) => (
-                      <div
-                        key={oIdx}
-                        className={`p-2.5 rounded-xl border text-xs flex items-start gap-2 ${
-                          String(item.kunciJawaban).includes(op.id)
-                            ? "bg-emerald-50/60 border-emerald-300 text-emerald-950 font-semibold"
-                            : "bg-slate-50 border-slate-200 text-slate-700"
-                        }`}
-                      >
-                        <span className="font-bold shrink-0">{op.id}.</span>
-                        <div className="leading-relaxed">
-                          <MathRenderer content={op.label || ""} />
+                          <button
+                            onClick={() => handleDelete(item.id)}
+                            className="p-2 text-slate-400 hover:text-rose-600 hover:bg-rose-50 rounded-xl transition-all"
+                            title="Hapus Soal"
+                          >
+                            <Trash2 className="w-4 h-4" />
+                          </button>
                         </div>
                       </div>
-                    ))}
-                  </div>
-                )}
 
-                {/* Explanation */}
-                {item.pembahasan && (
-                  <div className="p-3.5 bg-slate-50 border border-slate-200 rounded-2xl text-xs space-y-1">
-                    <span className="font-bold text-slate-800 block text-[11px] uppercase">
-                      Kunci Jawaban & Pembahasan:
-                    </span>
-                    <div className="text-slate-600">
-                      <MathRenderer content={item.pembahasan} />
+                      {/* Question Content */}
+                      <div className="text-xs text-slate-900 leading-relaxed font-medium">
+                        <MathRenderer content={item.pertanyaan} />
+                      </div>
+
+                      {/* Options Preview */}
+                      {Array.isArray(parsedOpsi) && (
+                        <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 pt-2">
+                          {parsedOpsi.map((op: any, oIdx: number) => (
+                            <div
+                              key={oIdx}
+                              className={`p-2.5 rounded-xl border text-xs flex items-start gap-2 ${
+                                String(item.kunciJawaban).includes(op.id)
+                                  ? "bg-emerald-50/60 border-emerald-300 text-emerald-950 font-semibold"
+                                  : "bg-slate-50 border-slate-200 text-slate-700"
+                              }`}
+                            >
+                              <span className="font-bold shrink-0">{op.id}.</span>
+                              <div className="leading-relaxed">
+                                <MathRenderer content={op.label || ""} />
+                              </div>
+                            </div>
+                          ))}
+                        </div>
+                      )}
+
+                      {/* Explanation */}
+                      {item.pembahasan && (
+                        <div className="p-3.5 bg-slate-50 border border-slate-200 rounded-2xl text-xs space-y-1">
+                          <span className="font-bold text-slate-800 block text-[11px] uppercase">
+                            Kunci Jawaban & Pembahasan:
+                          </span>
+                          <div className="text-slate-600">
+                            <MathRenderer content={item.pembahasan} />
+                          </div>
+                        </div>
+                      )}
                     </div>
+                  );
+                })}
+
+                {/* Standard Pagination Controls (10 data per page) */}
+                <div className="p-4 bg-white rounded-3xl border border-slate-200 shadow-xs flex flex-col sm:flex-row items-center justify-between gap-3 text-xs text-slate-500">
+                  <div>
+                    Menampilkan <span className="font-bold text-slate-800">{totalItems > 0 ? startIndex + 1 : 0}</span> s.d.{" "}
+                    <span className="font-bold text-slate-800">{endIndex}</span> dari{" "}
+                    <span className="font-bold text-slate-800">{totalItems}</span> butir soal
                   </div>
-                )}
-              </div>
+
+                  <div className="flex items-center gap-1.5">
+                    <button
+                      onClick={() => setCurrentPage((p) => Math.max(p - 1, 1))}
+                      disabled={currentPage === 1}
+                      className="px-2.5 py-1.5 rounded-lg border border-slate-200 bg-white text-slate-600 hover:bg-slate-50 disabled:opacity-40 disabled:cursor-not-allowed cursor-pointer flex items-center gap-1 font-semibold"
+                    >
+                      <ChevronLeft className="w-3.5 h-3.5" />
+                      <span>Sebelumnya</span>
+                    </button>
+
+                    <div className="flex items-center gap-1">
+                      {Array.from({ length: totalPages }, (_, i) => i + 1).map((pg) => {
+                        if (pg === 1 || pg === totalPages || (pg >= currentPage - 1 && pg <= currentPage + 1)) {
+                          return (
+                            <button
+                              key={pg}
+                              onClick={() => setCurrentPage(pg)}
+                              className={`w-7 h-7 rounded-lg text-xs font-bold transition-all cursor-pointer ${
+                                currentPage === pg
+                                  ? "bg-blue-600 text-white shadow-xs"
+                                  : "bg-white border border-slate-200 text-slate-600 hover:bg-slate-50"
+                              }`}
+                            >
+                              {pg}
+                            </button>
+                          );
+                        } else if (pg === currentPage - 2 || pg === currentPage + 2) {
+                          return (
+                            <span key={pg} className="px-1 text-slate-400">
+                              ...
+                            </span>
+                          );
+                        }
+                        return null;
+                      })}
+                    </div>
+
+                    <button
+                      onClick={() => setCurrentPage((p) => Math.min(p + 1, totalPages))}
+                      disabled={currentPage === totalPages || totalPages === 0}
+                      className="px-2.5 py-1.5 rounded-lg border border-slate-200 bg-white text-slate-600 hover:bg-slate-50 disabled:opacity-40 disabled:cursor-not-allowed cursor-pointer flex items-center gap-1 font-semibold"
+                    >
+                      <span>Selanjutnya</span>
+                      <ChevronRight className="w-3.5 h-3.5" />
+                    </button>
+                  </div>
+                </div>
+              </>
             );
-          })}
+          })()}
         </div>
       )}
 

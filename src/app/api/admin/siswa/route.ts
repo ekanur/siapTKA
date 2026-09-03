@@ -9,21 +9,40 @@ export async function GET(request: Request) {
     const statusTka = searchParams.get("statusTka");
     const industri = searchParams.get("industri");
     const search = searchParams.get("search");
+    const kelas = searchParams.get("kelas");
 
     const where: any = {};
     if (statusTka && statusTka !== "ALL") where.statusTka = statusTka;
     if (industri) where.namaIndustriPkl = { contains: industri };
-    if (search) {
+    if (kelas && kelas !== "ALL") {
       where.OR = [
+        { kelasId: kelas },
+        { namaKelas: kelas },
+      ];
+    }
+    if (search) {
+      const searchConditions = [
         { nama: { contains: search } },
         { nis: { contains: search } },
         { email: { contains: search } },
       ];
+      if (where.OR) {
+        where.AND = [
+          { OR: where.OR },
+          { OR: searchConditions },
+        ];
+        delete where.OR;
+      } else {
+        where.OR = searchConditions;
+      }
     }
 
     const students = await prisma.siswa.findMany({
       where,
       include: {
+        kelas: {
+          select: { id: true, nama: true, jurusan: true },
+        },
         _count: {
           select: { progres: true },
         },
@@ -33,6 +52,7 @@ export async function GET(request: Request) {
 
     return NextResponse.json({ success: true, count: students.length, students });
   } catch (error) {
+    console.error("GET Siswa Error:", error);
     return NextResponse.json({ success: false, error: "Gagal memuat data siswa" }, { status: 500 });
   }
 }
@@ -58,24 +78,40 @@ export async function POST(request: Request) {
         return NextResponse.json({ success: false, error: "NIS atau Email siswa sudah terdaftar." }, { status: 400 });
       }
 
+      let kelasId = s.kelasId || null;
+      let namaKelas = s.namaKelas || null;
+
+      if (kelasId && !namaKelas) {
+        const k = await prisma.kelas.findUnique({ where: { id: kelasId } });
+        if (k) namaKelas = k.nama;
+      } else if (namaKelas && !kelasId) {
+        const k = await prisma.kelas.findUnique({ where: { nama: namaKelas } });
+        if (k) kelasId = k.id;
+      }
+
       const created = await prisma.siswa.create({
         data: {
           nis: String(s.nis).trim(),
           nama: String(s.nama).trim(),
           email: String(s.email).trim().toLowerCase(),
           jurusan: s.jurusan || "SIJA",
+          kelasId,
+          namaKelas,
           namaIndustriPkl: s.namaIndustriPkl || "Belum Ditentukan",
           statusAkun: "BELUM_AKTIF",
           statusTka: s.statusTka || "BELUM_MERESPONS",
           mapelPilihan1: s.mapelPilihan1 || null,
           mapelPilihan2: s.mapelPilihan2 || null,
         },
+        include: {
+          kelas: true,
+        },
       });
 
       return NextResponse.json({
         success: true,
         student: created,
-        message: `Siswa ${created.nama} berhasil ditambahkan.`,
+        message: `Siswa ${created.nama} (${created.namaKelas || "Tanpa Kelas"}) berhasil ditambahkan.`,
       });
     }
 
@@ -85,9 +121,38 @@ export async function POST(request: Request) {
       return NextResponse.json({ success: false, error: "Data siswa CSV kosong" }, { status: 400 });
     }
 
+    // Cache existing classes
+    const existingClasses = await prisma.kelas.findMany();
+    const classMap = new Map(existingClasses.map((k) => [k.nama.toUpperCase(), k]));
+
     let insertedCount = 0;
     for (const s of students) {
       if (!s.nis || !s.email || !s.nama) continue;
+
+      let kelasId = null;
+      let namaKelas = null;
+
+      const rawKelas = (s.kelas || s.Kelas || s.KELAS || "").trim().toUpperCase();
+      if (rawKelas) {
+        if (classMap.has(rawKelas)) {
+          const k = classMap.get(rawKelas)!;
+          kelasId = k.id;
+          namaKelas = k.nama;
+        } else {
+          // Auto create class if not existing
+          const newClass = await prisma.kelas.create({
+            data: {
+              nama: rawKelas,
+              tingkat: 13,
+              jurusan: s.jurusan || "SIJA",
+            },
+          });
+          classMap.set(rawKelas, newClass);
+          kelasId = newClass.id;
+          namaKelas = newClass.nama;
+        }
+      }
+
       await prisma.siswa.upsert({
         where: { nis: String(s.nis).trim() },
         create: {
@@ -95,6 +160,8 @@ export async function POST(request: Request) {
           nama: String(s.nama).trim(),
           email: String(s.email).trim().toLowerCase(),
           jurusan: s.jurusan || "SIJA",
+          kelasId,
+          namaKelas,
           namaIndustriPkl: s.namaIndustriPkl || "Belum Ditentukan",
           statusAkun: "BELUM_AKTIF",
           statusTka: "BELUM_MERESPONS",
@@ -102,7 +169,10 @@ export async function POST(request: Request) {
         update: {
           nama: String(s.nama).trim(),
           email: String(s.email).trim().toLowerCase(),
-          namaIndustriPkl: s.namaIndustriPkl || "Belum Ditentukan",
+          jurusan: s.jurusan || undefined,
+          kelasId: kelasId || undefined,
+          namaKelas: namaKelas || undefined,
+          namaIndustriPkl: s.namaIndustriPkl || undefined,
         },
       });
       insertedCount++;
@@ -121,7 +191,20 @@ export async function POST(request: Request) {
 export async function PUT(request: Request) {
   try {
     const body = await request.json();
-    const { id, nis, nama, email, jurusan, namaIndustriPkl, statusAkun, statusTka, mapelPilihan1, mapelPilihan2 } = body;
+    const {
+      id,
+      nis,
+      nama,
+      email,
+      jurusan,
+      kelasId,
+      namaKelas,
+      namaIndustriPkl,
+      statusAkun,
+      statusTka,
+      mapelPilihan1,
+      mapelPilihan2,
+    } = body;
 
     if (!id) return NextResponse.json({ success: false, error: "ID siswa wajib ada" }, { status: 400 });
 
@@ -136,9 +219,24 @@ export async function PUT(request: Request) {
     if (mapelPilihan1 !== undefined) updateData.mapelPilihan1 = mapelPilihan1;
     if (mapelPilihan2 !== undefined) updateData.mapelPilihan2 = mapelPilihan2;
 
+    if (kelasId !== undefined) {
+      updateData.kelasId = kelasId || null;
+      if (kelasId) {
+        const k = await prisma.kelas.findUnique({ where: { id: kelasId } });
+        updateData.namaKelas = k ? k.nama : null;
+      } else {
+        updateData.namaKelas = null;
+      }
+    } else if (namaKelas !== undefined) {
+      updateData.namaKelas = namaKelas || null;
+    }
+
     const updated = await prisma.siswa.update({
       where: { id },
       data: updateData,
+      include: {
+        kelas: true,
+      },
     });
 
     return NextResponse.json({ success: true, student: updated, message: "Data siswa berhasil diperbarui." });
