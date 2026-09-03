@@ -254,20 +254,20 @@ export default function OnboardingTkaPage() {
                     <li>
                       <strong>Kriteria Prodi Kuliah:</strong> Sesuaikan pilihan dengan jurusan/program studi perguruan tinggi yang diincar agar mendukung jalur seleksi PTN/PTS (SNBP, SNBT, atau Mandiri).
                     </li>
-                    <li className="text-blue-900 font-semibold">
+                    {/* <li className="text-blue-900 font-semibold">
                       <em>Catatan Pilot: Pada tahap awal ini, bank soal aktif yang tersedia untuk latihan offline adalah <strong>Matematika (Wajib)</strong> dan <strong>Kejuruan PPLG (Pilihan)</strong>.</em>
-                    </li>
+                    </li> */}
                   </ul>
                 </div>
 
                 <label className="block text-sm font-bold text-slate-900">
-                  2. Pilih 2 Mata Pelajaran Pilihan TKA (Dari Spektrum Resmi)
+                  2. Pilih 2 Mata Pelajaran Pilihan TKA
                 </label>
 
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                   <div>
                     <label className="block text-xs font-bold text-slate-700 mb-1.5">
-                      Mapel Pilihan 1 (Kejuruan / Akademik Utama)
+                      Mapel Pilihan 1
                     </label>
                     <select
                       value={mapel1}
@@ -288,7 +288,7 @@ export default function OnboardingTkaPage() {
 
                   <div>
                     <label className="block text-xs font-bold text-slate-700 mb-1.5">
-                      Mapel Pilihan 2 (Pilihan Tambahan)
+                      Mapel Pilihan 2
                     </label>
                     <select
                       value={mapel2}
@@ -363,6 +363,20 @@ export default function OnboardingTkaPage() {
           </form>
         </div>
       </div>
+
+      {/* Footer */}
+      <footer className="bg-slate-100 w-full py-8 px-4 sm:px-6 mt-auto flex flex-col md:flex-row justify-between items-center gap-4 border-t border-slate-200 text-xs text-slate-600">
+        <div className="font-bold text-[#004ac6] text-sm flex items-center gap-2">
+          Siap TKA
+        </div>
+        <div className="flex flex-wrap gap-4 text-xs font-semibold text-slate-500">
+          <span className="hover:text-blue-600 cursor-pointer">Tentang Kami</span>
+          <span className="hover:text-blue-600 cursor-pointer">Pusat Bantuan</span>
+          <span className="hover:text-blue-600 cursor-pointer">Kebijakan Privasi</span>
+          <span className="hover:text-blue-600 cursor-pointer">Syarat & Ketentuan</span>
+        </div>
+        <div>© 2026 Siap TKA - SMKN 2 Depok Sleman</div>
+      </footer>
     </div>
   );
 }

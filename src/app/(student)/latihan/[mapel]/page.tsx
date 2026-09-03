@@ -24,6 +24,8 @@ import {
   LogOut,
   Sparkles,
   BookOpen,
+  ShieldAlert,
+  ArrowRight,
 } from "lucide-react";
 import { clientDb, CachedSoal, OfflineSubmission } from "@/lib/db/client-db";
 import { downloadActiveBankSoal } from "@/lib/sync/sync-manager";
@@ -51,6 +53,7 @@ export default function SubjectDetailPage() {
   const params = useParams();
   const router = useRouter();
   const { data: session } = useSession();
+  const statusTka = (session?.user as any)?.statusTka;
 
   const mapelParam = (params?.mapel as string) || "matematika";
   const normalizedParam = mapelParam.replace(/-/g, "_").toUpperCase();
@@ -279,13 +282,49 @@ export default function SubjectDetailPage() {
 
       {/* Main Container */}
       <main className="flex-grow pt-6 pb-12 px-4 sm:px-6 max-w-7xl mx-auto w-full flex flex-col gap-6">
-        {/* Navigation Breadcrumb */}
-        <div className="flex items-center gap-2 text-xs font-semibold text-slate-500">
-          <Link href="/latihan" className="hover:text-blue-600 flex items-center gap-1 transition-colors">
-            <ArrowLeft className="w-3.5 h-3.5" />
-            <span>Kembali ke Daftar Mata Pelajaran</span>
-          </Link>
-        </div>
+        {statusTka === "TIDAK_IKUT" ? (
+          <div className="bg-white rounded-3xl border border-slate-200 p-8 sm:p-12 text-center space-y-6 shadow-sm max-w-2xl mx-auto my-8">
+            <div className="w-16 h-16 rounded-3xl bg-amber-50 text-amber-600 border border-amber-200 flex items-center justify-center mx-auto shadow-sm">
+              <ShieldAlert className="w-8 h-8" />
+            </div>
+
+            <div className="space-y-2">
+              <span className="px-3 py-1 bg-rose-50 text-rose-700 text-xs font-bold rounded-full border border-rose-200 uppercase tracking-wider">
+                Akses Dinonaktifkan
+              </span>
+              <h2 className="text-2xl font-extrabold text-slate-900 tracking-tight">
+                Anda Tidak Terdaftar di Sesi TKA
+              </h2>
+              <p className="text-sm text-slate-600 leading-relaxed max-w-lg mx-auto">
+                Status konfirmasi Anda tercatat <strong>Tidak Mengikuti TKA 2026</strong>. Oleh karena itu, Anda tidak dapat mengakses bank soal mata pelajaran <strong>{subjectDetail.name}</strong>.
+              </p>
+            </div>
+
+            <div className="pt-2 flex flex-col sm:flex-row gap-3 justify-center items-center">
+              <Link
+                href="/onboarding-tka"
+                className="w-full sm:w-auto px-6 py-3 bg-blue-600 hover:bg-blue-700 text-white font-bold text-xs sm:text-sm rounded-xl shadow-md transition-all flex items-center justify-center gap-2"
+              >
+                <span>Ubah Konfirmasi Keikutsertaan</span>
+                <ArrowRight className="w-4 h-4" />
+              </Link>
+              <Link
+                href="/latihan"
+                className="w-full sm:w-auto px-6 py-3 bg-slate-100 hover:bg-slate-200 text-slate-700 font-bold text-xs sm:text-sm rounded-xl transition-all text-center"
+              >
+                Kembali ke Beranda Latihan
+              </Link>
+            </div>
+          </div>
+        ) : (
+          <>
+            {/* Navigation Breadcrumb */}
+            <div className="flex items-center gap-2 text-xs font-semibold text-slate-500">
+              <Link href="/latihan" className="hover:text-blue-600 flex items-center gap-1 transition-colors">
+                <ArrowLeft className="w-3.5 h-3.5" />
+                <span>Kembali ke Daftar Mata Pelajaran</span>
+              </Link>
+            </div>
 
         {/* Top Section: Bento Card (Header, Description, Action, Stats) */}
         <section className="bg-white border border-slate-200 p-6 sm:p-8 rounded-2xl shadow-xs">
@@ -576,7 +615,9 @@ export default function SubjectDetailPage() {
             </div>
           </div>
         </section>
-      </main>
+        </>
+      )}
+    </main>
 
       {/* Footer */}
       <footer className="bg-slate-100 w-full py-8 px-4 sm:px-6 mt-auto flex flex-col md:flex-row justify-between items-center gap-4 border-t border-slate-200 text-xs text-slate-600">

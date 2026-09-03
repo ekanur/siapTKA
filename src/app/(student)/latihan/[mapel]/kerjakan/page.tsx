@@ -19,6 +19,7 @@ import {
   BookOpen,
   Send,
   Layers,
+  ShieldAlert,
 } from "lucide-react";
 import { clientDb, CachedSoal, OfflineSubmission } from "@/lib/db/client-db";
 import { downloadActiveBankSoal, syncPendingSubmissions } from "@/lib/sync/sync-manager";
@@ -33,6 +34,7 @@ export default function QuizRunnerPage() {
   const searchParams = useSearchParams();
   const router = useRouter();
   const { data: session } = useSession();
+  const statusTka = (session?.user as any)?.statusTka;
 
   const mapelParam = (params?.mapel as string) || "matematika";
   const normalizedParam = mapelParam.replace(/-/g, "_").toUpperCase();
@@ -335,7 +337,42 @@ export default function QuizRunnerPage() {
         </div>
       </header>
 
-      {loading ? (
+      {statusTka === "TIDAK_IKUT" ? (
+        <div className="flex-1 flex items-center justify-center p-4">
+          <div className="bg-white rounded-3xl border border-slate-200 p-8 sm:p-12 text-center space-y-6 shadow-sm max-w-md w-full my-8">
+            <div className="w-16 h-16 rounded-3xl bg-amber-50 text-amber-600 border border-amber-200 flex items-center justify-center mx-auto shadow-sm">
+              <ShieldAlert className="w-8 h-8" />
+            </div>
+
+            <div className="space-y-2">
+              <span className="px-3 py-1 bg-rose-50 text-rose-700 text-xs font-bold rounded-full border border-rose-200 uppercase tracking-wider">
+                Akses Dinonaktifkan
+              </span>
+              <h2 className="text-xl font-extrabold text-slate-900 tracking-tight">
+                Tidak Mengikuti Sesi TKA
+              </h2>
+              <p className="text-xs text-slate-600 leading-relaxed">
+                Status konfirmasi Anda tercatat <strong>Tidak Mengikuti TKA 2026</strong>. Anda tidak dapat mengerjakan latihan soal TKA.
+              </p>
+            </div>
+
+            <div className="pt-2 flex flex-col gap-2">
+              <Link
+                href="/onboarding-tka"
+                className="w-full py-3 px-4 bg-blue-600 hover:bg-blue-700 text-white font-bold text-xs rounded-xl shadow-md transition-all text-center"
+              >
+                Ubah Konfirmasi Keikutsertaan
+              </Link>
+              <Link
+                href="/latihan"
+                className="w-full py-2.5 px-4 bg-slate-100 hover:bg-slate-200 text-slate-700 font-bold text-xs rounded-xl transition-all text-center"
+              >
+                Kembali ke Beranda Latihan
+              </Link>
+            </div>
+          </div>
+        </div>
+      ) : loading ? (
         <div className="flex-1 flex items-center justify-center p-4">
           <div className="text-center space-y-3">
             <div className="w-10 h-10 border-4 border-blue-600 border-t-transparent rounded-full animate-spin mx-auto" />
