@@ -72,11 +72,27 @@ async function main() {
     create: {
       id: "default",
       isKonfirmasiOpen: true,
-      tanggalMulai: new Date("2026-08-01T00:00:00Z"),
-      tanggalSelesai: new Date("2026-09-30T23:59:59Z"),
-      pesanPengumuman: "Periode konfirmasi keikutsertaan dan pemilihan 2 mata pelajaran pilihan TKA 2026 aktif sampai 30 September 2026.",
+      tanggalMulai: new Date("2026-07-27T00:00:00Z"),
+      tanggalSelesai: new Date("2026-09-10T23:59:59Z"),
+      pesanPengumuman: "Batas pengumpulan surat pernyataan dan perubahan pilihan mapel TKA adalah 10 September 2026.",
+      batasSuratPernyataan: "10 September 2026",
+      pendaftaranSistemTka: "27 Juli – 27 September 2026 (* dilakukan sekolah)",
+      simulasiTka: "21 – 27 September 2026",
+      gladiBersihTka: "5 – 18 Oktober 2026",
+      pelaksanaanGel1: "26 – 29 Oktober 2026",
+      pelaksanaanGel2: "2 – 5 November 2026",
     },
-    update: {},
+    update: {
+      tanggalMulai: new Date("2026-07-27T00:00:00Z"),
+      tanggalSelesai: new Date("2026-09-10T23:59:59Z"),
+      pesanPengumuman: "Batas pengumpulan surat pernyataan dan perubahan pilihan mapel TKA adalah 10 September 2026.",
+      batasSuratPernyataan: "10 September 2026",
+      pendaftaranSistemTka: "27 Juli – 27 September 2026 (* dilakukan sekolah)",
+      simulasiTka: "21 – 27 September 2026",
+      gladiBersihTka: "5 – 18 Oktober 2026",
+      pelaksanaanGel1: "26 – 29 Oktober 2026",
+      pelaksanaanGel2: "2 – 5 November 2026",
+    },
   });
 
   // 3. 72 Siswa SIJA dengan Industri PKL

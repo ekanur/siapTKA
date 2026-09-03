@@ -40,23 +40,40 @@ export async function POST(request: Request) {
     }
 
     const body = await request.json();
-    const { isKonfirmasiOpen, tanggalMulai, tanggalSelesai, pesanPengumuman } = body;
+    const {
+      isKonfirmasiOpen,
+      tanggalMulai,
+      tanggalSelesai,
+      pesanPengumuman,
+      batasSuratPernyataan,
+      pendaftaranSistemTka,
+      simulasiTka,
+      gladiBersihTka,
+      pelaksanaanGel1,
+      pelaksanaanGel2,
+    } = body;
+
+    const dataPayload: any = {
+      isKonfirmasiOpen: Boolean(isKonfirmasiOpen),
+      tanggalMulai: tanggalMulai ? new Date(tanggalMulai) : null,
+      tanggalSelesai: tanggalSelesai ? new Date(tanggalSelesai) : null,
+      pesanPengumuman: pesanPengumuman || "",
+    };
+
+    if (batasSuratPernyataan !== undefined) dataPayload.batasSuratPernyataan = batasSuratPernyataan;
+    if (pendaftaranSistemTka !== undefined) dataPayload.pendaftaranSistemTka = pendaftaranSistemTka;
+    if (simulasiTka !== undefined) dataPayload.simulasiTka = simulasiTka;
+    if (gladiBersihTka !== undefined) dataPayload.gladiBersihTka = gladiBersihTka;
+    if (pelaksanaanGel1 !== undefined) dataPayload.pelaksanaanGel1 = pelaksanaanGel1;
+    if (pelaksanaanGel2 !== undefined) dataPayload.pelaksanaanGel2 = pelaksanaanGel2;
 
     const updated = await prisma.pengaturanTka.upsert({
       where: { id: "default" },
       create: {
         id: "default",
-        isKonfirmasiOpen: Boolean(isKonfirmasiOpen),
-        tanggalMulai: tanggalMulai ? new Date(tanggalMulai) : null,
-        tanggalSelesai: tanggalSelesai ? new Date(tanggalSelesai) : null,
-        pesanPengumuman: pesanPengumuman || "",
+        ...dataPayload,
       },
-      update: {
-        isKonfirmasiOpen: Boolean(isKonfirmasiOpen),
-        tanggalMulai: tanggalMulai ? new Date(tanggalMulai) : null,
-        tanggalSelesai: tanggalSelesai ? new Date(tanggalSelesai) : null,
-        pesanPengumuman: pesanPengumuman || "",
-      },
+      update: dataPayload,
     });
 
     return NextResponse.json({

@@ -30,7 +30,15 @@ export async function GET() {
       isWithinPeriod,
       tanggalMulai: settings?.tanggalMulai || null,
       tanggalSelesai: settings?.tanggalSelesai || null,
-      pesanPengumuman: settings?.pesanPengumuman || "Periode konfirmasi keikutsertaan TKA sedang dibuka.",
+      pesanPengumuman: settings?.pesanPengumuman || "Batas pengumpulan surat pernyataan dan perubahan pilihan TKA adalah 10 September 2026.",
+      jadwalTka: {
+        batasSuratPernyataan: settings?.batasSuratPernyataan || "10 September 2026",
+        pendaftaranSistemTka: settings?.pendaftaranSistemTka || "27 Juli – 27 September 2026 (* dilakukan sekolah)",
+        simulasiTka: settings?.simulasiTka || "21 – 27 September 2026",
+        gladiBersihTka: settings?.gladiBersihTka || "5 – 18 Oktober 2026",
+        pelaksanaanGel1: settings?.pelaksanaanGel1 || "26 – 29 Oktober 2026",
+        pelaksanaanGel2: settings?.pelaksanaanGel2 || "2 – 5 November 2026",
+      },
     });
   } catch (error: any) {
     console.error("GET Public Lini Masa Error:", error);
@@ -40,7 +48,15 @@ export async function GET() {
       isWithinPeriod: true,
       tanggalMulai: null,
       tanggalSelesai: null,
-      pesanPengumuman: "Periode konfirmasi keikutsertaan TKA dibuka.",
+      pesanPengumuman: "Batas pengumpulan surat pernyataan dan perubahan pilihan TKA adalah 10 September 2026.",
+      jadwalTka: {
+        batasSuratPernyataan: "10 September 2026",
+        pendaftaranSistemTka: "27 Juli – 27 September 2026 (* dilakukan sekolah)",
+        simulasiTka: "21 – 27 September 2026",
+        gladiBersihTka: "5 – 18 Oktober 2026",
+        pelaksanaanGel1: "26 – 29 Oktober 2026",
+        pelaksanaanGel2: "2 – 5 November 2026",
+      },
     });
   }
 }

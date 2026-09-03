@@ -29,6 +29,16 @@ export default async function LandingPage() {
   const konfirmasiIkut = await prisma.siswa.count({ where: { statusTka: "IKUT" } });
   const percentConfirmed = totalSiswa > 0 ? Math.round(((siswaAktif + konfirmasiIkut) / (totalSiswa * 2)) * 100) : 85;
 
+  const settings = await prisma.pengaturanTka.findUnique({ where: { id: "default" } });
+  const jadwalTka = {
+    batasSuratPernyataan: settings?.batasSuratPernyataan || "10 September 2026",
+    pendaftaranSistemTka: settings?.pendaftaranSistemTka || "27 Juli – 27 September 2026 (* dilakukan sekolah)",
+    simulasiTka: settings?.simulasiTka || "21 – 27 September 2026",
+    gladiBersihTka: settings?.gladiBersihTka || "5 – 18 Oktober 2026",
+    pelaksanaanGel1: settings?.pelaksanaanGel1 || "26 – 29 Oktober 2026",
+    pelaksanaanGel2: settings?.pelaksanaanGel2 || "2 – 5 November 2026",
+  };
+
   const role = (session?.user as any)?.role;
   const destinationHref = role === "ADMIN" || role === "GURU" ? "/admin/dashboard" : "/latihan";
 
@@ -249,55 +259,120 @@ export default async function LandingPage() {
 
         {/* 4. Timeline Section */}
         <section className="bg-surface-container-low py-16 md:py-24 border-y border-outline-variant/30" id="jadwal">
-          <div className="max-w-4xl mx-auto px-6 md:px-12">
-            <h2 className="text-3xl sm:text-4xl font-extrabold text-primary text-center mb-16 tracking-tight">
-              Linimasa Pelaksanaan TKA
-            </h2>
+          <div className="max-w-6xl mx-auto px-6 md:px-12">
+            <div className="text-center max-w-2xl mx-auto mb-12">
+              <span className="text-xs font-bold text-primary bg-primary-fixed/50 px-3 py-1 rounded-full uppercase tracking-wider">
+                Jadwal Resmi Sekolah
+              </span>
+              <h2 className="text-3xl sm:text-4xl font-extrabold text-primary mt-2 tracking-tight">
+                Linimasa Pelaksanaan TKA 2026
+              </h2>
+              <p className="text-xs sm:text-sm text-on-surface-variant mt-2 leading-relaxed">
+                Agenda penting persiapan, simulasi, hingga pelaksanaan resmi Tes Kemampuan Akademik SMKN 2 Depok Sleman.
+              </p>
+            </div>
 
-            <div className="relative border-l-2 border-outline-variant ml-4 md:ml-0 md:border-l-0">
-              <div className="hidden md:block absolute top-1/2 w-full border-t-2 border-outline-variant -z-10" />
-              <div className="hidden md:block absolute top-1/2 w-3/4 border-t-2 border-primary -z-10" />
-
-              <div className="flex flex-col md:flex-row justify-between gap-8 md:gap-4 relative z-10">
-                {/* Step 1 */}
-                <div className="pl-8 md:pl-0 relative flex flex-col md:items-center">
-                  <div className="absolute md:relative left-[-33px] md:left-auto md:mb-4 w-6 h-6 bg-primary rounded-full border-4 border-surface-container-low shadow-sm" />
-                  <div className="bg-surface-container-lowest p-4 rounded-xl border border-outline-variant shadow-sm min-w-[160px]">
-                    <p className="text-[11px] font-bold text-primary mb-1 uppercase tracking-wider">Januari</p>
-                    <h4 className="text-xs sm:text-sm font-bold text-on-background">Aktivasi Akun</h4>
-                    <p className="text-[11px] text-on-surface-variant mt-0.5">Konfirmasi data siswa</p>
-                  </div>
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-5">
+              {/* Tahap 1 */}
+              <div className="bg-surface-container-lowest p-5 rounded-2xl border border-primary/40 shadow-sm space-y-2 hover:border-primary transition-all">
+                <div className="flex items-center justify-between">
+                  <span className="text-[10px] font-bold text-primary bg-primary-fixed px-2 py-0.5 rounded-full uppercase tracking-wider">
+                    Tahap 1 • Konfirmasi Siswa
+                  </span>
                 </div>
+                <h3 className="font-bold text-sm text-on-background">Surat Pernyataan & Pas Foto</h3>
+                <p className="text-xs font-black text-primary flex items-center gap-1.5 pt-1">
+                  <Calendar className="w-3.5 h-3.5" />
+                  <span>{jadwalTka.batasSuratPernyataan}</span>
+                </p>
+                <p className="text-[11px] text-on-surface-variant leading-relaxed">
+                  Batas akhir pengumpulan berkas dan pemilihan 2 mata pelajaran pilihan oleh siswa di sistem.
+                </p>
+              </div>
 
-                {/* Step 2 */}
-                <div className="pl-8 md:pl-0 relative flex flex-col md:items-center">
-                  <div className="absolute md:relative left-[-33px] md:left-auto md:mb-4 w-6 h-6 bg-primary rounded-full border-4 border-surface-container-low shadow-sm" />
-                  <div className="bg-surface-container-lowest p-4 rounded-xl border border-outline-variant shadow-sm min-w-[160px]">
-                    <p className="text-[11px] font-bold text-primary mb-1 uppercase tracking-wider">Jan - Mar</p>
-                    <h4 className="text-xs sm:text-sm font-bold text-on-background">Latihan Mandiri</h4>
-                    <p className="text-[11px] text-on-surface-variant mt-0.5">Mengerjakan modul offline</p>
-                  </div>
+              {/* Tahap 2 */}
+              <div className="bg-surface-container-lowest p-5 rounded-2xl border border-outline-variant/60 shadow-sm space-y-2 hover:border-primary transition-all">
+                <div className="flex items-center justify-between">
+                  <span className="text-[10px] font-bold text-secondary bg-secondary-container px-2 py-0.5 rounded-full uppercase tracking-wider">
+                    Tahap 2 • Operator Sekolah
+                  </span>
                 </div>
+                <h3 className="font-bold text-sm text-on-background">Pendaftaran ke Sistem TKA</h3>
+                <p className="text-xs font-black text-on-surface flex items-center gap-1.5 pt-1">
+                  <Calendar className="w-3.5 h-3.5 text-secondary" />
+                  <span>{jadwalTka.pendaftaranSistemTka}</span>
+                </p>
+                <p className="text-[11px] text-on-surface-variant leading-relaxed">
+                  Pendaftaran resmi data peserta ke portal pusat asesmen Kemendikdasmen oleh sekolah.
+                </p>
+              </div>
 
-                {/* Step 3 */}
-                <div className="pl-8 md:pl-0 relative flex flex-col md:items-center">
-                  <div className="absolute md:relative left-[-33px] md:left-auto md:mb-4 w-6 h-6 bg-primary rounded-full border-4 border-surface-container-low shadow-sm" />
-                  <div className="bg-primary-container text-white p-4 rounded-xl border border-primary shadow-sm min-w-[160px]">
-                    <p className="text-[11px] font-bold text-primary-fixed mb-1 uppercase tracking-wider">Maret</p>
-                    <h4 className="text-xs sm:text-sm font-bold text-on-primary">Simulasi Sekolah</h4>
-                    <p className="text-[11px] text-on-primary-container mt-0.5">Ujian uji coba</p>
-                  </div>
+              {/* Tahap 3 */}
+              <div className="bg-surface-container-lowest p-5 rounded-2xl border border-outline-variant/60 shadow-sm space-y-2 hover:border-primary transition-all">
+                <div className="flex items-center justify-between">
+                  <span className="text-[10px] font-bold text-tertiary bg-tertiary-fixed px-2 py-0.5 rounded-full uppercase tracking-wider">
+                    Tahap 3 • Uji Coba
+                  </span>
                 </div>
+                <h3 className="font-bold text-sm text-on-background">Simulasi TKA</h3>
+                <p className="text-xs font-black text-on-surface flex items-center gap-1.5 pt-1">
+                  <Calendar className="w-3.5 h-3.5 text-tertiary" />
+                  <span>{jadwalTka.simulasiTka}</span>
+                </p>
+                <p className="text-[11px] text-on-surface-variant leading-relaxed">
+                  Uji coba teknis aplikasi ujian, kestabilan server, dan adaptasi format butir soal oleh siswa.
+                </p>
+              </div>
 
-                {/* Step 4 */}
-                <div className="pl-8 md:pl-0 relative flex flex-col md:items-center opacity-75">
-                  <div className="absolute md:relative left-[-33px] md:left-auto md:mb-4 w-6 h-6 bg-surface-variant rounded-full border-4 border-surface-container-low" />
-                  <div className="bg-surface-container-lowest p-4 rounded-xl border border-outline-variant border-dashed min-w-[160px]">
-                    <p className="text-[11px] font-bold text-on-surface-variant mb-1 uppercase tracking-wider">April</p>
-                    <h4 className="text-xs sm:text-sm font-bold text-on-background">Pelaksanaan TKA</h4>
-                    <p className="text-[11px] text-on-surface-variant mt-0.5">Ujian resmi Kemendikbud</p>
-                  </div>
+              {/* Tahap 4 */}
+              <div className="bg-surface-container-lowest p-5 rounded-2xl border border-outline-variant/60 shadow-sm space-y-2 hover:border-primary transition-all">
+                <div className="flex items-center justify-between">
+                  <span className="text-[10px] font-bold text-slate-700 bg-slate-100 px-2 py-0.5 rounded-full uppercase tracking-wider">
+                    Tahap 4 • Gladi Bersih
+                  </span>
                 </div>
+                <h3 className="font-bold text-sm text-on-background">Gladi Bersih TKA</h3>
+                <p className="text-xs font-black text-on-surface flex items-center gap-1.5 pt-1">
+                  <Calendar className="w-3.5 h-3.5 text-slate-600" />
+                  <span>{jadwalTka.gladiBersihTka}</span>
+                </p>
+                <p className="text-[11px] text-on-surface-variant leading-relaxed">
+                  Simulasi skala penuh dengan kondisi menyerupai hari ujian sesungguhnya.
+                </p>
+              </div>
+
+              {/* Tahap 5 */}
+              <div className="bg-surface-container-lowest p-5 rounded-2xl border border-amber-300 shadow-sm space-y-2 hover:border-amber-500 transition-all">
+                <div className="flex items-center justify-between">
+                  <span className="text-[10px] font-bold text-amber-800 bg-amber-100 px-2 py-0.5 rounded-full uppercase tracking-wider">
+                    Tahap 5 • Ujian Resmi
+                  </span>
+                </div>
+                <h3 className="font-bold text-sm text-on-background">Pelaksanaan Gelombang 1</h3>
+                <p className="text-xs font-black text-amber-900 flex items-center gap-1.5 pt-1">
+                  <Calendar className="w-3.5 h-3.5 text-amber-600" />
+                  <span>{jadwalTka.pelaksanaanGel1}</span>
+                </p>
+                <p className="text-[11px] text-on-surface-variant leading-relaxed">
+                  Pelaksanaan tes kemampuan akademik sesi pertama sesuai pembagian rombel sekolah.
+                </p>
+              </div>
+
+              {/* Tahap 6 */}
+              <div className="bg-surface-container-lowest p-5 rounded-2xl border border-amber-300 shadow-sm space-y-2 hover:border-amber-500 transition-all">
+                <div className="flex items-center justify-between">
+                  <span className="text-[10px] font-bold text-amber-800 bg-amber-100 px-2 py-0.5 rounded-full uppercase tracking-wider">
+                    Tahap 6 • Ujian Resmi
+                  </span>
+                </div>
+                <h3 className="font-bold text-sm text-on-background">Pelaksanaan Gelombang 2</h3>
+                <p className="text-xs font-black text-amber-900 flex items-center gap-1.5 pt-1">
+                  <Calendar className="w-3.5 h-3.5 text-amber-600" />
+                  <span>{jadwalTka.pelaksanaanGel2}</span>
+                </p>
+                <p className="text-[11px] text-on-surface-variant leading-relaxed">
+                  Pelaksanaan tes kemampuan akademik sesi kedua dan susulan resmi sekolah.
+                </p>
               </div>
             </div>
           </div>
@@ -308,7 +383,7 @@ export default async function LandingPage() {
           <div className="bg-inverse-surface rounded-3xl p-8 md:p-12 flex flex-col md:flex-row items-center justify-between gap-8 md:gap-12 overflow-hidden relative shadow-2xl">
             <div className="z-10 space-y-3 max-w-md">
               <span className="px-3 py-1 bg-white/10 text-cyan-300 rounded-full text-xs font-bold">
-                Pilot SIJA SMKN 2 Depok Sleman
+                Persiapan TKA Mandiri SMKN 2 Depok Sleman
               </span>
               <h2 className="text-2xl sm:text-3xl font-extrabold text-inverse-on-surface tracking-tight">
                 Kesiapan Siswa Menghadapi TKA

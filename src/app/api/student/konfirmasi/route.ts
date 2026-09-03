@@ -5,6 +5,43 @@ import prisma from "@/lib/prisma";
 
 export const dynamic = "force-dynamic";
 
+export async function GET() {
+  try {
+    const session = await getServerSession(authOptions);
+    const userId = (session?.user as any)?.id;
+
+    if (!userId) {
+      return NextResponse.json({ success: false, error: "Akses tidak sah" }, { status: 401 });
+    }
+
+    const student = await prisma.siswa.findUnique({
+      where: { id: userId },
+      select: {
+        id: true,
+        nis: true,
+        nama: true,
+        email: true,
+        jurusan: true,
+        namaIndustriPkl: true,
+        statusTka: true,
+        mapelPilihan1: true,
+        mapelPilihan2: true,
+        statusAkun: true,
+        tanggalAktivasi: true,
+      },
+    });
+
+    if (!student) {
+      return NextResponse.json({ success: false, error: "Data siswa tidak ditemukan" }, { status: 404 });
+    }
+
+    return NextResponse.json({ success: true, student });
+  } catch (error: any) {
+    console.error("GET Student Konfirmasi error:", error);
+    return NextResponse.json({ success: false, error: "Gagal memuat status konfirmasi" }, { status: 500 });
+  }
+}
+
 export async function POST(request: Request) {
   try {
     const session = await getServerSession(authOptions);
@@ -15,6 +52,38 @@ export async function POST(request: Request) {
 
     if (!targetId) {
       return NextResponse.json({ success: false, error: "Akses tidak sah" }, { status: 401 });
+    }
+
+    // Check timeline deadline
+    const settings = await prisma.pengaturanTka.findUnique({
+      where: { id: "default" },
+    });
+
+    const now = new Date();
+    if (settings) {
+      if (!settings.isKonfirmasiOpen) {
+        return NextResponse.json(
+          { success: false, error: "Periode konfirmasi atau pengubahan pilihan TKA sedang ditutup oleh pihak sekolah." },
+          { status: 403 }
+        );
+      }
+      if (settings.tanggalMulai && now < new Date(settings.tanggalMulai)) {
+        return NextResponse.json(
+          { success: false, error: "Periode pendaftaran konfirmasi TKA belum dimulai." },
+          { status: 403 }
+        );
+      }
+      if (settings.tanggalSelesai && now > new Date(settings.tanggalSelesai)) {
+        return NextResponse.json(
+          {
+            success: false,
+            error: `Batas waktu pengumpulan surat pernyataan dan perubahan pilihan TKA telah berakhir pada ${
+              settings.batasSuratPernyataan || "10 September 2026"
+            }.`,
+          },
+          { status: 403 }
+        );
+      }
     }
 
     const student = await prisma.siswa.findUnique({

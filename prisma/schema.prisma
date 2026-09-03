@@ -97,10 +97,16 @@ model UserAdmin {
 }
 
 model PengaturanTka {
-  id               String    @id @default("default")
-  isKonfirmasiOpen Boolean   @default(true)
-  tanggalMulai     DateTime?
-  tanggalSelesai   DateTime?
-  pesanPengumuman  String?
-  updatedAt        DateTime  @updatedAt
+  id                   String    @id @default("default")
+  isKonfirmasiOpen     Boolean   @default(true)
+  tanggalMulai         DateTime?
+  tanggalSelesai       DateTime?
+  pesanPengumuman      String?
+  batasSuratPernyataan String?   @default("10 September 2026")
+  pendaftaranSistemTka String?   @default("27 Juli – 27 September 2026")
+  simulasiTka          String?   @default("21 – 27 September 2026")
+  gladiBersihTka       String?   @default("5 – 18 Oktober 2026")
+  pelaksanaanGel1      String?   @default("26 – 29 Oktober 2026")
+  pelaksanaanGel2      String?   @default("2 – 5 November 2026")
+  updatedAt            DateTime  @updatedAt
 }
