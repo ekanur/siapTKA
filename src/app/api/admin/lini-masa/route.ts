@@ -16,9 +16,20 @@ export async function GET() {
         data: {
           id: "default",
           isKonfirmasiOpen: true,
-          tanggalMulai: new Date(),
-          tanggalSelesai: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000),
-          pesanPengumuman: "Periode konfirmasi keikutsertaan TKA dan pemilihan 2 mata pelajaran pilihan sedang berlangsung.",
+          tanggalMulai: new Date("2026-07-27T00:00:00.000Z"),
+          tanggalSelesai: new Date("2026-09-10T23:59:59.999Z"),
+          pesanPengumuman: "Batas pengumpulan surat pernyataan dan perubahan pilihan mapel TKA adalah 10 September 2026.",
+          batasSuratPernyataan: new Date("2026-09-10T23:59:59.999Z"),
+          pendaftaranMulai: new Date("2026-07-27T00:00:00.000Z"),
+          pendaftaranSelesai: new Date("2026-09-27T23:59:59.999Z"),
+          simulasiMulai: new Date("2026-09-21T00:00:00.000Z"),
+          simulasiSelesai: new Date("2026-09-27T23:59:59.999Z"),
+          gladiMulai: new Date("2026-10-05T00:00:00.000Z"),
+          gladiSelesai: new Date("2026-10-18T23:59:59.999Z"),
+          gelombang1Mulai: new Date("2026-10-26T00:00:00.000Z"),
+          gelombang1Selesai: new Date("2026-10-29T23:59:59.999Z"),
+          gelombang2Mulai: new Date("2026-11-02T00:00:00.000Z"),
+          gelombang2Selesai: new Date("2026-11-05T23:59:59.999Z"),
         },
       });
     }
@@ -42,30 +53,59 @@ export async function POST(request: Request) {
     const body = await request.json();
     const {
       isKonfirmasiOpen,
-      tanggalMulai,
-      tanggalSelesai,
       pesanPengumuman,
       batasSuratPernyataan,
-      pendaftaranSistemTka,
-      simulasiTka,
-      gladiBersihTka,
-      pelaksanaanGel1,
-      pelaksanaanGel2,
+      pendaftaranMulai,
+      pendaftaranSelesai,
+      simulasiMulai,
+      simulasiSelesai,
+      gladiMulai,
+      gladiSelesai,
+      gelombang1Mulai,
+      gelombang1Selesai,
+      gelombang2Mulai,
+      gelombang2Selesai,
     } = body;
+
+    // Helper to parse date
+    const parseDateStart = (dStr: any) => {
+      if (!dStr) return null;
+      const d = new Date(dStr);
+      if (isNaN(d.getTime())) return null;
+      d.setHours(0, 0, 0, 0);
+      return d;
+    };
+
+    const parseDateEnd = (dStr: any) => {
+      if (!dStr) return null;
+      const d = new Date(dStr);
+      if (isNaN(d.getTime())) return null;
+      d.setHours(23, 59, 59, 999);
+      return d;
+    };
+
+    const parsedBatas = parseDateEnd(batasSuratPernyataan);
+    const parsedPendaftaranMulai = parseDateStart(pendaftaranMulai);
+    const parsedPendaftaranSelesai = parseDateEnd(pendaftaranSelesai);
 
     const dataPayload: any = {
       isKonfirmasiOpen: Boolean(isKonfirmasiOpen),
-      tanggalMulai: tanggalMulai ? new Date(tanggalMulai) : null,
-      tanggalSelesai: tanggalSelesai ? new Date(tanggalSelesai) : null,
       pesanPengumuman: pesanPengumuman || "",
+      tanggalMulai: parsedPendaftaranMulai || new Date("2026-07-27T00:00:00.000Z"),
+      // Unify cutoff date to batasSuratPernyataan
+      tanggalSelesai: parsedBatas || new Date("2026-09-10T23:59:59.999Z"),
+      batasSuratPernyataan: parsedBatas || new Date("2026-09-10T23:59:59.999Z"),
+      pendaftaranMulai: parsedPendaftaranMulai || new Date("2026-07-27T00:00:00.000Z"),
+      pendaftaranSelesai: parsedPendaftaranSelesai || new Date("2026-09-27T23:59:59.999Z"),
+      simulasiMulai: parseDateStart(simulasiMulai) || new Date("2026-09-21T00:00:00.000Z"),
+      simulasiSelesai: parseDateEnd(simulasiSelesai) || new Date("2026-09-27T23:59:59.999Z"),
+      gladiMulai: parseDateStart(gladiMulai) || new Date("2026-10-05T00:00:00.000Z"),
+      gladiSelesai: parseDateEnd(gladiSelesai) || new Date("2026-10-18T23:59:59.999Z"),
+      gelombang1Mulai: parseDateStart(gelombang1Mulai) || new Date("2026-10-26T00:00:00.000Z"),
+      gelombang1Selesai: parseDateEnd(gelombang1Selesai) || new Date("2026-10-29T23:59:59.999Z"),
+      gelombang2Mulai: parseDateStart(gelombang2Mulai) || new Date("2026-11-02T00:00:00.000Z"),
+      gelombang2Selesai: parseDateEnd(gelombang2Selesai) || new Date("2026-11-05T23:59:59.999Z"),
     };
-
-    if (batasSuratPernyataan !== undefined) dataPayload.batasSuratPernyataan = batasSuratPernyataan;
-    if (pendaftaranSistemTka !== undefined) dataPayload.pendaftaranSistemTka = pendaftaranSistemTka;
-    if (simulasiTka !== undefined) dataPayload.simulasiTka = simulasiTka;
-    if (gladiBersihTka !== undefined) dataPayload.gladiBersihTka = gladiBersihTka;
-    if (pelaksanaanGel1 !== undefined) dataPayload.pelaksanaanGel1 = pelaksanaanGel1;
-    if (pelaksanaanGel2 !== undefined) dataPayload.pelaksanaanGel2 = pelaksanaanGel2;
 
     const updated = await prisma.pengaturanTka.upsert({
       where: { id: "default" },
@@ -79,7 +119,7 @@ export async function POST(request: Request) {
     return NextResponse.json({
       success: true,
       settings: updated,
-      message: "Pengaturan lini masa konfirmasi TKA berhasil diperbarui.",
+      message: "Seluruh pengaturan jadwal linimasa TKA berhasil diperbarui.",
     });
   } catch (error: any) {
     console.error("POST Lini Masa Error:", error);
