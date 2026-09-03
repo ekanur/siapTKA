@@ -1,17 +1,36 @@
 import { NextResponse } from "next/server";
+import { getServerSession } from "next-auth";
+import { authOptions } from "@/lib/auth";
 import prisma from "@/lib/prisma";
+import { encryptAnswerKey, encryptExplanation, isEncrypted } from "@/lib/security/crypto";
 
 export const dynamic = "force-dynamic";
 
 export async function GET(request: Request) {
   try {
+    const session = await getServerSession(authOptions);
+    const userRole = (session?.user as any)?.role;
+    const userMapel = (session?.user as any)?.mapel;
+
     const { searchParams } = new URL(request.url);
     const status = searchParams.get("status");
-    const mapel = searchParams.get("mapel");
+    let mapel = searchParams.get("mapel");
+
+    // Guard: Teacher locked to their assigned subject
+    if (userRole === "GURU" && userMapel) {
+      mapel = userMapel;
+    }
 
     const where: any = {};
-    if (status) where.status = status;
-    if (mapel) where.mapel = mapel.toUpperCase();
+    if (status && status !== "ALL") where.status = status;
+    if (mapel && mapel !== "ALL") {
+      const norm = mapel.replace(/-/g, "_").toUpperCase();
+      if (norm === "AIJ" || norm === "ADMINISTRASI_INFRASTRUKTUR_JARINGAN") {
+        where.mapel = { in: ["ADMINISTRASI_INFRASTRUKTUR_JARINGAN", "AIJ"] };
+      } else {
+        where.mapel = norm;
+      }
+    }
 
     const list = await prisma.soal.findMany({
       where,
@@ -27,19 +46,87 @@ export async function GET(request: Request) {
       },
     });
 
-    return NextResponse.json({ success: true, count: list.length, soal: list });
+    return NextResponse.json({
+      success: true,
+      count: list.length,
+      soal: list,
+      isGuru: userRole === "GURU",
+      assignedMapel: userMapel,
+    });
   } catch (error: any) {
     return NextResponse.json({ success: false, error: "Gagal memuat daftar soal" }, { status: 500 });
   }
 }
 
+export async function POST(request: Request) {
+  try {
+    const session = await getServerSession(authOptions);
+    const userRole = (session?.user as any)?.role;
+    const userMapel = (session?.user as any)?.mapel;
+
+    if (!session || !["ADMIN", "GURU"].includes(userRole)) {
+      return NextResponse.json({ success: false, error: "Akses tidak diizinkan." }, { status: 401 });
+    }
+
+    const body = await request.json();
+    let { mapel, tipeSoal, pertanyaan, opsiJawaban, kunciJawaban, pembahasan, kisiKisiId } = body;
+
+    // Guard: Teacher can only create questions for their subject
+    if (userRole === "GURU" && userMapel) {
+      mapel = userMapel;
+    }
+
+    if (!mapel || !pertanyaan || !opsiJawaban || !kunciJawaban) {
+      return NextResponse.json({ success: false, error: "Mapel, pertanyaan, opsi, dan kunci jawaban wajib diisi." }, { status: 400 });
+    }
+
+    const rawOpsi = typeof opsiJawaban === "string" ? opsiJawaban : JSON.stringify(opsiJawaban);
+    const rawKunci = typeof kunciJawaban === "string" ? kunciJawaban : JSON.stringify(kunciJawaban);
+
+    const created = await prisma.soal.create({
+      data: {
+        mapel: mapel.toUpperCase(),
+        kisiKisiId: kisiKisiId || null,
+        tipeSoal: tipeSoal || "PILIHAN_GANDA",
+        pertanyaan: pertanyaan.trim(),
+        opsiJawaban: rawOpsi,
+        kunciJawaban: rawKunci,
+        pembahasan: pembahasan || "",
+        status: "AKTIF", // Manual questions created by teacher are active immediately
+        source: "MANUAL_GURU",
+      },
+    });
+
+    return NextResponse.json({
+      success: true,
+      soal: created,
+      message: "Soal manual berhasil ditambahkan ke Bank Soal.",
+    });
+  } catch (error: any) {
+    console.error("POST Soal Error:", error);
+    return NextResponse.json({ success: false, error: error.message || "Gagal menambah soal" }, { status: 500 });
+  }
+}
+
 export async function PUT(request: Request) {
   try {
+    const session = await getServerSession(authOptions);
+    const userRole = (session?.user as any)?.role;
+    const userMapel = (session?.user as any)?.mapel;
+
     const body = await request.json();
     const { id, status, pertanyaan, opsiJawaban, kunciJawaban, pembahasan } = body;
 
     if (!id) {
       return NextResponse.json({ success: false, error: "ID soal wajib disertakan" }, { status: 400 });
+    }
+
+    // Teacher can only edit questions of their subject
+    if (userRole === "GURU" && userMapel) {
+      const existing = await prisma.soal.findUnique({ where: { id } });
+      if (existing && existing.mapel !== userMapel) {
+        return NextResponse.json({ success: false, error: "Anda tidak berhak mengedit soal di luar mapel Anda." }, { status: 403 });
+      }
     }
 
     const updateData: any = {};
@@ -66,9 +153,21 @@ export async function PUT(request: Request) {
 
 export async function DELETE(request: Request) {
   try {
+    const session = await getServerSession(authOptions);
+    const userRole = (session?.user as any)?.role;
+    const userMapel = (session?.user as any)?.mapel;
+
     const { searchParams } = new URL(request.url);
     const id = searchParams.get("id");
     if (!id) return NextResponse.json({ success: false, error: "ID soal wajib ada" }, { status: 400 });
+
+    // Teacher guard
+    if (userRole === "GURU" && userMapel) {
+      const existing = await prisma.soal.findUnique({ where: { id } });
+      if (existing && existing.mapel !== userMapel) {
+        return NextResponse.json({ success: false, error: "Anda tidak berhak menghapus soal di luar mapel Anda." }, { status: 403 });
+      }
+    }
 
     await prisma.soal.delete({ where: { id } });
     return NextResponse.json({ success: true, message: "Soal berhasil dihapus" });

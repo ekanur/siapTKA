@@ -2,6 +2,7 @@
 
 import React, { useState, useEffect } from "react";
 import Link from "next/link";
+import { useSession } from "next-auth/react";
 import {
   BarChart3,
   CheckCircle2,
@@ -36,6 +37,10 @@ interface AnalyzedQuestion {
 }
 
 export default function AnalisisSoalPage() {
+  const { data: session } = useSession();
+  const userRole = (session?.user as any)?.role;
+  const userMapel = (session?.user as any)?.mapel;
+
   const [items, setItems] = useState<AnalyzedQuestion[]>([]);
   const [summary, setSummary] = useState<any>(null);
   const [loading, setLoading] = useState(true);
@@ -43,10 +48,17 @@ export default function AnalisisSoalPage() {
   const [selectedDifficulty, setSelectedDifficulty] = useState<string>("ALL");
   const [expandedDistractorId, setExpandedDistractorId] = useState<string | null>(null);
 
+  useEffect(() => {
+    if (userRole === "GURU" && userMapel) {
+      setSelectedMapel(userMapel);
+    }
+  }, [userRole, userMapel]);
+
   const fetchAnalysis = async () => {
     setLoading(true);
     try {
-      const url = selectedMapel !== "ALL" ? `/api/admin/analisis?mapel=${selectedMapel}` : `/api/admin/analisis`;
+      const activeMapel = userRole === "GURU" ? userMapel : selectedMapel;
+      const url = activeMapel !== "ALL" ? `/api/admin/analisis?mapel=${activeMapel}` : `/api/admin/analisis`;
       const res = await fetch(url);
       const data = await res.json();
       if (data.success) {
@@ -62,7 +74,7 @@ export default function AnalisisSoalPage() {
 
   useEffect(() => {
     fetchAnalysis();
-  }, [selectedMapel]);
+  }, [selectedMapel, userRole, userMapel]);
 
   const filteredItems = items.filter((item) => {
     if (selectedDifficulty !== "ALL" && item.difficulty !== selectedDifficulty) {
@@ -76,22 +88,24 @@ export default function AnalisisSoalPage() {
       {/* Header */}
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
         <div>
-          <div className="inline-flex items-center gap-2 px-3 py-1 bg-indigo-50 border border-indigo-200 text-indigo-700 rounded-full text-xs font-bold mb-1">
+          <div className="inline-flex items-center gap-2 px-3 py-1 bg-blue-50 border border-blue-200 text-blue-700 rounded-full text-xs font-bold mb-1">
             <BarChart3 className="w-3.5 h-3.5" />
-            <span>Diagnostik Akurasi & Tingkat Kesukaran</span>
+            <span>Analisis Butir Soal</span>
           </div>
-          <h1 className="text-2xl font-extrabold text-slate-900">
+          <h1 className="text-2xl font-black text-slate-900 tracking-tight">
             Analisis Butir Soal (% Benar & % Salah)
           </h1>
           <p className="text-xs text-slate-500 mt-1">
-            Evaluasi otomatis hasil latihan offline seluruh siswa untuk mengidentifikasi butir soal dan topik yang masih sulit dipahami.
+            {userRole === "GURU"
+              ? `Mata Pelajaran: ${userMapel}. Evaluasi akurasi jawaban siswa untuk butir soal mata pelajaran Anda.`
+              : "Evaluasi akurasi jawaban latihan siswa untuk mengidentifikasi tingkat kesukaran dan daya pembeda butir soal."}
           </p>
         </div>
 
         <div className="flex items-center gap-2">
           <button
             onClick={fetchAnalysis}
-            className="p-2.5 bg-white border border-slate-200 hover:bg-slate-50 text-slate-700 rounded-xl text-xs font-bold transition-all flex items-center gap-1.5 shadow-sm cursor-pointer"
+            className="p-2.5 bg-white border border-slate-200 hover:bg-slate-50 text-slate-700 rounded-xl text-xs font-bold transition-all flex items-center gap-1.5 shadow-xs cursor-pointer"
           >
             <RefreshCw className={`w-4 h-4 ${loading ? "animate-spin" : ""}`} />
             <span>Segarkan Data</span>
@@ -116,43 +130,55 @@ export default function AnalisisSoalPage() {
               <AlertTriangle className="w-4 h-4 text-rose-600" />
             </div>
             <div className="text-2xl font-black text-rose-900">{summary.difficultQuestionsCount} Butir</div>
-            <div className="text-[11px] text-rose-700 font-medium">Perlu remedial / pendampingan guru</div>
+            <div className="text-[11px] text-rose-700 font-medium">Perlu penguatan materi / pembahasan</div>
           </div>
 
           <div className="bg-amber-50/70 rounded-2xl p-5 border border-amber-200 shadow-sm space-y-2">
-            <span className="text-xs font-bold text-amber-800">Kategori SEDANG (40-70%)</span>
+            <div className="flex items-center justify-between">
+              <span className="text-xs font-bold text-amber-800">Kategori SEDANG (40-70%)</span>
+              <AlertTriangle className="w-4 h-4 text-amber-600" />
+            </div>
             <div className="text-2xl font-black text-amber-900">{summary.moderateQuestionsCount} Butir</div>
             <div className="text-[11px] text-amber-700 font-medium">Pemahaman siswa cukup memadai</div>
           </div>
 
           <div className="bg-emerald-50/70 rounded-2xl p-5 border border-emerald-200 shadow-sm space-y-2">
-            <span className="text-xs font-bold text-emerald-800">Kategori MUDAH (&gt;70%)</span>
+            <div className="flex items-center justify-between">
+              <span className="text-xs font-bold text-emerald-800">Kategori MUDAH (&gt;70%)</span>
+              <CheckCircle2 className="w-4 h-4 text-emerald-600" />
+            </div>
             <div className="text-2xl font-black text-emerald-900">{summary.easyQuestionsCount} Butir</div>
-            <div className="text-[11px] text-emerald-700 font-medium">Materi sudah dikuasai mayoritas</div>
+            <div className="text-[11px] text-emerald-700 font-medium">Materi telah dikuasai mayoritas</div>
           </div>
         </div>
       )}
 
       {/* Filter Bar */}
       <div className="bg-white rounded-2xl p-4 border border-slate-200 shadow-sm flex flex-wrap items-center justify-between gap-3">
-        <div className="flex flex-wrap items-center gap-2">
-          <span className="text-xs font-bold text-slate-500 flex items-center gap-1.5 mr-1">
-            <Filter className="w-3.5 h-3.5" /> Filter Mapel:
-          </span>
-          {["ALL", "MATEMATIKA", "PPLG"].map((m) => (
-            <button
-              key={m}
-              onClick={() => setSelectedMapel(m)}
-              className={`px-3 py-1.5 rounded-xl text-xs font-bold transition-all cursor-pointer ${
-                selectedMapel === m
-                  ? "bg-blue-600 text-white shadow-sm"
-                  : "bg-slate-100 text-slate-700 hover:bg-slate-200"
-              }`}
-            >
-              {m === "ALL" ? "Semua Mapel" : m}
-            </button>
-          ))}
-        </div>
+        {userRole === "GURU" ? (
+          <div className="text-xs font-bold text-slate-800 px-3 py-1.5 bg-blue-50 border border-blue-200 rounded-xl">
+            Mata Pelajaran: {userMapel}
+          </div>
+        ) : (
+          <div className="flex flex-wrap items-center gap-2">
+            <span className="text-xs font-bold text-slate-500 flex items-center gap-1.5 mr-1">
+              <Filter className="w-3.5 h-3.5" /> Mapel:
+            </span>
+            {["ALL", "MATEMATIKA", "BAHASA_INDONESIA", "BAHASA_INGGRIS", "PPLG", "AIJ"].map((m) => (
+              <button
+                key={m}
+                onClick={() => setSelectedMapel(m)}
+                className={`px-3 py-1.5 rounded-xl text-xs font-bold transition-all cursor-pointer ${
+                  selectedMapel === m
+                    ? "bg-blue-600 text-white shadow-xs"
+                    : "bg-slate-100 text-slate-700 hover:bg-slate-200"
+                }`}
+              >
+                {m === "ALL" ? "Semua" : m}
+              </button>
+            ))}
+          </div>
+        )}
 
         <div className="flex flex-wrap items-center gap-2">
           <span className="text-xs font-bold text-slate-500 mr-1">Kesukaran:</span>

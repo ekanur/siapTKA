@@ -1,5 +1,6 @@
 import { NextResponse } from "next/server";
 import prisma from "@/lib/prisma";
+import { encryptAnswerKey, encryptExplanation } from "@/lib/security/crypto";
 
 export const dynamic = "force-dynamic";
 
@@ -42,8 +43,8 @@ export async function GET(request: Request) {
       tipeSoal: q.tipeSoal,
       pertanyaan: q.pertanyaan,
       opsiJawaban: q.opsiJawaban,
-      kunciJawaban: q.kunciJawaban,
-      pembahasan: q.pembahasan,
+      kunciJawaban: encryptAnswerKey(q.kunciJawaban, q.id),
+      pembahasan: encryptExplanation(q.pembahasan || "", q.id),
       status: q.status,
       updatedAt: q.updatedAt.toISOString(),
     }));

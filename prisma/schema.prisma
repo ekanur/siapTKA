@@ -84,8 +84,23 @@ model ProgresLatihan {
 model UserAdmin {
   id        String   @id @default(cuid())
   username  String   @unique
-  password  String
+  email     String   @unique
+  password  String?
   nama      String
   role      String   @default("GURU")
+  mapel     String?
   createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([email])
+  @@index([role])
+}
+
+model PengaturanTka {
+  id               String    @id @default("default")
+  isKonfirmasiOpen Boolean   @default(true)
+  tanggalMulai     DateTime?
+  tanggalSelesai   DateTime?
+  pesanPengumuman  String?
+  updatedAt        DateTime  @updatedAt
 }

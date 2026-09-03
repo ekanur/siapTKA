@@ -1,4 +1,5 @@
 import { clientDb, CachedSoal, OfflineSubmission } from "@/lib/db/client-db";
+import { encryptAnswerKey, encryptExplanation, isEncrypted } from "@/lib/security/crypto";
 
 export interface SyncStatusResult {
   cachedQuestionsCount: number;
@@ -8,7 +9,7 @@ export interface SyncStatusResult {
 }
 
 /**
- * Downloads active questions from server to local IndexedDB
+ * Downloads active questions from server to local IndexedDB, ensuring kunciJawaban is always encrypted
  */
 export async function downloadActiveBankSoal(mapel?: string): Promise<{ success: boolean; count: number; error?: string }> {
   try {
@@ -17,7 +18,14 @@ export async function downloadActiveBankSoal(mapel?: string): Promise<{ success:
     if (!res.ok) throw new Error("Gagal mengunduh bank soal dari server");
 
     const data = await res.json();
-    const questions: CachedSoal[] = data.soal || [];
+    const rawQuestions: CachedSoal[] = data.soal || [];
+
+    // Ensure all stored questions have encrypted kunciJawaban & pembahasan
+    const questions: CachedSoal[] = rawQuestions.map((q) => ({
+      ...q,
+      kunciJawaban: isEncrypted(q.kunciJawaban) ? q.kunciJawaban : encryptAnswerKey(q.kunciJawaban, q.id),
+      pembahasan: isEncrypted(q.pembahasan) ? q.pembahasan : encryptExplanation(q.pembahasan || "", q.id),
+    }));
 
     // Save to Dexie IndexedDB
     await clientDb.transaction("rw", clientDb.soal, clientDb.syncMeta, async () => {
@@ -91,9 +99,39 @@ export async function syncPendingSubmissions(): Promise<{ success: boolean; sync
 }
 
 /**
+ * Ensures all questions currently stored in client IndexedDB have encrypted kunciJawaban & pembahasan
+ */
+export async function secureOfflineDatabase(): Promise<number> {
+  try {
+    if (typeof window === "undefined") return 0;
+    const allQuestions = await clientDb.soal.toArray();
+    const unencrypted = allQuestions.filter(
+      (s) => !isEncrypted(s.kunciJawaban) || (!!s.pembahasan && !isEncrypted(s.pembahasan))
+    );
+
+    if (unencrypted.length === 0) return 0;
+
+    const updated = unencrypted.map((q) => ({
+      ...q,
+      kunciJawaban: isEncrypted(q.kunciJawaban) ? q.kunciJawaban : encryptAnswerKey(q.kunciJawaban, q.id),
+      pembahasan: isEncrypted(q.pembahasan) ? q.pembahasan : encryptExplanation(q.pembahasan || "", q.id),
+    }));
+
+    await clientDb.soal.bulkPut(updated);
+    return updated.length;
+  } catch (e) {
+    console.error("Error securing offline database:", e);
+    return 0;
+  }
+}
+
+/**
  * Gets overview stats of offline storage
  */
 export async function getOfflineSyncStatus(): Promise<SyncStatusResult> {
+  // Auto-migrate any unencrypted legacy records in IndexedDB
+  await secureOfflineDatabase();
+
   const cachedQuestionsCount = await clientDb.soal.count();
   const pendingSubmissionsCount = await clientDb.offlineSubmissions
     .where("syncStatus")

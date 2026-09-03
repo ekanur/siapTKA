@@ -4,13 +4,17 @@ interface GenerateParams {
   mapel: string;
   tipeSoal: "PILIHAN_GANDA" | "MCMA" | "PGK_KATEGORI";
   jumlahSoal?: number;
-  kisiKisi: {
-    topik: string;
-    definisi: string;
-    muatan: string;
-    kompetensi: string;
-    matriksAsesmen: string;
-    contohSoal: string;
+  elemen?: string;
+  subElemen?: string;
+  kompetensi?: string;
+  batasan?: string;
+  kisiKisi?: {
+    topik?: string;
+    definisi?: string;
+    muatan?: string;
+    kompetensi?: string;
+    matriksAsesmen?: string;
+    contohSoal?: string;
   };
 }
 
@@ -40,17 +44,15 @@ export async function generateSoalWithGemini(params: GenerateParams): Promise<Ge
   });
 
   const prompt = `
-Anda adalah Pakar Pembuat Soal Tes Kemampuan Akademik (TKA) Standar Kemendikbud untuk jenjang SMK SIJA (Sistem Informatika, Jaringan, dan Aplikasi).
-Tugas Anda adalah menghasilkan ${params.jumlahSoal || 3} butir soal latihan baru berkualitas tinggi berdasarkan 5 Pilar Kisi-Kisi Resmi TKA berikut:
+Anda adalah Pakar Pembuat Soal Tes Kemampuan Akademik (TKA) Standar Pusmendik Kemendikdasmen RI.
+Tugas Anda adalah menghasilkan ${params.jumlahSoal || 3} butir soal latihan baru berkualitas tinggi dan kontekstual berdasarkan Matriks Asesmen Resmi TKA berikut:
 
 - MATA PELAJARAN: ${params.mapel}
-- TOPIK / MATERI: ${params.kisiKisi.topik}
-- PILAR 1 (DEFINISI): ${params.kisiKisi.definisi}
-- PILAR 2 (MUATAN): ${params.kisiKisi.muatan}
-- PILAR 3 (KOMPETENSI): ${params.kisiKisi.kompetensi}
-- PILAR 4 (MATRIKS ASESMEN & LEVEL KOGNITIF): ${params.kisiKisi.matriksAsesmen}
-- PILAR 5 (CONTOH SOAL ACUAN): ${params.kisiKisi.contohSoal}
-- TIPE SOAL YANG HARUS DIBUAT: ${params.tipeSoal}
+- ELEMEN / MATERI POKOK: ${params.elemen || params.kisiKisi?.topik || "Materi Asesmen Standar"}
+- SUB-ELEMEN / SUB-MATERI: ${params.subElemen || params.kisiKisi?.muatan || "Sub-Materi Asesmen"}
+- KOMPETENSI / INDIKATOR ASESMEN: ${params.kompetensi || params.kisiKisi?.kompetensi || "Kompetensi penalaran akademik"}
+- BATASAN KONTEKS & RUANG LINGKUP: ${params.batasan || params.kisiKisi?.matriksAsesmen || "Standar kerangka asesmen nasional"}
+- BENTUK SOAL YANG HARUS DIBUAT: ${params.tipeSoal}
 
 PETUNJUK FORMATTING KHUSUS:
 1. Jika soal Matematika, gunakan LaTeX standar dengan tanda dollar ($ untuk inline, $$ untuk block display) seperti $f(x) = ax^2 + bx + c$, $\\int_a^b$, $\\frac{a}{b}$, \\begin{pmatrix}...\\end{pmatrix}.

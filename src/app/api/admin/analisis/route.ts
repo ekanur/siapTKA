@@ -1,17 +1,34 @@
 import { NextResponse } from "next/server";
+import { getServerSession } from "next-auth";
+import { authOptions } from "@/lib/auth";
 import prisma from "@/lib/prisma";
 
 export const dynamic = "force-dynamic";
 
 export async function GET(request: Request) {
   try {
+    const session = await getServerSession(authOptions);
+    const userRole = (session?.user as any)?.role;
+    const userMapel = (session?.user as any)?.mapel;
+
     const { searchParams } = new URL(request.url);
-    const mapel = searchParams.get("mapel");
+    let mapel = searchParams.get("mapel");
+
+    if (userRole === "GURU" && userMapel) {
+      mapel = userMapel;
+    }
 
     const whereSoal: any = {
       status: "AKTIF",
     };
-    if (mapel) whereSoal.mapel = mapel.toUpperCase();
+    if (mapel && mapel !== "ALL") {
+      const norm = mapel.replace(/-/g, "_").toUpperCase();
+      if (norm === "AIJ" || norm === "ADMINISTRASI_INFRASTRUKTUR_JARINGAN") {
+        whereSoal.mapel = { in: ["ADMINISTRASI_INFRASTRUKTUR_JARINGAN", "AIJ"] };
+      } else {
+        whereSoal.mapel = norm;
+      }
+    }
 
     const questions = await prisma.soal.findMany({
       where: whereSoal,
@@ -56,7 +73,6 @@ export async function GET(request: Request) {
         totalSeconds += p.waktuPengerjaan || 0;
         let cleanAns = p.jawabanSiswa;
         try {
-          // If JSON
           const parsed = JSON.parse(p.jawabanSiswa);
           if (Array.isArray(parsed)) cleanAns = parsed.join(", ");
         } catch {}
@@ -94,6 +110,8 @@ export async function GET(request: Request) {
 
     return NextResponse.json({
       success: true,
+      isGuru: userRole === "GURU",
+      assignedMapel: userMapel,
       summary: {
         totalQuestionsAnalyzed,
         totalAllAttempts,

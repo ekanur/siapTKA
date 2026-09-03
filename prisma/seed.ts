@@ -17,23 +17,66 @@ async function main() {
     data: [
       {
         username: "admin",
+        email: "admin@smkn2depok.sch.id",
         password: "adminpassword2026",
-        nama: "Administrator Sekolah",
+        nama: "Administrator Asesmen TKA",
         role: "ADMIN",
+        mapel: null,
       },
       {
         username: "guru_matematika",
+        email: "guru.matematika@smkn2depok.sch.id",
         password: "gurumatematika2026",
-        nama: "Dra. Siti Rahmawati, M.Pd (Guru Matematika)",
+        nama: "Dra. Siti Rahmawati, M.Pd",
         role: "GURU",
+        mapel: "MATEMATIKA",
       },
       {
         username: "guru_pplg",
+        email: "guru.pplg@smkn2depok.sch.id",
         password: "gurupplg2026",
-        nama: "Ahmad Fauzi, S.Kom., M.T. (Guru Kejuruan PPLG)",
+        nama: "Ahmad Fauzi, S.Kom., M.T.",
         role: "GURU",
+        mapel: "PPLG",
+      },
+      {
+        username: "guru_aij",
+        email: "guru.aij@smkn2depok.sch.id",
+        password: "guruaij2026",
+        nama: "Bambang Sudarsono, S.T.",
+        role: "GURU",
+        mapel: "AIJ",
+      },
+      {
+        username: "guru_indonesia",
+        email: "guru.indonesia@smkn2depok.sch.id",
+        password: "guruindo2026",
+        nama: "Nurul Hidayati, S.Pd., M.Hum.",
+        role: "GURU",
+        mapel: "BAHASA_INDONESIA",
+      },
+      {
+        username: "guru_inggris",
+        email: "guru.inggris@smkn2depok.sch.id",
+        password: "guruinggris2026",
+        nama: "David Christian, M.Ed.",
+        role: "GURU",
+        mapel: "BAHASA_INGGRIS",
       },
     ],
+  });
+
+  // 2b. Pengaturan Default Lini Masa TKA
+  await prisma.pengaturanTka.upsert({
+    where: { id: "default" },
+    create: {
+      id: "default",
+      isKonfirmasiOpen: true,
+      tanggalMulai: new Date("2026-08-01T00:00:00Z"),
+      tanggalSelesai: new Date("2026-09-30T23:59:59Z"),
+      pesanPengumuman: "Periode konfirmasi keikutsertaan dan pemilihan 2 mata pelajaran pilihan TKA 2026 aktif sampai 30 September 2026.",
+    },
+    update: {},
   });
 
   // 3. 72 Siswa SIJA dengan Industri PKL

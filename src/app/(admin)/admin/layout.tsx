@@ -9,15 +9,15 @@ import {
   BarChart3,
   Sparkles,
   CheckSquare,
-  BookMarked,
   Users,
   FileSpreadsheet,
   LogOut,
   Menu,
   X,
-  GraduationCap,
+  Clock,
+  TrendingUp,
   ShieldCheck,
-  Layers,
+  GraduationCap,
 } from "lucide-react";
 
 export default function AdminLayout({ children }: { children: React.ReactNode }) {
@@ -25,46 +25,76 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
   const { data: session } = useSession();
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
 
-  const navItems = [
+  const userRole = (session?.user as any)?.role || "ADMIN";
+  const userMapel = (session?.user as any)?.mapel || null;
+
+  const adminNavItems = [
     {
       name: "Dashboard Utama",
       href: "/admin/dashboard",
       icon: LayoutDashboard,
     },
     {
-      name: "Analisis Butir Soal (% Benar/Salah)",
-      href: "/admin/analisis-soal",
-      icon: BarChart3,
-      badge: "Diagnostik",
+      name: "Lini Masa Konfirmasi",
+      href: "/admin/lini-masa",
+      icon: Clock,
     },
     {
-      name: "Generator Soal AI (Gemini)",
+      name: "Monitoring Konfirmasi",
+      href: "/admin/rekap-tka",
+      icon: FileSpreadsheet,
+    },
+    {
+      name: "Generator Soal AI",
       href: "/admin/generator-soal",
       icon: Sparkles,
-      badge: "AI 5-Pilar",
     },
     {
-      name: "Validasi Bank Soal",
+      name: "Validasi & Input Soal",
       href: "/admin/validasi-soal",
       icon: CheckSquare,
     },
     {
-      name: "5 Pilar Kisi-Kisi TKA",
-      href: "/admin/kisi-kisi",
-      icon: BookMarked,
+      name: "Analisis Butir Soal",
+      href: "/admin/analisis-soal",
+      icon: BarChart3,
     },
     {
-      name: "Daftar Siswa & Industri PKL",
+      name: "Monitoring Progres",
+      href: "/admin/monitoring-progres",
+      icon: TrendingUp,
+    },
+    {
+      name: "Master Data Siswa",
       href: "/admin/siswa",
       icon: Users,
     },
     {
-      name: "Rekap Konfirmasi TKA",
-      href: "/admin/rekap-tka",
-      icon: FileSpreadsheet,
-      badge: "Ekspor",
+      name: "Master Staf & Guru",
+      href: "/admin/pengguna",
+      icon: ShieldCheck,
     },
   ];
+
+  const guruNavItems = [
+    {
+      name: "Validasi & Input Soal",
+      href: "/admin/validasi-soal",
+      icon: CheckSquare,
+    },
+    {
+      name: "Analisis Butir Soal",
+      href: "/admin/analisis-soal",
+      icon: BarChart3,
+    },
+    {
+      name: "Monitoring Progres Siswa",
+      href: "/admin/monitoring-progres",
+      icon: TrendingUp,
+    },
+  ];
+
+  const navItems = userRole === "GURU" ? guruNavItems : adminNavItems;
 
   return (
     <div className="min-h-screen bg-slate-100 flex">
@@ -92,7 +122,7 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
               <div>
                 <h1 className="font-extrabold text-lg text-white leading-tight">siapTKA</h1>
                 <p className="text-[11px] text-cyan-400 font-bold uppercase tracking-wider">
-                  Panel Guru & Sekolah
+                  {userRole === "GURU" ? `Guru: ${userMapel || "Mapel"}` : "Portal Administrator"}
                 </p>
               </div>
             </div>
@@ -104,8 +134,16 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
             </button>
           </div>
 
+          {/* Teacher Badge if applicable */}
+          {userRole === "GURU" && (
+            <div className="mx-4 mt-3 px-3 py-2 rounded-xl bg-blue-950/60 border border-blue-800/60 flex items-center gap-2 text-xs text-blue-300">
+              <GraduationCap className="w-4 h-4 text-cyan-400 shrink-0" />
+              <span className="font-medium truncate">Mata Pelajaran: <strong>{userMapel}</strong></span>
+            </div>
+          )}
+
           {/* Navigation Links */}
-          <nav className="p-4 space-y-1.5 overflow-y-auto max-h-[calc(100vh-180px)]">
+          <nav className="p-4 space-y-1 overflow-y-auto max-h-[calc(100vh-210px)]">
             {navItems.map((item) => {
               const isActive = pathname === item.href;
               const Icon = item.icon;
@@ -115,7 +153,7 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
                   key={item.href}
                   href={item.href}
                   onClick={() => setIsSidebarOpen(false)}
-                  className={`flex items-center justify-between px-3.5 py-3 rounded-2xl text-xs font-semibold transition-all ${
+                  className={`flex items-center justify-between px-3.5 py-2.5 rounded-xl text-xs font-semibold transition-all ${
                     isActive
                       ? "bg-blue-600 text-white shadow-lg shadow-blue-600/30"
                       : "text-slate-400 hover:text-white hover:bg-slate-800/60"
@@ -125,34 +163,25 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
                     <Icon className={`w-4 h-4 ${isActive ? "text-white" : "text-slate-400"}`} />
                     <span>{item.name}</span>
                   </div>
-                  {item.badge && (
-                    <span
-                      className={`text-[10px] px-2 py-0.5 rounded-full font-bold uppercase ${
-                        isActive ? "bg-white/20 text-white" : "bg-slate-800 text-cyan-400 border border-cyan-500/20"
-                      }`}
-                    >
-                      {item.badge}
-                    </span>
-                  )}
                 </Link>
               );
             })}
           </nav>
         </div>
 
-        {/* User Footer */}
-        <div className="p-4 border-t border-slate-800 bg-slate-950/50">
+        {/* User Profile Footer */}
+        <div className="p-4 border-t border-slate-800 bg-slate-950/60">
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-2.5 overflow-hidden">
               <div className="w-8 h-8 rounded-xl bg-slate-800 flex items-center justify-center text-cyan-400 font-bold text-xs shrink-0">
-                G
+                {userRole === "ADMIN" ? "A" : "G"}
               </div>
               <div className="overflow-hidden">
                 <p className="text-xs font-bold text-white truncate">
-                  {session?.user?.name || "Guru Pembimbing"}
+                  {session?.user?.name || "Pengguna"}
                 </p>
                 <p className="text-[10px] text-slate-400 truncate">
-                  {session?.user?.email || "guru@sekolah.sch.id"}
+                  {session?.user?.email || "admin@sekolah.sch.id"}
                 </p>
               </div>
             </div>
@@ -179,7 +208,7 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
             >
               <Menu className="w-5 h-5" />
             </button>
-            <span className="font-extrabold text-slate-900 text-base">siapTKA Admin</span>
+            <span className="font-extrabold text-slate-900 text-base">siapTKA</span>
           </div>
         </header>
 

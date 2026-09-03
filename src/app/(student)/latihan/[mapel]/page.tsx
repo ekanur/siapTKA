@@ -30,6 +30,7 @@ import {
 import { clientDb, CachedSoal, OfflineSubmission } from "@/lib/db/client-db";
 import { downloadActiveBankSoal } from "@/lib/sync/sync-manager";
 import { getSubjectTkaDetail } from "@/lib/constants/subjects";
+import { decryptExplanation } from "@/lib/security/crypto";
 import MathRenderer from "@/components/math/MathRenderer";
 
 function CloudCheckIcon({ className = "w-4 h-4 text-emerald-600" }: { className?: string }) {
@@ -700,7 +701,7 @@ export default function SubjectDetailPage() {
                   <span>Kunci Jawaban & Pembahasan Lengkap</span>
                 </div>
                 <div className="text-xs text-slate-800 leading-relaxed font-normal">
-                  <MathRenderer content={reviewSoal.pembahasan} />
+                  <MathRenderer content={decryptExplanation(reviewSoal.pembahasan, reviewSoal.id)} />
                 </div>
               </div>
             )}
