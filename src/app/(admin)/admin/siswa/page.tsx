@@ -21,17 +21,29 @@ import {
   ChevronRight,
   Layers,
   Sparkles,
+  ArrowLeft,
+  ArrowRight,
+  GraduationCap,
 } from "lucide-react";
 import { getSubjectDisplayName } from "@/lib/constants/subjects";
 import { DAFTAR_JURUSAN, getJurusanName } from "@/lib/constants/jurusan";
 
 export default function AdminSiswaPage() {
-  const [students, setStudents] = useState<any[]>([]);
   const [classes, setClasses] = useState<any[]>([]);
-  const [loading, setLoading] = useState(true);
-  const [searchTerm, setSearchTerm] = useState("");
+  const [classesLoading, setClassesLoading] = useState(true);
+
+  // Level 1 Filters: Jurusan & Class Search
+  const [selectedJurusanFilter, setSelectedJurusanFilter] = useState("ALL");
+  const [classSearchTerm, setClassSearchTerm] = useState("");
+
+  // Level 2 Drill-Down: Active Selected Class
+  const [selectedClassDetail, setSelectedClassDetail] = useState<any | null>(null);
+
+  // Students Data (Loaded only when Level 2 is active)
+  const [students, setStudents] = useState<any[]>([]);
+  const [studentsLoading, setStudentsLoading] = useState(false);
+  const [studentSearchTerm, setStudentSearchTerm] = useState("");
   const [selectedStatusTka, setSelectedStatusTka] = useState("ALL");
-  const [selectedKelas, setSelectedKelas] = useState("ALL");
 
   // Pagination (10 data per page)
   const [currentPage, setCurrentPage] = useState(1);
@@ -63,7 +75,9 @@ export default function AdminSiswaPage() {
   const [classSaving, setClassSaving] = useState(false);
   const [classMsg, setClassMsg] = useState<{ type: "success" | "error"; text: string } | null>(null);
 
+  // Fetch Classes List
   const loadClasses = async () => {
+    setClassesLoading(true);
     try {
       const res = await fetch("/api/admin/kelas");
       const data = await res.json();
@@ -72,29 +86,29 @@ export default function AdminSiswaPage() {
       }
     } catch (err) {
       console.error("Load classes error:", err);
+    } finally {
+      setClassesLoading(false);
     }
   };
 
-  const loadStudents = async () => {
-    setLoading(true);
+  // Fetch Students for Specific Class (Level 2)
+  const loadStudentsForClass = async (className: string) => {
+    setStudentsLoading(true);
     try {
-      let url = `/api/admin/siswa`;
-      const queryParts = [];
-      if (selectedStatusTka !== "ALL") queryParts.push(`statusTka=${selectedStatusTka}`);
-      if (selectedKelas !== "ALL") queryParts.push(`kelas=${encodeURIComponent(selectedKelas)}`);
-      if (searchTerm) queryParts.push(`search=${encodeURIComponent(searchTerm)}`);
-      if (queryParts.length > 0) url += `?${queryParts.join("&")}`;
+      let url = `/api/admin/siswa?kelas=${encodeURIComponent(className)}`;
+      if (selectedStatusTka !== "ALL") url += `&statusTka=${selectedStatusTka}`;
+      if (studentSearchTerm.trim()) url += `&search=${encodeURIComponent(studentSearchTerm.trim())}`;
 
       const res = await fetch(url);
       const data = await res.json();
       if (data.success) {
         setStudents(data.students);
-        setCurrentPage(1); // Reset to page 1 on filter
+        setCurrentPage(1);
       }
     } catch (err) {
-      console.error(err);
+      console.error("Load students error:", err);
     } finally {
-      setLoading(false);
+      setStudentsLoading(false);
     }
   };
 
@@ -102,13 +116,31 @@ export default function AdminSiswaPage() {
     loadClasses();
   }, []);
 
+  // When drilling down or changing filters in Level 2
   useEffect(() => {
-    loadStudents();
-  }, [selectedStatusTka, selectedKelas]);
+    if (selectedClassDetail) {
+      loadStudentsForClass(selectedClassDetail.nama);
+    }
+  }, [selectedClassDetail, selectedStatusTka]);
 
-  const handleSearchSubmit = (e: React.FormEvent) => {
+  const handleStudentSearchSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    loadStudents();
+    if (selectedClassDetail) {
+      loadStudentsForClass(selectedClassDetail.nama);
+    }
+  };
+
+  const handleSelectClass = (cls: any) => {
+    setSelectedClassDetail(cls);
+    setStudentSearchTerm("");
+    setSelectedStatusTka("ALL");
+    setCurrentPage(1);
+  };
+
+  const handleBackToClasses = () => {
+    setSelectedClassDetail(null);
+    setStudents([]);
+    loadClasses();
   };
 
   // CSV Import Parser
@@ -125,8 +157,8 @@ export default function AdminSiswaPage() {
           nis: r.nis || r.NIS || r.Nis,
           nama: r.nama || r.Nama || r.NAMA,
           email: r.email || r.Email || r.EMAIL,
-          jurusan: r.jurusan || r.Jurusan || "SIJA",
-          kelas: r.kelas || r.Kelas || r.KELAS || "",
+          jurusan: r.jurusan || r.Jurusan || (selectedClassDetail ? selectedClassDetail.jurusan : "DPIB"),
+          kelas: r.kelas || r.Kelas || r.KELAS || (selectedClassDetail ? selectedClassDetail.nama : ""),
           namaIndustriPkl: r.namaIndustriPkl || r.industri || r.Industri || "Belum Ditentukan",
         }));
 
@@ -139,8 +171,10 @@ export default function AdminSiswaPage() {
           const data = await res.json();
           if (data.success) {
             setCsvStatusMsg(data.message);
-            loadStudents();
             loadClasses();
+            if (selectedClassDetail) {
+              loadStudentsForClass(selectedClassDetail.nama);
+            }
           } else {
             setCsvStatusMsg(data.error || "Gagal mengimpor data");
           }
@@ -151,34 +185,34 @@ export default function AdminSiswaPage() {
     });
   };
 
-  // Manual Add/Edit Student
+  // Modal Student Handlers
   const handleOpenAddModal = () => {
     setModalMode("ADD");
+    setFeedbackMsg(null);
     setFormData({
       id: "",
       nis: "",
       nama: "",
       email: "",
-      jurusan: "SIJA",
-      kelasId: classes[0]?.id || "",
+      jurusan: selectedClassDetail ? selectedClassDetail.jurusan : "DPIB",
+      kelasId: selectedClassDetail ? selectedClassDetail.id : (classes[0]?.id || ""),
       namaIndustriPkl: "",
     });
-    setFeedbackMsg(null);
     setIsModalOpen(true);
   };
 
-  const handleOpenEditModal = (s: any) => {
+  const handleOpenEditModal = (student: any) => {
     setModalMode("EDIT");
-    setFormData({
-      id: s.id,
-      nis: s.nis,
-      nama: s.nama,
-      email: s.email,
-      jurusan: s.jurusan || "SIJA",
-      kelasId: s.kelasId || "",
-      namaIndustriPkl: s.namaIndustriPkl || "",
-    });
     setFeedbackMsg(null);
+    setFormData({
+      id: student.id,
+      nis: student.nis,
+      nama: student.nama,
+      email: student.email,
+      jurusan: student.jurusan,
+      kelasId: student.kelasId || "",
+      namaIndustriPkl: student.namaIndustriPkl || "",
+    });
     setIsModalOpen(true);
   };
 
@@ -188,10 +222,14 @@ export default function AdminSiswaPage() {
     setFeedbackMsg(null);
 
     try {
-      const selectedK = classes.find((c) => c.id === formData.kelasId);
-      const payload: any = {
-        ...formData,
-        namaKelas: selectedK?.nama || null,
+      const payload = {
+        id: formData.id,
+        nis: formData.nis.trim(),
+        nama: formData.nama.trim(),
+        email: formData.email.trim().toLowerCase(),
+        jurusan: formData.jurusan,
+        kelasId: formData.kelasId || null,
+        namaIndustriPkl: formData.namaIndustriPkl.trim() || "Belum Ditentukan",
       };
 
       if (modalMode === "ADD") {
@@ -203,8 +241,10 @@ export default function AdminSiswaPage() {
         const data = await res.json();
         if (data.success) {
           setFeedbackMsg({ type: "success", text: data.message });
-          loadStudents();
           loadClasses();
+          if (selectedClassDetail) {
+            loadStudentsForClass(selectedClassDetail.nama);
+          }
           setTimeout(() => setIsModalOpen(false), 1200);
         } else {
           setFeedbackMsg({ type: "error", text: data.error });
@@ -218,8 +258,10 @@ export default function AdminSiswaPage() {
         const data = await res.json();
         if (data.success) {
           setFeedbackMsg({ type: "success", text: data.message });
-          loadStudents();
           loadClasses();
+          if (selectedClassDetail) {
+            loadStudentsForClass(selectedClassDetail.nama);
+          }
           setTimeout(() => setIsModalOpen(false), 1200);
         } else {
           setFeedbackMsg({ type: "error", text: data.error });
@@ -239,8 +281,10 @@ export default function AdminSiswaPage() {
       const res = await fetch(`/api/admin/siswa?id=${id}`, { method: "DELETE" });
       const data = await res.json();
       if (data.success) {
-        loadStudents();
         loadClasses();
+        if (selectedClassDetail) {
+          loadStudentsForClass(selectedClassDetail.nama);
+        }
       } else {
         alert(data.error || "Gagal menghapus siswa");
       }
@@ -288,7 +332,6 @@ export default function AdminSiswaPage() {
       const data = await res.json();
       if (data.success) {
         loadClasses();
-        loadStudents();
       } else {
         alert(data.error);
       }
@@ -297,7 +340,20 @@ export default function AdminSiswaPage() {
     }
   };
 
-  // Pagination Calculations
+  // Level 1: Filter classes by jurusan & search
+  const filteredClasses = classes.filter((c) => {
+    const matchJurusan = selectedJurusanFilter === "ALL" || c.jurusan === selectedJurusanFilter;
+    const matchSearch =
+      !classSearchTerm.trim() ||
+      c.nama.toLowerCase().includes(classSearchTerm.toLowerCase()) ||
+      c.jurusan.toLowerCase().includes(classSearchTerm.toLowerCase()) ||
+      getJurusanName(c.jurusan).toLowerCase().includes(classSearchTerm.toLowerCase());
+    return matchJurusan && matchSearch;
+  });
+
+  const totalSiswaSekolah = classes.reduce((acc, c) => acc + (c.totalSiswa || 0), 0);
+
+  // Level 2: Pagination Calculations
   const totalItems = students.length;
   const totalPages = Math.ceil(totalItems / itemsPerPage) || 1;
   const startIndex = (currentPage - 1) * itemsPerPage;
@@ -311,17 +367,17 @@ export default function AdminSiswaPage() {
         <div>
           <div className="inline-flex items-center gap-1.5 px-3 py-1 bg-blue-50 border border-blue-200 text-blue-700 rounded-full text-xs font-bold mb-1.5">
             <Users className="w-3.5 h-3.5" />
-            <span>Master Data Peserta Didik</span>
+            <span>Master Data Peserta Didik & Rombel</span>
           </div>
           <h1 className="text-2xl font-black text-slate-900 tracking-tight">
             Data Siswa & Manajemen Kelas
           </h1>
           <p className="text-xs text-slate-500 mt-1">
-            Kelola data siswa, alokasi kelas untuk 12 Jurusan SMKN 2 Depok Sleman, tempat industri PKL, serta pemetaan mata pelajaran pilihan TKA.
+            Sistem pengelompokan bertingkat: Pilih rombel kelas terlebih dahulu untuk mengelola data siswa dengan hemat beban transfer jaringan.
           </p>
         </div>
 
-        {/* Action Buttons */}
+        {/* Global Action Buttons */}
         <div className="flex flex-wrap items-center gap-2.5">
           <button
             onClick={() => {
@@ -352,237 +408,385 @@ export default function AdminSiswaPage() {
         </div>
       </div>
 
-      {/* Class Statistics Pills */}
-      <div className="flex items-center gap-2 overflow-x-auto pb-1 text-xs">
-        <button
-          onClick={() => setSelectedKelas("ALL")}
-          className={`px-3 py-1.5 rounded-xl font-bold transition-all shrink-0 cursor-pointer ${
-            selectedKelas === "ALL"
-              ? "bg-slate-900 text-white shadow-xs"
-              : "bg-white border border-slate-200 text-slate-600 hover:bg-slate-50"
-          }`}
-        >
-          Semua Kelas ({students.length})
-        </button>
-        {classes.map((c) => (
-          <button
-            key={c.id}
-            onClick={() => setSelectedKelas(c.nama)}
-            className={`px-3 py-1.5 rounded-xl font-bold transition-all shrink-0 cursor-pointer flex items-center gap-1.5 ${
-              selectedKelas === c.nama
-                ? "bg-blue-600 text-white shadow-xs"
-                : "bg-white border border-slate-200 text-slate-600 hover:bg-slate-50"
-            }`}
-          >
-            <span>{c.nama}</span>
-            <span
-              className={`px-1.5 py-0.2 rounded-full text-[10px] ${
-                selectedKelas === c.nama ? "bg-blue-700 text-white" : "bg-slate-100 text-slate-600"
-              }`}
-            >
-              {c.totalSiswa}
-            </span>
-          </button>
-        ))}
-      </div>
-
-      {/* Filter & Search Bar */}
-      <div className="bg-white p-4 rounded-3xl border border-slate-200 shadow-xs flex flex-col sm:flex-row items-center justify-between gap-3">
-        <form onSubmit={handleSearchSubmit} className="relative w-full sm:w-80">
-          <Search className="w-4 h-4 text-slate-400 absolute left-3.5 top-1/2 -translate-y-1/2" />
-          <input
-            type="text"
-            placeholder="Cari NIS, Nama, atau Email..."
-            value={searchTerm}
-            onChange={(e) => setSearchTerm(e.target.value)}
-            className="w-full pl-9 pr-3.5 py-2 rounded-xl border border-slate-200 text-xs font-medium text-slate-800 placeholder:text-slate-400 focus:outline-hidden focus:ring-2 focus:ring-blue-500"
-          />
-        </form>
-
-        <div className="flex items-center gap-2.5 w-full sm:w-auto">
-          <div className="flex items-center gap-1.5 text-xs text-slate-500 font-semibold shrink-0">
-            <Filter className="w-3.5 h-3.5" />
-            <span>Status TKA:</span>
-          </div>
-          <select
-            value={selectedStatusTka}
-            onChange={(e) => setSelectedStatusTka(e.target.value)}
-            className="w-full sm:w-auto px-3 py-2 rounded-xl border border-slate-200 bg-white text-xs font-semibold text-slate-700 focus:outline-hidden focus:ring-2 focus:ring-blue-500 cursor-pointer"
-          >
-            <option value="ALL">Semua Status</option>
-            <option value="IKUT">Bersedia Ikut (IKUT)</option>
-            <option value="TIDAK_IKUT">Tidak Ikut</option>
-            <option value="BELUM_MERESPONS">Belum Konfirmasi</option>
-          </select>
-        </div>
-      </div>
-
-      {/* Students Table Card */}
-      <div className="bg-white rounded-3xl border border-slate-200 shadow-xs overflow-hidden">
-        <div className="overflow-x-auto">
-          <table className="w-full text-left text-xs border-collapse">
-            <thead>
-              <tr className="bg-slate-50/80 border-b border-slate-200 text-slate-500 font-extrabold uppercase tracking-wider">
-                <th className="py-3.5 px-4 w-12 text-center">No</th>
-                <th className="py-3.5 px-4">Siswa</th>
-                <th className="py-3.5 px-4">Kelas</th>
-                <th className="py-3.5 px-4">Industri PKL</th>
-                <th className="py-3.5 px-4">Status TKA</th>
-                <th className="py-3.5 px-4">Mapel Pilihan</th>
-                <th className="py-3.5 px-4 text-center">Aksi</th>
-              </tr>
-            </thead>
-            <tbody className="divide-y divide-slate-100 font-medium text-slate-700">
-              {loading ? (
-                <tr>
-                  <td colSpan={7} className="py-12 text-center text-slate-400">
-                    Memuat data siswa...
-                  </td>
-                </tr>
-              ) : paginatedStudents.length === 0 ? (
-                <tr>
-                  <td colSpan={7} className="py-12 text-center text-slate-400">
-                    Tidak ditemukan data siswa sesuai filter.
-                  </td>
-                </tr>
-              ) : (
-                paginatedStudents.map((s, idx) => (
-                  <tr key={s.id} className="hover:bg-slate-50/80 transition-colors">
-                    <td className="py-3 px-4 text-center text-slate-400 font-mono">
-                      {startIndex + idx + 1}
-                    </td>
-                    <td className="py-3 px-4">
-                      <div>
-                        <p className="font-bold text-slate-900">{s.nama}</p>
-                        <p className="text-[11px] text-slate-400 font-mono">
-                          NIS: {s.nis} • {s.email}
-                        </p>
-                      </div>
-                    </td>
-                    <td className="py-3 px-4">
-                      <span className="px-2.5 py-1 rounded-lg text-[11px] font-extrabold bg-blue-50 text-blue-800 border border-blue-200">
-                        {s.namaKelas || s.kelas?.nama || "Tanpa Kelas"}
-                      </span>
-                    </td>
-                    <td className="py-3 px-4">
-                      <div className="flex items-center gap-1.5 text-slate-600">
-                        <Building2 className="w-3.5 h-3.5 text-slate-400 shrink-0" />
-                        <span className="truncate max-w-[160px]">{s.namaIndustriPkl}</span>
-                      </div>
-                    </td>
-                    <td className="py-3 px-4">
-                      {s.statusTka === "IKUT" ? (
-                        <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-[10px] font-bold bg-emerald-100 text-emerald-800">
-                          <CheckCircle2 className="w-3 h-3" />
-                          <span>Ikut TKA</span>
-                        </span>
-                      ) : s.statusTka === "TIDAK_IKUT" ? (
-                        <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-[10px] font-bold bg-rose-100 text-rose-800">
-                          <span>Tidak Ikut</span>
-                        </span>
-                      ) : (
-                        <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-[10px] font-bold bg-amber-100 text-amber-800">
-                          <Clock className="w-3 h-3" />
-                          <span>Belum Respons</span>
-                        </span>
-                      )}
-                    </td>
-                    <td className="py-3 px-4">
-                      {s.statusTka === "IKUT" ? (
-                        <div className="text-[11px] space-y-0.5">
-                          <p className="font-semibold text-slate-800 truncate max-w-[170px]">
-                            1. {getSubjectDisplayName(s.mapelPilihan1)}
-                          </p>
-                          <p className="font-semibold text-slate-800 truncate max-w-[170px]">
-                            2. {getSubjectDisplayName(s.mapelPilihan2)}
-                          </p>
-                        </div>
-                      ) : (
-                        <span className="text-slate-400 text-[11px]">-</span>
-                      )}
-                    </td>
-                    <td className="py-3 px-4 text-center">
-                      <div className="flex items-center justify-center gap-1">
-                        <button
-                          onClick={() => handleOpenEditModal(s)}
-                          className="p-1.5 text-slate-500 hover:text-blue-600 hover:bg-blue-50 rounded-lg transition-colors cursor-pointer"
-                          title="Edit Data Siswa"
-                        >
-                          <Edit2 className="w-3.5 h-3.5" />
-                        </button>
-                        <button
-                          onClick={() => handleDeleteStudent(s.id, s.nama)}
-                          className="p-1.5 text-slate-500 hover:text-rose-600 hover:bg-rose-50 rounded-lg transition-colors cursor-pointer"
-                          title="Hapus Siswa"
-                        >
-                          <Trash2 className="w-3.5 h-3.5" />
-                        </button>
-                      </div>
-                    </td>
-                  </tr>
-                ))
-              )}
-            </tbody>
-          </table>
-        </div>
-
-        {/* Standard Pagination (10 data per page) */}
-        <div className="p-4 bg-slate-50/70 border-t border-slate-200 flex flex-col sm:flex-row items-center justify-between gap-3 text-xs text-slate-500">
-          <div>
-            Menampilkan <span className="font-bold text-slate-800">{totalItems > 0 ? startIndex + 1 : 0}</span> s.d.{" "}
-            <span className="font-bold text-slate-800">{endIndex}</span> dari{" "}
-            <span className="font-bold text-slate-800">{totalItems}</span> siswa
-          </div>
-
-          <div className="flex items-center gap-1.5">
-            <button
-              onClick={() => setCurrentPage((p) => Math.max(p - 1, 1))}
-              disabled={currentPage === 1}
-              className="px-2.5 py-1.5 rounded-lg border border-slate-200 bg-white text-slate-600 hover:bg-slate-50 disabled:opacity-40 disabled:cursor-not-allowed cursor-pointer flex items-center gap-1 font-semibold"
-            >
-              <ChevronLeft className="w-3.5 h-3.5" />
-              <span>Sebelumnya</span>
-            </button>
-
-            <div className="flex items-center gap-1">
-              {Array.from({ length: totalPages }, (_, i) => i + 1).map((pg) => {
-                // Show first, last, and pages around current
-                if (pg === 1 || pg === totalPages || (pg >= currentPage - 1 && pg <= currentPage + 1)) {
-                  return (
-                    <button
-                      key={pg}
-                      onClick={() => setCurrentPage(pg)}
-                      className={`w-7 h-7 rounded-lg text-xs font-bold transition-all cursor-pointer ${
-                        currentPage === pg
-                          ? "bg-blue-600 text-white shadow-xs"
-                          : "bg-white border border-slate-200 text-slate-600 hover:bg-slate-50"
-                      }`}
-                    >
-                      {pg}
-                    </button>
-                  );
-                } else if (pg === currentPage - 2 || pg === currentPage + 2) {
-                  return (
-                    <span key={pg} className="px-1 text-slate-400">
-                      ...
-                    </span>
-                  );
-                }
-                return null;
-              })}
+      {/* ========================================================================= */}
+      {/* LEVEL 1: DAFTAR ROMBEL KELAS (Tampil Pertama Kali) */}
+      {/* ========================================================================= */}
+      {!selectedClassDetail ? (
+        <div className="space-y-5">
+          {/* Summary Metric Cards */}
+          <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+            <div className="p-4 bg-white rounded-3xl border border-slate-200 shadow-xs flex items-center gap-3.5">
+              <div className="w-11 h-11 rounded-2xl bg-blue-50 text-blue-600 flex items-center justify-center font-bold">
+                <School className="w-5 h-5" />
+              </div>
+              <div>
+                <span className="text-[11px] font-bold text-slate-400 uppercase tracking-wider">Total Rombel Kelas</span>
+                <div className="text-xl font-black text-slate-900">{classes.length} Kelas</div>
+              </div>
             </div>
 
+            <div className="p-4 bg-white rounded-3xl border border-slate-200 shadow-xs flex items-center gap-3.5">
+              <div className="w-11 h-11 rounded-2xl bg-indigo-50 text-indigo-600 flex items-center justify-center font-bold">
+                <GraduationCap className="w-5 h-5" />
+              </div>
+              <div>
+                <span className="text-[11px] font-bold text-slate-400 uppercase tracking-wider">Kompetensi Keahlian</span>
+                <div className="text-xl font-black text-slate-900">{DAFTAR_JURUSAN.length} Jurusan</div>
+              </div>
+            </div>
+
+            <div className="p-4 bg-white rounded-3xl border border-slate-200 shadow-xs flex items-center gap-3.5">
+              <div className="w-11 h-11 rounded-2xl bg-emerald-50 text-emerald-600 flex items-center justify-center font-bold">
+                <Users className="w-5 h-5" />
+              </div>
+              <div>
+                <span className="text-[11px] font-bold text-slate-400 uppercase tracking-wider">Total Siswa Terdaftar</span>
+                <div className="text-xl font-black text-slate-900">{totalSiswaSekolah} Siswa</div>
+              </div>
+            </div>
+          </div>
+
+          {/* Jurusan Filter Pills */}
+          <div className="flex items-center gap-1.5 overflow-x-auto pb-1 text-xs">
             <button
-              onClick={() => setCurrentPage((p) => Math.min(p + 1, totalPages))}
-              disabled={currentPage === totalPages || totalPages === 0}
-              className="px-2.5 py-1.5 rounded-lg border border-slate-200 bg-white text-slate-600 hover:bg-slate-50 disabled:opacity-40 disabled:cursor-not-allowed cursor-pointer flex items-center gap-1 font-semibold"
+              onClick={() => setSelectedJurusanFilter("ALL")}
+              className={`px-3 py-1.5 rounded-xl font-bold transition-all shrink-0 cursor-pointer ${
+                selectedJurusanFilter === "ALL"
+                  ? "bg-slate-900 text-white shadow-xs"
+                  : "bg-white border border-slate-200 text-slate-600 hover:bg-slate-50"
+              }`}
             >
-              <span>Selanjutnya</span>
-              <ChevronRight className="w-3.5 h-3.5" />
+              Semua Jurusan ({classes.length})
             </button>
+            {DAFTAR_JURUSAN.map((j) => {
+              const classCount = classes.filter((c) => c.jurusan === j.id).length;
+              return (
+                <button
+                  key={j.id}
+                  onClick={() => setSelectedJurusanFilter(j.id)}
+                  className={`px-3 py-1.5 rounded-xl font-bold transition-all shrink-0 cursor-pointer flex items-center gap-1.5 ${
+                    selectedJurusanFilter === j.id
+                      ? "bg-blue-600 text-white shadow-xs"
+                      : "bg-white border border-slate-200 text-slate-600 hover:bg-slate-50"
+                  }`}
+                >
+                  <span>{j.id}</span>
+                  <span
+                    className={`px-1.5 py-0.2 rounded-full text-[10px] ${
+                      selectedJurusanFilter === j.id ? "bg-blue-700 text-white" : "bg-slate-100 text-slate-600"
+                    }`}
+                  >
+                    {classCount}
+                  </span>
+                </button>
+              );
+            })}
+          </div>
+
+          {/* Class Search Bar */}
+          <div className="bg-white p-4 rounded-3xl border border-slate-200 shadow-xs flex flex-col sm:flex-row items-center justify-between gap-3">
+            <div className="relative w-full sm:w-96">
+              <Search className="w-4 h-4 text-slate-400 absolute left-3.5 top-1/2 -translate-y-1/2" />
+              <input
+                type="text"
+                placeholder="Cari nama rombel kelas atau jurusan..."
+                value={classSearchTerm}
+                onChange={(e) => setClassSearchTerm(e.target.value)}
+                className="w-full pl-9 pr-3.5 py-2 rounded-xl border border-slate-200 text-xs font-medium text-slate-800 placeholder:text-slate-400 focus:outline-hidden focus:ring-2 focus:ring-blue-500"
+              />
+            </div>
+            <div className="text-xs text-slate-500">
+              Menampilkan <strong>{filteredClasses.length}</strong> rombel kelas. Klik pada kelas untuk mengelola siswanya.
+            </div>
+          </div>
+
+          {/* Grid of Class Cards */}
+          {classesLoading ? (
+            <div className="p-16 text-center text-xs text-slate-400 bg-white rounded-3xl border border-slate-200">
+              Memuat data rombel kelas...
+            </div>
+          ) : filteredClasses.length === 0 ? (
+            <div className="p-16 text-center text-xs text-slate-400 bg-white rounded-3xl border border-slate-200 space-y-2">
+              <School className="w-8 h-8 text-slate-300 mx-auto" />
+              <p className="font-semibold">Tidak ditemukan rombel kelas sesuai filter.</p>
+            </div>
+          ) : (
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+              {filteredClasses.map((c) => (
+                <div
+                  key={c.id}
+                  onClick={() => handleSelectClass(c)}
+                  className="bg-white rounded-3xl border border-slate-200 p-5 shadow-xs hover:border-blue-300 hover:shadow-md transition-all cursor-pointer group flex flex-col justify-between space-y-4"
+                >
+                  <div className="space-y-2">
+                    <div className="flex items-center justify-between">
+                      <span className="text-sm font-black text-slate-900 group-hover:text-blue-600 transition-colors">
+                        {c.nama}
+                      </span>
+                      <span className="px-2.5 py-0.5 rounded-full bg-blue-50 text-blue-700 font-extrabold text-[11px]">
+                        {c.jurusan}
+                      </span>
+                    </div>
+
+                    <p className="text-xs text-slate-500 line-clamp-1">
+                      {getJurusanName(c.jurusan)}
+                    </p>
+                    <div className="text-[11px] text-slate-400 font-medium">
+                      Tingkat {c.tingkat} {c.tingkat === 13 ? "(Program 4 Tahun)" : "(Program 3 Tahun)"}
+                    </div>
+                  </div>
+
+                  <div className="pt-3 border-t border-slate-100 flex items-center justify-between">
+                    <div className="flex items-center gap-1.5 text-xs text-slate-700 font-bold">
+                      <Users className="w-3.5 h-3.5 text-slate-400" />
+                      <span>{c.totalSiswa || 0} Siswa Terdaftar</span>
+                    </div>
+                    <span className="text-xs font-bold text-blue-600 flex items-center gap-1 group-hover:translate-x-1 transition-transform">
+                      <span>Buka Siswa</span>
+                      <ArrowRight className="w-3.5 h-3.5" />
+                    </span>
+                  </div>
+                </div>
+              ))}
+            </div>
+          )}
+        </div>
+      ) : (
+        /* ========================================================================= */
+        /* LEVEL 2: DAFTAR SISWA KELAS TERPILIH (Setelah Kelas Diklik) */
+        /* ========================================================================= */
+        <div className="space-y-5 animate-in fade-in duration-200">
+          {/* Back Button & Class Banner */}
+          <div className="bg-white p-5 rounded-3xl border border-slate-200 shadow-xs flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+            <div className="space-y-1">
+              <button
+                onClick={handleBackToClasses}
+                className="inline-flex items-center gap-1.5 text-xs font-bold text-blue-600 hover:text-blue-800 transition-colors cursor-pointer mb-1"
+              >
+                <ArrowLeft className="w-4 h-4" />
+                <span>Kembali ke Daftar Rombel Kelas</span>
+              </button>
+              <div className="flex items-center gap-2.5 flex-wrap">
+                <h2 className="text-xl font-black text-slate-900">
+                  Data Siswa: {selectedClassDetail.nama}
+                </h2>
+                <span className="px-2.5 py-0.5 rounded-full bg-blue-100 text-blue-800 text-xs font-bold">
+                  {selectedClassDetail.jurusan}
+                </span>
+                <span className="text-xs text-slate-500 font-medium">
+                  • {getJurusanName(selectedClassDetail.jurusan)}
+                </span>
+              </div>
+            </div>
+
+            <div className="flex items-center gap-2">
+              <button
+                onClick={handleOpenAddModal}
+                className="px-4 py-2 rounded-xl bg-blue-600 hover:bg-blue-700 text-white text-xs font-bold flex items-center gap-1.5 shadow-md shadow-blue-500/20 transition-all cursor-pointer shrink-0"
+              >
+                <PlusCircle className="w-3.5 h-3.5" />
+                <span>+ Siswa di Kelas Ini</span>
+              </button>
+            </div>
+          </div>
+
+          {/* Student Search & Status Filter */}
+          <div className="bg-white p-4 rounded-3xl border border-slate-200 shadow-xs flex flex-col sm:flex-row items-center justify-between gap-3">
+            <form onSubmit={handleStudentSearchSubmit} className="relative w-full sm:w-80">
+              <Search className="w-4 h-4 text-slate-400 absolute left-3.5 top-1/2 -translate-y-1/2" />
+              <input
+                type="text"
+                placeholder="Cari NIS, Nama, atau Email di kelas ini..."
+                value={studentSearchTerm}
+                onChange={(e) => setStudentSearchTerm(e.target.value)}
+                className="w-full pl-9 pr-3.5 py-2 rounded-xl border border-slate-200 text-xs font-medium text-slate-800 placeholder:text-slate-400 focus:outline-hidden focus:ring-2 focus:ring-blue-500"
+              />
+            </form>
+
+            <div className="flex items-center gap-2.5 w-full sm:w-auto">
+              <div className="flex items-center gap-1.5 text-xs text-slate-500 font-semibold shrink-0">
+                <Filter className="w-3.5 h-3.5" />
+                <span>Filter Status:</span>
+              </div>
+              <select
+                value={selectedStatusTka}
+                onChange={(e) => setSelectedStatusTka(e.target.value)}
+                className="w-full sm:w-auto px-3 py-2 rounded-xl border border-slate-200 bg-white text-xs font-semibold text-slate-700 focus:outline-hidden focus:ring-2 focus:ring-blue-500 cursor-pointer"
+              >
+                <option value="ALL">Semua Status Konfirmasi</option>
+                <option value="IKUT">Bersedia Ikut (IKUT)</option>
+                <option value="TIDAK_IKUT">Tidak Ikut</option>
+                <option value="BELUM_MERESPONS">Belum Konfirmasi</option>
+              </select>
+            </div>
+          </div>
+
+          {/* Students Table Card */}
+          <div className="bg-white rounded-3xl border border-slate-200 shadow-xs overflow-hidden">
+            <div className="overflow-x-auto">
+              <table className="w-full text-left text-xs border-collapse">
+                <thead>
+                  <tr className="bg-slate-50/80 border-b border-slate-200 text-slate-500 font-extrabold uppercase tracking-wider">
+                    <th className="py-3.5 px-4 w-12 text-center">No</th>
+                    <th className="py-3.5 px-4">Siswa</th>
+                    <th className="py-3.5 px-4">Industri PKL</th>
+                    <th className="py-3.5 px-4">Status TKA</th>
+                    <th className="py-3.5 px-4">Mapel Pilihan</th>
+                    <th className="py-3.5 px-4 text-center">Aksi</th>
+                  </tr>
+                </thead>
+                <tbody className="divide-y divide-slate-100 font-medium text-slate-700">
+                  {studentsLoading ? (
+                    <tr>
+                      <td colSpan={6} className="py-12 text-center text-slate-400">
+                        Memuat data siswa kelas {selectedClassDetail.nama}...
+                      </td>
+                    </tr>
+                  ) : paginatedStudents.length === 0 ? (
+                    <tr>
+                      <td colSpan={6} className="py-12 text-center text-slate-400">
+                        Tidak ditemukan data siswa di kelas ini.
+                      </td>
+                    </tr>
+                  ) : (
+                    paginatedStudents.map((s, idx) => (
+                      <tr key={s.id} className="hover:bg-slate-50/80 transition-colors">
+                        <td className="py-3 px-4 text-center text-slate-400 font-semibold">
+                          {startIndex + idx + 1}
+                        </td>
+                        <td className="py-3 px-4">
+                          <div className="font-extrabold text-slate-900">{s.nama}</div>
+                          <div className="text-[11px] text-slate-400">
+                            NIS: {s.nis} • {s.email}
+                          </div>
+                        </td>
+                        <td className="py-3 px-4">
+                          <div className="flex items-center gap-1.5 text-slate-700">
+                            <Building2 className="w-3.5 h-3.5 text-slate-400 shrink-0" />
+                            <span className="truncate max-w-[180px]">{s.namaIndustriPkl || "-"}</span>
+                          </div>
+                        </td>
+                        <td className="py-3 px-4">
+                          {s.statusTka === "IKUT" && (
+                            <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full bg-emerald-50 text-emerald-700 font-extrabold text-[11px] border border-emerald-200">
+                              <CheckCircle2 className="w-3 h-3 text-emerald-600" />
+                              <span>Bersedia</span>
+                            </span>
+                          )}
+                          {s.statusTka === "TIDAK_IKUT" && (
+                            <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full bg-rose-50 text-rose-700 font-extrabold text-[11px] border border-rose-200">
+                              <X className="w-3 h-3 text-rose-600" />
+                              <span>Tidak Ikut</span>
+                            </span>
+                          )}
+                          {(!s.statusTka || s.statusTka === "BELUM_MERESPONS") && (
+                            <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full bg-amber-50 text-amber-700 font-extrabold text-[11px] border border-amber-200">
+                              <Clock className="w-3 h-3 text-amber-600" />
+                              <span>Belum Konfirmasi</span>
+                            </span>
+                          )}
+                        </td>
+                        <td className="py-3 px-4">
+                          {s.statusTka === "IKUT" && (s.mapelPilihan1 || s.mapelPilihan2) ? (
+                            <div className="space-y-0.5">
+                              {s.mapelPilihan1 && (
+                                <span className="inline-block px-2 py-0.5 bg-blue-50 text-blue-700 rounded-md font-bold text-[10px] mr-1">
+                                  1. {getSubjectDisplayName(s.mapelPilihan1)}
+                                </span>
+                              )}
+                              {s.mapelPilihan2 && (
+                                <span className="inline-block px-2 py-0.5 bg-indigo-50 text-indigo-700 rounded-md font-bold text-[10px]">
+                                  2. {getSubjectDisplayName(s.mapelPilihan2)}
+                                </span>
+                              )}
+                            </div>
+                          ) : (
+                            <span className="text-slate-400 text-[11px]">-</span>
+                          )}
+                        </td>
+                        <td className="py-3 px-4 text-center">
+                          <div className="flex items-center justify-center gap-1">
+                            <button
+                              onClick={() => handleOpenEditModal(s)}
+                              className="p-1.5 text-slate-500 hover:text-blue-600 hover:bg-blue-50 rounded-lg transition-colors cursor-pointer"
+                              title="Edit Data Siswa"
+                            >
+                              <Edit2 className="w-3.5 h-3.5" />
+                            </button>
+                            <button
+                              onClick={() => handleDeleteStudent(s.id, s.nama)}
+                              className="p-1.5 text-slate-500 hover:text-rose-600 hover:bg-rose-50 rounded-lg transition-colors cursor-pointer"
+                              title="Hapus Siswa"
+                            >
+                              <Trash2 className="w-3.5 h-3.5" />
+                            </button>
+                          </div>
+                        </td>
+                      </tr>
+                    ))
+                  )}
+                </tbody>
+              </table>
+            </div>
+
+            {/* Standard Pagination (10 data per page) */}
+            <div className="p-4 bg-slate-50/70 border-t border-slate-200 flex flex-col sm:flex-row items-center justify-between gap-3 text-xs text-slate-500">
+              <div>
+                Menampilkan <span className="font-bold text-slate-800">{totalItems > 0 ? startIndex + 1 : 0}</span> s.d.{" "}
+                <span className="font-bold text-slate-800">{endIndex}</span> dari{" "}
+                <span className="font-bold text-slate-800">{totalItems}</span> siswa di kelas {selectedClassDetail.nama}
+              </div>
+
+              <div className="flex items-center gap-1.5">
+                <button
+                  onClick={() => setCurrentPage((p) => Math.max(p - 1, 1))}
+                  disabled={currentPage === 1}
+                  className="px-2.5 py-1.5 rounded-lg border border-slate-200 bg-white text-slate-600 hover:bg-slate-50 disabled:opacity-40 disabled:cursor-not-allowed cursor-pointer flex items-center gap-1 font-semibold"
+                >
+                  <ChevronLeft className="w-3.5 h-3.5" />
+                  <span>Sebelumnya</span>
+                </button>
+
+                <div className="flex items-center gap-1">
+                  {Array.from({ length: totalPages }, (_, i) => i + 1).map((pg) => {
+                    if (pg === 1 || pg === totalPages || (pg >= currentPage - 1 && pg <= currentPage + 1)) {
+                      return (
+                        <button
+                          key={pg}
+                          onClick={() => setCurrentPage(pg)}
+                          className={`w-7 h-7 rounded-lg text-xs font-bold transition-all cursor-pointer ${
+                            currentPage === pg
+                              ? "bg-blue-600 text-white shadow-xs"
+                              : "bg-white border border-slate-200 text-slate-600 hover:bg-slate-50"
+                          }`}
+                        >
+                          {pg}
+                        </button>
+                      );
+                    } else if (pg === currentPage - 2 || pg === currentPage + 2) {
+                      return (
+                        <span key={pg} className="px-1 text-slate-400">
+                          ...
+                        </span>
+                      );
+                    }
+                    return null;
+                  })}
+                </div>
+
+                <button
+                  onClick={() => setCurrentPage((p) => Math.min(p + 1, totalPages))}
+                  disabled={currentPage === totalPages || totalPages === 0}
+                  className="px-2.5 py-1.5 rounded-lg border border-slate-200 bg-white text-slate-600 hover:bg-slate-50 disabled:opacity-40 disabled:cursor-not-allowed cursor-pointer flex items-center gap-1 font-semibold"
+                >
+                  <span>Selanjutnya</span>
+                  <ChevronRight className="w-3.5 h-3.5" />
+                </button>
+              </div>
+            </div>
           </div>
         </div>
-      </div>
+      )}
 
       {/* Modal Add/Edit Student */}
       {isModalOpen && (
@@ -690,7 +894,7 @@ export default function AdminSiswaPage() {
                   required
                   value={formData.email}
                   onChange={(e) => setFormData({ ...formData, email: e.target.value })}
-                  placeholder="sija.22231001@sekolah.sch.id"
+                  placeholder="siswa@sekolah.sch.id"
                   className="w-full px-3 py-2 rounded-xl border border-slate-300 font-semibold focus:ring-2 focus:ring-blue-500"
                 />
               </div>
@@ -701,7 +905,7 @@ export default function AdminSiswaPage() {
                   type="text"
                   value={formData.namaIndustriPkl}
                   onChange={(e) => setFormData({ ...formData, namaIndustriPkl: e.target.value })}
-                  placeholder="Contoh: PT Telkom Akses"
+                  placeholder="Contoh: PT PLN (Persero)"
                   className="w-full px-3 py-2 rounded-xl border border-slate-300 font-semibold focus:ring-2 focus:ring-blue-500"
                 />
               </div>
@@ -738,7 +942,7 @@ export default function AdminSiswaPage() {
                   <span>Manajemen Data Kelas</span>
                 </h3>
                 <p className="text-[11px] text-slate-500 mt-0.5">
-                  Daftar rombel kelas tingkat 13 PKL SMKN 2 Depok Sleman.
+                  Daftar rombel kelas 12 jurusan SMKN 2 Depok Sleman.
                 </p>
               </div>
               <button
