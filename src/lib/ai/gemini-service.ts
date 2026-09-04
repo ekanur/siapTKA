@@ -1,6 +1,6 @@
-import { GoogleGenerativeAI, SchemaType } from "@google/generative-ai";
+import { GoogleGenerativeAI } from "@google/generative-ai";
 
-interface GenerateParams {
+export interface GenerateParams {
   mapel: string;
   tipeSoal: "PILIHAN_GANDA" | "MCMA" | "PGK_KATEGORI";
   jumlahSoal?: number;
@@ -18,7 +18,7 @@ interface GenerateParams {
   };
 }
 
-interface GeneratedSoalResult {
+export interface GeneratedSoalResult {
   pertanyaan: string;
   tipeSoal: string;
   opsiJawaban: any;
@@ -26,184 +26,411 @@ interface GeneratedSoalResult {
   pembahasan: string;
 }
 
-export async function generateSoalWithGemini(params: GenerateParams): Promise<GeneratedSoalResult[]> {
-  const apiKey = process.env.GEMINI_API_KEY;
+export interface GenerationResponse {
+  success: boolean;
+  soal: GeneratedSoalResult[];
+  source: "AI_GEMINI" | "AI_SIMULASI_KONTEKSTUAL";
+  statusApi: "READY" | "NOT_CONFIGURED" | "RATE_LIMITED" | "INVALID_KEY" | "ERROR";
+  message: string;
+  promptUsed: string;
+}
 
-  // Fallback realistic generator if API key is not yet configured by the user
-  if (!apiKey || apiKey === "your-gemini-api-key") {
-    return generateMockAiQuestions(params);
+/**
+ * Cek status konfigurasi GEMINI_API_KEY dari environment (.env)
+ */
+export function getGeminiApiStatus() {
+  const rawKey = process.env.GEMINI_API_KEY || "";
+  const cleanKey = rawKey.trim();
+  const isConfigured = Boolean(cleanKey && cleanKey !== "your-gemini-api-key");
+
+  let maskedKey: string | null = null;
+  if (isConfigured) {
+    if (cleanKey.length > 10) {
+      maskedKey = `${cleanKey.substring(0, 6)}...${cleanKey.slice(-4)}`;
+    } else {
+      maskedKey = "Aktif (Terkonfigurasi)";
+    }
   }
 
-  const genAI = new GoogleGenerativeAI(apiKey);
-  const model = genAI.getGenerativeModel({
+  return {
+    isConfigured,
+    maskedKey,
     model: "gemini-1.5-flash",
-    generationConfig: {
-      responseMimeType: "application/json",
-      temperature: 0.7,
-    },
-  });
+  };
+}
 
-  const prompt = `
-Anda adalah Pakar Pembuat Soal Tes Kemampuan Akademik (TKA) Standar Pusmendik Kemendikdasmen RI.
-Tugas Anda adalah menghasilkan ${params.jumlahSoal || 3} butir soal latihan baru berkualitas tinggi dan kontekstual berdasarkan Matriks Asesmen Resmi TKA berikut:
+/**
+ * Membangun prompt Gemini AI yang secara ketat (strictly grounded)
+ * mengacu pada 7 parameter input form matriks asesmen TKA Pusmendik.
+ */
+export function buildGeminiPrompt(params: GenerateParams): string {
+  const count = params.jumlahSoal || 3;
+  const elemen = params.elemen || params.kisiKisi?.topik || "Materi Asesmen Standar";
+  const subElemen = params.subElemen || params.kisiKisi?.muatan || "Sub-Materi Asesmen";
+  const kompetensi = params.kompetensi || params.kisiKisi?.kompetensi || "Kompetensi penalaran akademik tingkat tinggi (HOTS)";
+  const batasan = params.batasan || params.kisiKisi?.matriksAsesmen || "Standar kerangka asesmen nasional Pusmendik";
+  const mapel = params.mapel || "MATEMATIKA";
+  const tipeSoal = params.tipeSoal || "PILIHAN_GANDA";
 
-- MATA PELAJARAN: ${params.mapel}
-- ELEMEN / MATERI POKOK: ${params.elemen || params.kisiKisi?.topik || "Materi Asesmen Standar"}
-- SUB-ELEMEN / SUB-MATERI: ${params.subElemen || params.kisiKisi?.muatan || "Sub-Materi Asesmen"}
-- KOMPETENSI / INDIKATOR ASESMEN: ${params.kompetensi || params.kisiKisi?.kompetensi || "Kompetensi penalaran akademik"}
-- BATASAN KONTEKS & RUANG LINGKUP: ${params.batasan || params.kisiKisi?.matriksAsesmen || "Standar kerangka asesmen nasional"}
-- BENTUK SOAL YANG HARUS DIBUAT: ${params.tipeSoal}
+  const tipeSoalLabel =
+    tipeSoal === "PILIHAN_GANDA"
+      ? "Pilihan Ganda Tunggal (1 Kunci Jawaban Benar dari 5 Opsi A-E)"
+      : tipeSoal === "MCMA"
+      ? "Pilihan Ganda Kompleks Multi-Jawaban / MCMA (Pilih lebih dari satu opsi benar)"
+      : "Pilihan Ganda Kompleks Kategori (Matriks Pernyataan: Benar/Salah atau Sesuai/Tidak Sesuai)";
 
-PETUNJUK FORMATTING KHUSUS:
-1. Jika soal Matematika, gunakan LaTeX standar dengan tanda dollar ($ untuk inline, $$ untuk block display) seperti $f(x) = ax^2 + bx + c$, $\\int_a^b$, $\\frac{a}{b}$, \\begin{pmatrix}...\\end{pmatrix}.
-2. Jika tipeSoal == "PILIHAN_GANDA":
-   - "opsiJawaban": Array of 5 options: [{"id": "A", "label": "..."}, {"id": "B", "label": "..."}, {"id": "C", "label": "..."}, {"id": "D", "label": "..."}, {"id": "E", "label": "..."}]
-   - "kunciJawaban": String huruf ("A", "B", "C", "D", atau "E")
-3. Jika tipeSoal == "MCMA" (Multiple Choice Multiple Answer):
-   - "opsiJawaban": Array of 5 options: [{"id": "A", "label": "..."}, ...]
-   - "kunciJawaban": Array of string huruf benar, misal ["A", "C"] atau ["B", "D", "E"]
-4. Jika tipeSoal == "PGK_KATEGORI" (Pilihan Ganda Kompleks Kategori):
-   - "opsiJawaban": {"categories": ["Benar", "Salah"], "statements": [{"id": 1, "text": "..."}, {"id": 2, "text": "..."}, {"id": 3, "text": "..."}, {"id": 4, "text": "..."}]}
-   - "kunciJawaban": Array of answers: [{"id": 1, "answer": "Benar"}, {"id": 2, "answer": "Salah"}, ...]
-5. "pembahasan": Jelaskan langkah penyelesaian matematis atau rasional konseptual secara lengkap langkah demi langkah.
+  return `Anda adalah Pakar Asesmen Akademik & Kejuruan serta Pembuat Soal Ujian Nasional / Tes Kemampuan Akademik (TKA) Standar Resmi Pusmendik Kemendikdasmen RI.
 
-Hasilkan JSON array valid tanpa markdown tick tambahan. Format JSON:
+TUGAS UTAMA ANDA:
+Hasilkan tepat ${count} butir soal latihan baru berkualitas tinggi dengan tingkat kognitif HOTS (Higher Order Thinking Skills: C3/C4/C5 - Aplikasi, Analisis, Evaluasi, dan Pemecahan Masalah Nyata) yang WAJIB SECARA KETAT MENGACU PADA MATRIKS ASESMEN BERIKUT:
+
+============================================================
+MATRIKS ASESMEN & PARAMETER ACUAN FORM:
+============================================================
+1. MATA PELAJARAN: ${mapel}
+2. BENTUK SOAL: ${tipeSoalLabel} (${tipeSoal})
+3. JUMLAH BUTIR SOAL: ${count} butir
+4. ELEMEN / MATERI POKOK: ${elemen}
+5. SUB-ELEMEN / SUB-MATERI: ${subElemen}
+6. KOMPETENSI / INDIKATOR ASESMEN: ${kompetensi}
+7. BATASAN RUANG LINGKUP & KONTEKS: ${batasan}
+============================================================
+
+INSTRUKSI KONTEN & RELEVANSI KETAT (CRITICAL REQUIREMENTS):
+1. RELEVANSI 100% TERHADAP FORM: Seluruh stimulus narasi/kasus, pertanyaan, opsi jawaban, dan pembahasan WAJIB berakar secara spesifik pada Elemen "${elemen}" dan Sub-Elemen "${subElemen}". DILARANG membuat soal materi lain.
+2. PENGUJIAN KOMPETENSI: Setiap butir soal harus secara langsung mengukur kemampuan siswa dalam: "${kompetensi}".
+3. KEPATUHAN BATASAN RUANG LINGKUP: Patuhi batasan konteks: "${batasan}". Segala batasan variabel, asumsi, jenis alat, kedalaman rumus, ataupun skenario tidak boleh melampaui batasan ini.
+4. STIMULUS REALISTIS & KONTEKSTUAL: Setiap butir soal harus diawali dengan stimulus situasi nyata, permasalahan industri/PKL, data teknis, eksperimen, tabel, atau kasus konkret yang relevan bagi siswa SMK.
+5. NOTASI SAINS & MATEMATIKA: Gunakan notasi LaTeX standar untuk rumus atau persamaan matematika/fisika/kimia ($...$ untuk inline, $$...$$ untuk display blok).
+
+KETENTUAN STRUKTUR JSON SESUAI BENTUK SOAL:
+${
+  tipeSoal === "PILIHAN_GANDA"
+    ? `- "tipeSoal": "PILIHAN_GANDA"
+- "opsiJawaban": Array of 5 objek:
+  [
+    {"id": "A", "label": "Deskripsi opsi A..."},
+    {"id": "B", "label": "Deskripsi opsi B..."},
+    {"id": "C", "label": "Deskripsi opsi C..."},
+    {"id": "D", "label": "Deskripsi opsi D..."},
+    {"id": "E", "label": "Deskripsi opsi E..."}
+  ]
+- "kunciJawaban": Tepat satu string huruf kapital ("A", "B", "C", "D", atau "E").
+- Pengecoh (distractor) harus logis, mencerminkan miskonsepsi umum siswa.`
+    : tipeSoal === "MCMA"
+    ? `- "tipeSoal": "MCMA"
+- "opsiJawaban": Array of 5 objek (A, B, C, D, E).
+- "kunciJawaban": Array berisi 2 hingga 4 huruf string opsi yang bernilai BENAR, contoh: ["A", "C"] atau ["B", "D", "E"].
+- Pertanyaan harus secara eksplisit menyertakan instruksi: "(Pilihlah lebih dari satu jawaban yang benar)".`
+    : `- "tipeSoal": "PGK_KATEGORI"
+- "opsiJawaban": Objek matriks pernyataan:
+  {
+    "categories": ["Benar", "Salah"],
+    "statements": [
+      {"id": 1, "text": "Pernyataan 1..."},
+      {"id": 2, "text": "Pernyataan 2..."},
+      {"id": 3, "text": "Pernyataan 3..."},
+      {"id": 4, "text": "Pernyataan 4..."}
+    ]
+  }
+- "kunciJawaban": Array evaluasi setiap pernyataan:
+  [
+    {"id": 1, "answer": "Benar"},
+    {"id": 2, "answer": "Salah"},
+    {"id": 3, "answer": "Benar"},
+    {"id": 4, "answer": "Salah"}
+  ]`
+}
+
+6. PEMBAHASAN: Wajib menyertakan "pembahasan" yang komprehensif, menguraikan langkah rasional atau matematis langkah demi langkah, mengaitkan dengan Elemen "${elemen}", menjelaskan pembuktian jawaban benar, serta alasan mengapa opsi lain tidak tepat.
+
+FORMAT OUTPUT:
+Keluarkan HANYA array JSON valid (tanpa pembungkus markdown seperti \`\`\`json, tanpa komentar di luar JSON).
 [
   {
-    "pertanyaan": "...",
-    "tipeSoal": "${params.tipeSoal}",
+    "pertanyaan": "Teks stimulus dan pertanyaan lengkap...",
+    "tipeSoal": "${tipeSoal}",
     "opsiJawaban": ...,
     "kunciJawaban": ...,
-    "pembahasan": "..."
+    "pembahasan": "Pembahasan rinci..."
   }
-]
-`;
+]`;
+}
+
+/**
+ * Membersihkan format teks respon Gemini dari kemungkinan markdown codeblock
+ */
+function cleanJsonOutput(text: string): string {
+  let clean = text.trim();
+  if (clean.startsWith("```json")) {
+    clean = clean.slice(7);
+  } else if (clean.startsWith("```")) {
+    clean = clean.slice(3);
+  }
+  if (clean.endsWith("```")) {
+    clean = clean.slice(0, -3);
+  }
+  return clean.trim();
+}
+
+/**
+ * Fungsi utama generate soal:
+ * 1. Mengecek ketersediaan GEMINI_API_KEY dari .env
+ * 2. Jika ada, memanggil Google Generative AI (Gemini 1.5 Flash)
+ * 3. Menangani error status seperti Rate Limit (429) atau Invalid Key (400/403)
+ * 4. Jika key belum diisi atau mengalami limit, beralih ke Mesin Simulasi Kontekstual
+ *    yang tetap secara cerdas menyusun soal berdasarkan 7 parameter form pengguna.
+ */
+export async function generateSoalWithGemini(params: GenerateParams): Promise<GenerationResponse> {
+  const apiStatus = getGeminiApiStatus();
+  const prompt = buildGeminiPrompt(params);
+
+  // Jika API Key belum diisi di .env
+  if (!apiStatus.isConfigured) {
+    const contextualSoal = generateContextualSimulatedQuestions(params);
+    return {
+      success: true,
+      soal: contextualSoal,
+      source: "AI_SIMULASI_KONTEKSTUAL",
+      statusApi: "NOT_CONFIGURED",
+      message: `GEMINI_API_KEY belum dikonfigurasi di file .env. Soal berhasil disintesis menggunakan Mesin Generator Kontekstual internal yang menyesuaikan Elemen, Sub-Elemen, Kompetensi, dan Batasan yang Anda masukkan.`,
+      promptUsed: prompt,
+    };
+  }
+
+  const rawKey = process.env.GEMINI_API_KEY!.trim();
 
   try {
+    const genAI = new GoogleGenerativeAI(rawKey);
+    const model = genAI.getGenerativeModel({
+      model: "gemini-1.5-flash",
+      generationConfig: {
+        responseMimeType: "application/json",
+        temperature: 0.7,
+      },
+    });
+
     const result = await model.generateContent(prompt);
-    const text = result.response.text();
-    const parsed = JSON.parse(text);
-    return Array.isArray(parsed) ? parsed : [parsed];
-  } catch (error) {
-    console.error("Gemini Generation Error:", error);
-    // Fallback to high-quality template generator
-    return generateMockAiQuestions(params);
+    const rawText = result.response.text();
+    const cleanedText = cleanJsonOutput(rawText);
+    const parsed = JSON.parse(cleanedText);
+    const soalList: GeneratedSoalResult[] = Array.isArray(parsed) ? parsed : [parsed];
+
+    return {
+      success: true,
+      soal: soalList,
+      source: "AI_GEMINI",
+      statusApi: "READY",
+      message: `Berhasil men-generate ${soalList.length} butir soal menggunakan Google Gemini AI (Model: gemini-1.5-flash) secara presisi merujuk pada matriks asesmen yang Anda inputkan.`,
+      promptUsed: prompt,
+    };
+  } catch (error: any) {
+    console.error("Gemini API Error:", error);
+    const errorMsg = error?.message || String(error);
+
+    let statusApi: "RATE_LIMITED" | "INVALID_KEY" | "ERROR" = "ERROR";
+    let notice = "Terjadi gangguan saat memanggil Gemini API.";
+
+    if (errorMsg.includes("429") || errorMsg.includes("quota") || errorMsg.includes("ResourceExhausted")) {
+      statusApi = "RATE_LIMITED";
+      notice = "Kuota limit Gemini API tercapai (Rate Limit / Quota Exceeded).";
+    } else if (errorMsg.includes("API_KEY_INVALID") || errorMsg.includes("400") || errorMsg.includes("403") || errorMsg.includes("unregistered")) {
+      statusApi = "INVALID_KEY";
+      notice = "GEMINI_API_KEY pada file .env tidak valid atau ditolak oleh Google.";
+    }
+
+    // Fallback cerdas agar pengguna tetap mendapatkan soal yang relevan dengan form
+    const contextualSoal = generateContextualSimulatedQuestions(params);
+
+    return {
+      success: true,
+      soal: contextualSoal,
+      source: "AI_SIMULASI_KONTEKSTUAL",
+      statusApi,
+      message: `${notice} Sistem otomatis mengaktifkan Mesin Simulasi Kontekstual agar proses penyusunan soal tetap berjalan sesuai Elemen, Sub-Elemen, Kompetensi, dan Batasan yang Anda tentukan.`,
+      promptUsed: prompt,
+    };
   }
 }
 
 /**
- * Fallback high-quality generator with authentic TKA curriculum templates
+ * Mesin Generator Simulasi Kontekstual Dinamis:
+ * Mengkonstruksi butir soal, stimulus, opsi jawaban, dan pembahasan secara dinamis
+ * yang langsung menyuntikkan dan merefleksikan nilai 7 parameter form:
+ * - mapel, tipeSoal, jumlahSoal, elemen, subElemen, kompetensi, dan batasan.
  */
-function generateMockAiQuestions(params: GenerateParams): GeneratedSoalResult[] {
-  const isMath = params.mapel === "MATEMATIKA";
+export function generateContextualSimulatedQuestions(params: GenerateParams): GeneratedSoalResult[] {
   const count = params.jumlahSoal || 3;
+  const elemen = params.elemen?.trim() || "Materi Pokok Kejuruan & Akademik";
+  const subElemen = params.subElemen?.trim() || "Fokus Sub-Topik Asesmen";
+  const kompetensi = params.kompetensi?.trim() || "Menganalisis dan memecahkan persoalan kontekstual";
+  const batasan = params.batasan?.trim() || "Sesuai batasan ruang lingkup kurikulum";
+  const mapel = params.mapel || "MATEMATIKA";
+  const tipeSoal = params.tipeSoal || "PILIHAN_GANDA";
+
   const results: GeneratedSoalResult[] = [];
+  const isMath = mapel.toUpperCase().includes("MATEMATIKA");
 
   for (let i = 1; i <= count; i++) {
-    const seed = Date.now() + i;
-    if (isMath) {
-      if (params.tipeSoal === "PILIHAN_GANDA") {
-        results.push({
-          pertanyaan: `Diberikan sistem persamaan kuadrat $f(x) = (x - ${i + 1})^2 - ${i * 4}$. Nilai pembuat nol fungsi ($f(x) = 0$) dari kurva tersebut adalah...`,
-          tipeSoal: "PILIHAN_GANDA",
-          opsiJawaban: [
-            { id: "A", label: `$x = ${i + 1 - i * 2}$ atau $x = ${i + 1 + i * 2}$` },
-            { id: "B", label: `$x = -${i + 1}$ atau $x = ${i * 4}$` },
-            { id: "C", label: `$x = ${i * 2}$ atau $x = -${i * 2}$` },
-            { id: "D", label: `$x = 0$ atau $x = ${i + 5}$` },
-            { id: "E", label: `$x = 1$ atau $x = -1$` },
-          ],
-          kunciJawaban: "A",
-          pembahasan: `Untuk mencari pembuat nol fungsi, set $f(x) = 0$:\n$$(x - ${i + 1})^2 - ${i * 4} = 0 \\implies (x - ${i + 1})^2 = ${i * 4}$$\n$$x - ${i + 1} = \\pm ${i * 2}$$\nMaka akar-akarnya adalah $x_1 = ${i + 1 - i * 2}$ dan $x_2 = ${i + 1 + i * 2}$ (Opsi A).`,
-        });
-      } else if (params.tipeSoal === "MCMA") {
-        results.push({
-          pertanyaan: `Diketahui matriks $B = \\begin{pmatrix} ${i + 2} & 1 \\\\ 2 & ${i + 1} \\end{pmatrix}$. Manakah pernyataan-pernyataan berikut yang bernilai **BENAR**? *(Pilih lebih dari satu)*`,
-          tipeSoal: "MCMA",
-          opsiJawaban: [
-            { id: "A", label: `Determinan matriks $B$ adalah $|B| = ${ (i + 2) * (i + 1) - 2 }$` },
-            { id: "B", label: `Transpose matriks $B^T = \\begin{pmatrix} ${i + 2} & 2 \\\\ 1 & ${i + 1} \\end{pmatrix}$` },
-            { id: "C", label: `Elemen pada baris ke-1 kolom ke-2 adalah $1$` },
-            { id: "D", label: `Determinan $B$ selalu bernilai negatif untuk setiap bilangan asli` },
-            { id: "E", label: `Matriks $B$ adalah matriks identitas` },
-          ],
-          kunciJawaban: ["A", "B", "C"],
-          pembahasan: `1. $|B| = (${i + 2})(${i + 1}) - (1)(2) = ${ (i + 2) * (i + 1) - 2 }$ (Pernyataan A Benar)\n2. $B^T$ membalik baris dan kolom sehingga menjadi $\\begin{pmatrix} ${i + 2} & 2 \\\\ 1 & ${i + 1} \\end{pmatrix}$ (Pernyataan B Benar)\n3. Baris 1 kolom 2 bernilai $1$ (Pernyataan C Benar).`,
-        });
+    if (tipeSoal === "PILIHAN_GANDA") {
+      let pertanyaan = "";
+      let opsiJawaban = [];
+      let kunciJawaban = "A";
+      let pembahasan = "";
+
+      if (isMath) {
+        pertanyaan = `Dalam konteks materi **${elemen}** (khususnya kajian **${subElemen}**), seorang analis dihadapkan pada model fungsi terapan $f(x) = ${i + 1}x^2 - ${i * 4}x + ${i * 2 + 1}$. Berdasarkan indikator asesmen: *"${kompetensi}"*, dengan batasan ruang lingkup: *"${batasan}"*, maka nilai kritis atau nilai optimum fungsi tersebut adalah...`;
+        opsiJawaban = [
+          { id: "A", label: `$x = \\frac{${i * 2}}{${i + 1}}$ dengan nilai minimum $f(x) = ${i * 2 + 1 - ((i * 4) * (i * 4)) / (4 * (i + 1))}$` },
+          { id: "B", label: `$x = -\\frac{${i * 2}}{${i + 1}}$ dengan nilai maksimum tak terdefinisi` },
+          { id: "C", label: `$x = ${i * 4}$ dengan nilai diskriminan $D < 0$` },
+          { id: "D", label: `$x = 0$ menghasilkan akar bilangan imajiner` },
+          { id: "E", label: `$x = ${i + 1}$ dengan titik potong sumbu-Y di nol` },
+        ];
+        kunciJawaban = "A";
+        pembahasan = `**Langkah Analisis (${elemen} — ${subElemen}):**
+1. Sesuai batasan materi: "${batasan}", fungsi kuadrat memiliki bentuk standar $f(x) = ax^2 + bx + c$ dengan $a = ${i + 1}$, $b = -${i * 4}$, dan $c = ${i * 2 + 1}$.
+2. Titik puncak (sumbu simetri) dihitung dengan $x_p = -\\frac{b}{2a} = -\\frac{-${i * 4}}{2(${i + 1})} = \\frac{${i * 2}}{${i + 1}}$.
+3. Karena $a = ${i + 1} > 0$, kurva membuka ke atas sehingga menghasilkan nilai minimum, sesuai dengan kompetensi: "${kompetensi}".
+4. Nilai optimum diperoleh dengan mensubstitusikan $x_p$ ke fungsi. Jadi Opsi A adalah jawaban yang benar dan presisi.`;
       } else {
-        results.push({
-          pertanyaan: `Perhatikan fungsi integral tentu $I = \\int_{0}^{${i + 1}} (${i * 2}x + 3) \\, dx$. Tentukan kategori (*Benar* atau *Salah*) untuk setiap pernyataan berikut:`,
-          tipeSoal: "PGK_KATEGORI",
-          opsiJawaban: {
-            categories: ["Benar", "Salah"],
-            statements: [
-              { id: 1, text: `Antiturunan fungsi integran adalah $F(x) = ${i}x^2 + 3x + C$` },
-              { id: 2, text: `Nilai $F(${i + 1}) - F(0)$ bernilai positif` },
-              { id: 3, text: `Integral tentu menghasilkan konstanta sembarang $+ C$` },
-              { id: 4, text: `Luas daerah di bawah kurva selalu bernilai nol` },
-            ],
+        pertanyaan = `Pada pelaksanaan studi kasus di dunia industri terkait mata pelajaran **${mapel}**, peserta didik menganalisis elemen **${elemen}** dengan fokus bahasan **${subElemen}**.
+Diberikan skenario kasus: *"Dalam penerapannya di lapangan dengan memperhatikan batasan: '${batasan}', tim teknis perlu mengambil keputusan strategis guna ${kompetensi.toLowerCase()}."*
+
+Berdasarkan skenario dan batasan teknis di atas, tindakan atau solusi yang paling tepat dan terstandar adalah...`;
+
+        opsiJawaban = [
+          {
+            id: "A",
+            label: `Menerapkan prosedur terstandar pada ${subElemen} secara komprehensif untuk mencapai indikator "${kompetensi}", dengan tetap mematuhi batasan "${batasan}".`,
           },
-          kunciJawaban: [
-            { id: 1, answer: "Benar" },
-            { id: 2, answer: "Benar" },
-            { id: 3, answer: "Salah" },
-            { id: 4, answer: "Salah" },
-          ],
-          pembahasan: `- Pernyataan 1 Benar (Turunan dari $${i}x^2 + 3x$ adalah $${i * 2}x + 3$).\n- Pernyataan 2 Benar karena batas atas positif.\n- Pernyataan 3 Salah (Integral tentu menghasilkan nilai skalar riil, bukan konstanta + C).\n- Pernyataan 4 Salah.`,
-        });
+          {
+            id: "B",
+            label: `Mengabaikan batasan "${batasan}" untuk mempercepat proses penyelesaian kasus pada ${subElemen}.`,
+          },
+          {
+            id: "C",
+            label: `Mengalihkan fokus analisis ke luar materi ${elemen} tanpa melakukan validasi kondisi awal sistem.`,
+          },
+          {
+            id: "D",
+            label: `Melakukan modifikasi parameter secara acak pada ${subElemen} tanpa mengukur kompetensi yang dipersyaratkan.`,
+          },
+          {
+            id: "E",
+            label: `Menyimpulkan bahwa ${subElemen} tidak dapat diterapkan apabila terdapat batasan "${batasan}".`,
+          },
+        ];
+        kunciJawaban = "A";
+        pembahasan = `**Analisis Konseptual & Penerapan (${mapel}):**
+- **Elemen:** ${elemen}
+- **Sub-Elemen:** ${subElemen}
+- **Pengukuran Kompetensi:** Butir soal ini menguji kemampuan "${kompetensi}".
+- **Evaluasi Batasan:** Opsi A adalah solusi yang tepat karena secara langsung menyelesaikan persoalan pada ${subElemen} tanpa melanggar batasan "${batasan}".
+- **Analisis Pengecoh:** Opsi B salah karena melanggar batasan teknis. Opsi C, D, dan E merefleksikan miskonsepsi prosedur dan tidak memenuhi kompetensi yang diuji.`;
       }
+
+      results.push({
+        pertanyaan,
+        tipeSoal: "PILIHAN_GANDA",
+        opsiJawaban,
+        kunciJawaban,
+        pembahasan,
+      });
+    } else if (tipeSoal === "MCMA") {
+      const pertanyaan = `Perhatikan studi kasus evaluasi materi **${elemen}** (Sub-Elemen: **${subElemen}**) pada mata pelajaran **${mapel}**.
+Guru menyajikan data pengujian dengan batasan ruang lingkup: *"${batasan}"*.
+Siswa diminta untuk membuktikan kompetensi: *"${kompetensi}"*.
+
+Manakah dari pernyataan-pernyataan berikut yang bernilai **BENAR** terkait prinsip kerja dan analisis data tersebut? *(Pilihlah lebih dari satu jawaban yang benar)*`;
+
+      const opsiJawaban = [
+        {
+          id: "A",
+          label: `Analisis pada ${subElemen} harus selalu selaras dengan batasan "${batasan}" agar hasil pengujian valid.`,
+        },
+        {
+          id: "B",
+          label: `Penerapan konsep ${elemen} memungkinkan identifikasi parameter kunci guna ${kompetensi.toLowerCase()}.`,
+        },
+        {
+          id: "C",
+          label: `Karakteristik ${subElemen} dapat dioptimasi secara berkelanjutan sesuai kaidah mutu asesmen kejuruan.`,
+        },
+        {
+          id: "D",
+          label: `Batasan "${batasan}" tidak berpengaruh terhadap akurasi pencapaian kompetensi siswa.`,
+        },
+        {
+          id: "E",
+          label: `Semua variabel dalam ${elemen} bersifat independen dan tidak berhubungan dengan ${subElemen}.`,
+        },
+      ];
+      const kunciJawaban = ["A", "B", "C"];
+      const pembahasan = `**Analisis Jawaban Kompleks (MCMA):**
+- **Pernyataan A BENAR:** Setiap pengujian ${subElemen} wajib berpedoman pada batasan "${batasan}".
+- **Pernyataan B BENAR:** Prinsip ${elemen} menjadi dasar teoritis untuk ${kompetensi.toLowerCase()}.
+- **Pernyataan C BENAR:** Optimasi ${subElemen} merupakan bagian inti dari penguasaan kejuruan.
+- **Pernyataan D SALAH:** Batasan ruang lingkup secara langsung menentukan validitas indikator.
+- **Pernyataan E SALAH:** Sub-elemen adalah turunan langsung dari elemen utama yang saling terikat.`;
+
+      results.push({
+        pertanyaan,
+        tipeSoal: "MCMA",
+        opsiJawaban,
+        kunciJawaban,
+        pembahasan,
+      });
     } else {
-      // PPLG
-      if (params.tipeSoal === "PILIHAN_GANDA") {
-        results.push({
-          pertanyaan: `Seorang programmer membuat endpoint backend \`POST /api/v1/auth/login\`. Jika kredensial yang dimasukkan pengguna tidak cocok, status code HTTP dan pesan respon yang paling sesuai dengan standar REST API adalah...`,
-          tipeSoal: "PILIHAN_GANDA",
-          opsiJawaban: [
-            { id: "A", label: "401 Unauthorized: Invalid username or password" },
-            { id: "B", label: "200 OK: Data tidak ditemukan" },
-            { id: "C", label: "404 Not Found: Halaman login hilang" },
-            { id: "D", label: "500 Internal Server Error: Database crash" },
-            { id: "E", label: "301 Moved Permanently: Redirect" },
-          ],
-          kunciJawaban: "A",
-          pembahasan: `Status code **401 Unauthorized** secara spesifik ditujukan untuk kegagalan autentikasi (kredensial login tidak valid). Status 200 tidak boleh digunakan untuk merespon error autentikasi.`,
-        });
-      } else if (params.tipeSoal === "MCMA") {
-        results.push({
-          pertanyaan: `Manakah dari pernyataan berikut yang merupakan prinsip-prinsip dasar dari **ACID Transactions** dalam sistem manajemen basis data relasional (RDBMS)? *(Pilih lebih dari satu)*`,
-          tipeSoal: "MCMA",
-          opsiJawaban: [
-            { id: "A", label: "Atomicity: Semua operasi berhasil seluruhnya atau dibatalkan seluruhnya (all-or-nothing)" },
-            { id: "B", label: "Consistency: Transaksi membawa database dari satu kondisi valid ke kondisi valid lainnya" },
-            { id: "C", label: "Isolation: Transaksi yang berjalan konkuren tidak saling mengganggu sebelum selesai" },
-            { id: "D", label: "Durability: Data yang telah di-commit tersimpan permanen meski sistem reboot/mati listrik" },
-            { id: "E", label: "Availability: Server selalu membalas request meski data belum selesai ditulis" },
-          ],
-          kunciJawaban: ["A", "B", "C", "D"],
-          pembahasan: `ACID adalah singkatan dari **Atomicity, Consistency, Isolation, dan Durability**. Opsi E (Availability) adalah bagian dari teorema CAP, bukan pilar transaksi ACID.`,
-        });
-      } else {
-        results.push({
-          pertanyaan: `Perhatikan pernyataan mengenai arsitektur perangkat lunak dan manajemen Git berikut. Tentukan kategori (*Sesuai* atau *Tidak Sesuai*):`,
-          tipeSoal: "PGK_KATEGORI",
-          opsiJawaban: {
-            categories: ["Sesuai", "Tidak Sesuai"],
-            statements: [
-              { id: 1, text: "Perintah 'git checkout -b feature/login' membuat sekaligus berpindah ke branch baru" },
-              { id: 2, text: "Dalam Git Flow, branch 'main/master' selalu berisi kode yang siap rilis ke tahap produksi" },
-              { id: 3, text: "File '.env' yang berisi credential database harus selalu di-commit ke public repository GitHub" },
-              { id: 4, text: "Pull Request (PR) digunakan untuk code review sebelum menggabungkan kode ke branch utama" },
-            ],
+      // PGK_KATEGORI
+      const pertanyaan = `Diberikan serangkaian premis hasil observasi dan analisis teknis pada elemen **${elemen}**, topik bahasan **${subElemen}** (${mapel}).
+Ruang lingkup asesmen dibatasi pada: *"${batasan}"*.
+Tujuan asesmen mengukur kemampuan: *"${kompetensi}"*.
+
+Tentukan kategori (*Benar* atau *Salah*) untuk setiap pernyataan berikut berdasarkan prinsip di atas:`;
+
+      const opsiJawaban = {
+        categories: ["Benar", "Salah"],
+        statements: [
+          {
+            id: 1,
+            text: `Penerapan ${subElemen} secara langsung merefleksikan pencapaian kompetensi "${kompetensi}".`,
           },
-          kunciJawaban: [
-            { id: 1, answer: "Sesuai" },
-            { id: 2, answer: "Sesuai" },
-            { id: 3, answer: "Tidak Sesuai" },
-            { id: 4, answer: "Sesuai" },
-          ],
-          pembahasan: `- 1 Sesuai (Flag -b membuat branch baru).\n- 2 Sesuai (Main adalah production release).\n- 3 Tidak Sesuai (File .env berisi rahasia kredensial dan WAJIB masuk .gitignore).\n- 4 Sesuai (PR memfasilitasi peer review).`,
-        });
-      }
+          {
+            id: 2,
+            text: `Ruang lingkup pengujian wajib berpegang teguh pada batasan "${batasan}".`,
+          },
+          {
+            id: 3,
+            text: `Elemen ${elemen} dapat dievaluasi tanpa perlu mempertimbangkan karakteristik spesifik ${subElemen}.`,
+          },
+          {
+            id: 4,
+            text: `Data hasil observasi pada ${subElemen} dapat digunakan untuk perbaikan berkelanjutan sistem terkait.`,
+          },
+        ],
+      };
+
+      const kunciJawaban = [
+        { id: 1, answer: "Benar" },
+        { id: 2, answer: "Benar" },
+        { id: 3, answer: "Salah" },
+        { id: 4, answer: "Benar" },
+      ];
+
+      const pembahasan = `**Pembahasan Matriks Kategori (PGK):**
+1. **Pernyataan 1 (Benar):** Penguasaan materi ${subElemen} secara valid membuktikan pencapaian kompetensi "${kompetensi}".
+2. **Pernyataan 2 (Benar):** Menjaga batasan "${batasan}" memastikan reliabilitas asesmen.
+3. **Pernyataan 3 (Salah):** Elemen ${elemen} tidak dapat dipisahkan dari sub-elemen pembentuknya.
+4. **Pernyataan 4 (Benar):** Observasi teknis pada ${subElemen} memberikan bukti otentik untuk perbaikan sistem.`;
+
+      results.push({
+        pertanyaan,
+        tipeSoal: "PGK_KATEGORI",
+        opsiJawaban,
+        kunciJawaban,
+        pembahasan,
+      });
     }
   }
 

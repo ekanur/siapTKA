@@ -2,17 +2,42 @@ import { NextResponse } from "next/server";
 import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/auth";
 import prisma from "@/lib/prisma";
-import { generateSoalWithGemini } from "@/lib/ai/gemini-service";
+import { generateSoalWithGemini, getGeminiApiStatus } from "@/lib/ai/gemini-service";
 
 export const dynamic = "force-dynamic";
 
+/**
+ * GET: Mengembalikan status ketersediaan GEMINI_API_KEY di environment server
+ */
+export async function GET() {
+  try {
+    const session = await getServerSession(authOptions);
+    const userRole = (session?.user as any)?.role;
+
+    if (!session || !["ADMIN", "GURU"].includes(userRole)) {
+      return NextResponse.json({ success: false, error: "Akses tidak sah." }, { status: 401 });
+    }
+
+    const apiStatus = getGeminiApiStatus();
+    return NextResponse.json({
+      success: true,
+      apiStatus,
+    });
+  } catch (error: any) {
+    return NextResponse.json({ success: false, error: "Gagal memeriksa status API." }, { status: 500 });
+  }
+}
+
+/**
+ * POST: Men-generate butir soal berdasarkan 7 parameter matriks asesmen
+ */
 export async function POST(request: Request) {
   try {
     const session = await getServerSession(authOptions);
     const userRole = (session?.user as any)?.role;
 
-    if (userRole !== "ADMIN") {
-      return NextResponse.json({ success: false, error: "Akses ditolak. Generator Soal AI dikhususkan untuk Administrator." }, { status: 403 });
+    if (!session || !["ADMIN", "GURU"].includes(userRole)) {
+      return NextResponse.json({ success: false, error: "Akses ditolak. Generator Soal AI dikhususkan untuk Administrator dan Guru Mapel." }, { status: 403 });
     }
 
     const body = await request.json();
@@ -22,13 +47,13 @@ export async function POST(request: Request) {
       return NextResponse.json({ success: false, error: "Mata pelajaran dan bentuk soal wajib dipilih." }, { status: 400 });
     }
 
-    const finalElemen = elemen || "Aljabar dan Penalaran";
-    const finalSubElemen = subElemen || "Pemecahan Masalah Kontekstual";
-    const finalKompetensi = kompetensi || "Menganalisis dan memecahkan persoalan logika";
-    const finalBatasan = batasan || "Sesuai kerangka kurikulum asesmen nasional";
+    const finalElemen = elemen?.trim() || "Materi Pokok Kurikulum";
+    const finalSubElemen = subElemen?.trim() || "Fokus Sub-Topik Asesmen";
+    const finalKompetensi = kompetensi?.trim() || "Menganalisis dan memecahkan persoalan kontekstual";
+    const finalBatasan = batasan?.trim() || "Sesuai batasan ruang lingkup kurikulum";
 
-    // Call Gemini Service with Pusmendik Assessment Matrix
-    const generatedList = await generateSoalWithGemini({
+    // Panggil Gemini Service dengan 7 parameter matriks asesmen
+    const generationResult = await generateSoalWithGemini({
       mapel,
       tipeSoal,
       jumlahSoal: Number(jumlahSoal) || 3,
@@ -38,9 +63,9 @@ export async function POST(request: Request) {
       batasan: finalBatasan,
     });
 
-    // Save to Database with status MENUNGGU_VALIDASI
+    // Simpan ke Database dengan status MENUNGGU_VALIDASI
     const createdRecords = [];
-    for (const item of generatedList) {
+    for (const item of generationResult.soal) {
       const record = await prisma.soal.create({
         data: {
           mapel,
@@ -51,7 +76,7 @@ export async function POST(request: Request) {
           kunciJawaban: typeof item.kunciJawaban === "string" ? item.kunciJawaban : JSON.stringify(item.kunciJawaban),
           pembahasan: item.pembahasan,
           status: "MENUNGGU_VALIDASI",
-          source: "AI_GEMINI",
+          source: generationResult.source,
         },
       });
       createdRecords.push(record);
@@ -61,7 +86,10 @@ export async function POST(request: Request) {
       success: true,
       count: createdRecords.length,
       soal: createdRecords,
-      message: `Berhasil men-generate ${createdRecords.length} butir soal AI. Soal telah masuk ke antrean validasi guru ${mapel}.`,
+      source: generationResult.source,
+      statusApi: generationResult.statusApi,
+      message: generationResult.message,
+      promptUsed: generationResult.promptUsed,
     });
   } catch (error: any) {
     console.error("API Generate Soal error:", error);
