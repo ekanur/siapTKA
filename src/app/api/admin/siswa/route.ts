@@ -139,12 +139,20 @@ export async function POST(request: Request) {
           kelasId = k.id;
           namaKelas = k.nama;
         } else {
-          // Auto create class if not existing
+          // Auto create class if not existing with smart jurusan & tingkat detection
+          let detectedJurusan = (s.jurusan || "").trim().toUpperCase();
+          if (!detectedJurusan) {
+            const parts = rawKelas.split(" ");
+            detectedJurusan = parts.length > 1 ? parts[1] : "UMUM";
+          }
+          const tingkatMatch = rawKelas.match(/^(\d+)/);
+          const detectedTingkat = tingkatMatch ? parseInt(tingkatMatch[1], 10) : 12;
+
           const newClass = await prisma.kelas.create({
             data: {
               nama: rawKelas,
-              tingkat: 13,
-              jurusan: s.jurusan || "SIJA",
+              tingkat: detectedTingkat,
+              jurusan: detectedJurusan,
             },
           });
           classMap.set(rawKelas, newClass);

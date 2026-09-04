@@ -1,15 +1,17 @@
 import { PrismaClient } from "@prisma/client";
+import { DAFTAR_JURUSAN } from "../src/lib/constants/jurusan";
 
 const prisma = new PrismaClient();
 
 async function main() {
-  console.log("Seeding database siapTKA dengan Kurikulum Resmi TKA...");
+  console.log("Seeding database siapTKA dengan 12 Jurusan Resmi SMKN 2 Depok Sleman...");
 
   // 1. Bersihkan database
   await prisma.progresLatihan.deleteMany();
   await prisma.soal.deleteMany();
   await prisma.kisiKisi.deleteMany();
   await prisma.siswa.deleteMany();
+  await prisma.kelas.deleteMany();
   await prisma.userAdmin.deleteMany();
 
   // 2. Akun Guru & Admin
@@ -92,140 +94,620 @@ async function main() {
       tanggalMulai: new Date("2026-07-27T00:00:00.000Z"),
       tanggalSelesai: new Date("2026-09-10T23:59:59.999Z"),
       pesanPengumuman: "Batas pengumpulan surat pernyataan dan perubahan pilihan mapel TKA adalah 10 September 2026.",
+      batasSuratPernyataan: new Date("2026-09-10T23:59:59.999Z"),
+      pendaftaranMulai: new Date("2026-07-27T00:00:00.000Z"),
+      pendaftaranSelesai: new Date("2026-09-27T23:59:59.999Z"),
+      simulasiMulai: new Date("2026-09-21T00:00:00.000Z"),
+      simulasiSelesai: new Date("2026-09-27T23:59:59.999Z"),
+      gladiMulai: new Date("2026-10-05T00:00:00.000Z"),
+      gladiSelesai: new Date("2026-10-18T23:59:59.999Z"),
+      gelombang1Mulai: new Date("2026-10-26T00:00:00.000Z"),
+      gelombang1Selesai: new Date("2026-10-29T23:59:59.999Z"),
+      gelombang2Mulai: new Date("2026-11-02T00:00:00.000Z"),
+      gelombang2Selesai: new Date("2026-11-05T23:59:59.999Z"),
     },
   });
 
-  // 2c. Master Kelas SMKN 2 Depok Sleman
-  const kelasSijaA = await prisma.kelas.upsert({
-    where: { nama: "13 SIJA A" },
-    create: { nama: "13 SIJA A", tingkat: 13, jurusan: "SIJA" },
-    update: {},
-  });
-  const kelasSijaB = await prisma.kelas.upsert({
-    where: { nama: "13 SIJA B" },
-    create: { nama: "13 SIJA B", tingkat: 13, jurusan: "SIJA" },
-    update: {},
-  });
-  await prisma.kelas.upsert({
-    where: { nama: "13 KA A" },
-    create: { nama: "13 KA A", tingkat: 13, jurusan: "KA" },
-    update: {},
-  });
-  await prisma.kelas.upsert({
-    where: { nama: "13 KI A" },
-    create: { nama: "13 KI A", tingkat: 13, jurusan: "KI" },
-    update: {},
-  });
-  await prisma.kelas.upsert({
-    where: { nama: "13 GP A" },
-    create: { nama: "13 GP A", tingkat: 13, jurusan: "GP" },
-    update: {},
-  });
-
-  // 3. 72 Siswa SIJA dengan Industri PKL & Kelas
-  const industriList = [
-    "PT Telkom Akses",
-    "PT Len Industri (Persero)",
-    "PT Pindad (Persero)",
-    "Dinas Komunikasi dan Informatika",
-    "PT Kalimantan Prima Coal ",
-    "PT Berau Coal Energy ",
-    "PT Astra Graphia Information Technology",
-    "PT Bank Central Asia Tbk",
-    "PT Medco Energi Internasional",
-    "PT Solusi Teknologi Nusantara",
-    "PT Global Digital Niaga (Blibli)",
-    "Pusat Data Nasional Kominfo",
-  ];
-
-  const namaDepan = [
-    "Aditya", "Bagas", "Citra", "Dimas", "Eka", "Fadhil", "Galih", "Hafidz",
-    "Indra", "Jovian", "Kevin", "Lutfi", "Muhammad", "Naufal", "Octavian", "Panji",
-    "Raditya", "Satria", "Taufiq", "Utama", "Vino", "Wahyu", "Yoga", "Zaky",
-    "Anisa", "Bella", "Cynthia", "Dina", "Elsa", "Fany", "Gita", "Hana",
-    "Intan", "Jasmin", "Karin", "Lestari", "Maya", "Nabila", "Olivia", "Putri"
-  ];
-  const namaBelakang = [
-    "Pratama", "Saputra", "Wijaya", "Kusuma", "Hidayat", "Ramadhan", "Setiawan", "Utomo",
-    "Nugroho", "Santoso", "Firmansyah", "Pangestu", "Gunawan", "Mahendra", "Wibowo", "Syahputra"
-  ];
-
-  for (let i = 1; i <= 72; i++) {
-    const nis = `2223${String(1000 + i)}`;
-    const fName = namaDepan[(i - 1) % namaDepan.length];
-    const lName = namaBelakang[(i * 3) % namaBelakang.length];
-    const nama = `${fName} ${lName} (${i})`;
-    const email = `sija.${nis}@sekolah.sch.id`;
-    const industri = industriList[(i - 1) % industriList.length];
-    const assignedKelas = i <= 36 ? kelasSijaA : kelasSijaB;
-
-    let statusAkun = "BELUM_AKTIF";
-    let statusTka = "BELUM_MERESPONS";
-    let mapelPilihan1 = null;
-    let mapelPilihan2 = null;
-    let tanggalAktivasi = null;
-
-    if (i <= 35) {
-      statusAkun = "AKTIF";
-      statusTka = "IKUT";
-      mapelPilihan1 = "PPLG";
-      mapelPilihan2 = i % 2 === 0 ? "B_INGGRIS_LANJUT" : "PKK";
-      tanggalAktivasi = new Date(Date.now() - (72 - i) * 3600000);
-    } else if (i <= 45) {
-      statusAkun = "AKTIF";
-      statusTka = "TIDAK_IKUT";
-      tanggalAktivasi = new Date(Date.now() - (72 - i) * 3600000);
-    } else if (i <= 55) {
-      statusAkun = "AKTIF";
-      statusTka = "BELUM_MERESPONS";
-      tanggalAktivasi = new Date(Date.now() - (72 - i) * 3600000);
-    }
-
-    // Siswa Demo #1
-    if (i === 1) {
-      await prisma.siswa.upsert({
-        where: { nis: "22231001" },
-        create: {
-          nis: "22231001",
-          nama: "Aditya Pratama",
-          email: "siswa.demo@gmail.com",
-          jurusan: "SIJA",
-          kelasId: kelasSijaA.id,
-          namaKelas: "13 SIJA A",
-          namaIndustriPkl: "PT Kalimantan Prima Coal ",
-          statusAkun: "AKTIF",
-          tanggalAktivasi: new Date(),
-          statusTka: "IKUT",
-          mapelPilihan1: "PPLG",
-          mapelPilihan2: "B_INGGRIS_LANJUT",
-        },
-        update: {
-          kelasId: kelasSijaA.id,
-          namaKelas: "13 SIJA A",
+  // 2c. Master Kelas untuk 12 Jurusan Resmi SMKN 2 Depok Sleman
+  const classMap: { [rombelName: string]: any } = {};
+  for (const jur of DAFTAR_JURUSAN) {
+    for (const rombel of jur.rombelDefault) {
+      const cls = await prisma.kelas.create({
+        data: {
+          nama: rombel,
+          tingkat: jur.tingkatDefault,
+          jurusan: jur.id,
         },
       });
-      continue;
+      classMap[rombel] = cls;
     }
+  }
 
-    await prisma.siswa.upsert({
-      where: { nis },
-      create: {
-        nis,
-        nama,
-        email,
-        jurusan: "SIJA",
-        kelasId: assignedKelas.id,
-        namaKelas: assignedKelas.nama,
-        namaIndustriPkl: industri,
-        statusAkun,
-        tanggalAktivasi,
-        statusTka,
-        mapelPilihan1,
-        mapelPilihan2,
-      },
-      update: {
-        kelasId: assignedKelas.id,
-        namaKelas: assignedKelas.nama,
+  // 3. Siswa Uji Coba Berbasis 12 Jurusan Sekolah (Beberapa Siswa di Tiap Jurusan)
+  const sampleStudents = [
+    // DPIB - Desain Pemodelan dan Informasi Bangunan
+    {
+      nis: "22230101",
+      nama: "Bagas Ardiansyah",
+      jurusan: "DPIB",
+      kelas: "12 DPIB A",
+      industri: "PT Wijaya Karya (Persero) Tbk",
+      statusAkun: "AKTIF",
+      statusTka: "IKUT",
+      mapel1: "BKP",
+      mapel2: "PKK",
+    },
+    {
+      nis: "22230102",
+      nama: "Citra Lestari",
+      jurusan: "DPIB",
+      kelas: "12 DPIB A",
+      industri: "Studio Konsultan Arsitek Jogja",
+      statusAkun: "AKTIF",
+      statusTka: "TIDAK_IKUT",
+      mapel1: null,
+      mapel2: null,
+    },
+    {
+      nis: "22230103",
+      nama: "Dimas Nugroho",
+      jurusan: "DPIB",
+      kelas: "12 DPIB A",
+      industri: "PT PP (Persero) Tbk",
+      statusAkun: "BELUM_AKTIF",
+      statusTka: "BELUM_MERESPONS",
+      mapel1: null,
+      mapel2: null,
+    },
+    {
+      nis: "22230104",
+      nama: "Eka Prasetya",
+      jurusan: "DPIB",
+      kelas: "12 DPIB B",
+      industri: "PT Waskita Karya (Persero) Tbk",
+      statusAkun: "AKTIF",
+      statusTka: "IKUT",
+      mapel1: "BKP",
+      mapel2: "FISIKA",
+    },
+    {
+      nis: "22230105",
+      nama: "Fadhil Hidayat",
+      jurusan: "DPIB",
+      kelas: "12 DPIB B",
+      industri: "Dinas Pekerjaan Umum & ESDM DIY",
+      statusAkun: "AKTIF",
+      statusTka: "IKUT",
+      mapel1: "BKP",
+      mapel2: "PKK",
+    },
+
+    // TITL - Teknik Instalasi Tenaga Listrik
+    {
+      nis: "22230201",
+      nama: "Galih Ramadhan",
+      jurusan: "TITL",
+      kelas: "12 TITL A",
+      industri: "PT PLN (Persero) UP3 Yogyakarta",
+      statusAkun: "AKTIF",
+      statusTka: "IKUT",
+      mapel1: "TITL",
+      mapel2: "PKK",
+    },
+    {
+      nis: "22230202",
+      nama: "Hafidz Santoso",
+      jurusan: "TITL",
+      kelas: "12 TITL A",
+      industri: "PT Schneider Electric Indonesia",
+      statusAkun: "AKTIF",
+      statusTka: "TIDAK_IKUT",
+      mapel1: null,
+      mapel2: null,
+    },
+    {
+      nis: "22230203",
+      nama: "Indra Wijaya",
+      jurusan: "TITL",
+      kelas: "12 TITL A",
+      industri: "PT Trafoindo Prima Perkasa",
+      statusAkun: "BELUM_AKTIF",
+      statusTka: "BELUM_MERESPONS",
+      mapel1: null,
+      mapel2: null,
+    },
+    {
+      nis: "22230204",
+      nama: "Jovian Pratama",
+      jurusan: "TITL",
+      kelas: "12 TITL B",
+      industri: "PT PLN Enjiniring",
+      statusAkun: "AKTIF",
+      statusTka: "IKUT",
+      mapel1: "TITL",
+      mapel2: "MTK_LANJUT",
+    },
+    {
+      nis: "22230205",
+      nama: "Kevin Saputra",
+      jurusan: "TITL",
+      kelas: "12 TITL B",
+      industri: "PT Siemens Indonesia",
+      statusAkun: "AKTIF",
+      statusTka: "IKUT",
+      mapel1: "TITL",
+      mapel2: "PKK",
+    },
+
+    // TOI - Teknik Otomasi Industri
+    {
+      nis: "22230301",
+      nama: "Lutfi Mahendra",
+      jurusan: "TOI",
+      kelas: "12 TOI A",
+      industri: "PT Omron Manufacturing of Indonesia",
+      statusAkun: "AKTIF",
+      statusTka: "IKUT",
+      mapel1: "OTOMASI",
+      mapel2: "PKK",
+    },
+    {
+      nis: "22230302",
+      nama: "Muhammad Fany",
+      jurusan: "TOI",
+      kelas: "12 TOI A",
+      industri: "PT Denso Indonesia",
+      statusAkun: "AKTIF",
+      statusTka: "TIDAK_IKUT",
+      mapel1: null,
+      mapel2: null,
+    },
+    {
+      nis: "22230303",
+      nama: "Naufal Gunawan",
+      jurusan: "TOI",
+      kelas: "12 TOI B",
+      industri: "PT Festo Indonesia",
+      statusAkun: "AKTIF",
+      statusTka: "IKUT",
+      mapel1: "OTOMASI",
+      mapel2: "MEKATRONIKA",
+    },
+    {
+      nis: "22230304",
+      nama: "Octavian Pangestu",
+      jurusan: "TOI",
+      kelas: "12 TOI B",
+      industri: "PT Schneider Electric Cikarang",
+      statusAkun: "BELUM_AKTIF",
+      statusTka: "BELUM_MERESPONS",
+      mapel1: null,
+      mapel2: null,
+    },
+
+    // TP - Teknik Pemesinan
+    {
+      nis: "22230401",
+      nama: "Panji Utomo",
+      jurusan: "TP",
+      kelas: "12 TP A",
+      industri: "PT Komatsu Indonesia",
+      statusAkun: "AKTIF",
+      statusTka: "IKUT",
+      mapel1: "TPM",
+      mapel2: "LAS",
+    },
+    {
+      nis: "22230402",
+      nama: "Raditya Firmansyah",
+      jurusan: "TP",
+      kelas: "12 TP A",
+      industri: "PT Astra Otoparts Tbk",
+      statusAkun: "AKTIF",
+      statusTka: "TIDAK_IKUT",
+      mapel1: null,
+      mapel2: null,
+    },
+    {
+      nis: "22230403",
+      nama: "Satria Wibowo",
+      jurusan: "TP",
+      kelas: "12 TP B",
+      industri: "PT Mega Andalan Kalasan (MAK)",
+      statusAkun: "AKTIF",
+      statusTka: "IKUT",
+      mapel1: "TPM",
+      mapel2: "PKK",
+    },
+    {
+      nis: "22230404",
+      nama: "Taufiq Kusuma",
+      jurusan: "TP",
+      kelas: "12 TP B",
+      industri: "PT Pindad (Persero) Divisi Mesin",
+      statusAkun: "BELUM_AKTIF",
+      statusTka: "BELUM_MERESPONS",
+      mapel1: null,
+      mapel2: null,
+    },
+
+    // TKR - Teknik Kendaraan Ringan
+    {
+      nis: "22230501",
+      nama: "Utama Syahputra",
+      jurusan: "TKR",
+      kelas: "12 TKR A",
+      industri: "Nasmoco Toyota Mlati Sleman",
+      statusAkun: "AKTIF",
+      statusTka: "IKUT",
+      mapel1: "TKR",
+      mapel2: "TSM",
+    },
+    {
+      nis: "22230502",
+      nama: "Vino Pratama",
+      jurusan: "TKR",
+      kelas: "12 TKR A",
+      industri: "PT Astra Daihatsu Motor Jogja",
+      statusAkun: "AKTIF",
+      statusTka: "IKUT",
+      mapel1: "TKR",
+      mapel2: "PKK",
+    },
+    {
+      nis: "22230503",
+      nama: "Wahyu Hidayat",
+      jurusan: "TKR",
+      kelas: "12 TKR B",
+      industri: "Bengkel Resmi Honda Anugerah",
+      statusAkun: "AKTIF",
+      statusTka: "TIDAK_IKUT",
+      mapel1: null,
+      mapel2: null,
+    },
+    {
+      nis: "22230504",
+      nama: "Yoga Ramadhan",
+      jurusan: "TKR",
+      kelas: "12 TKR B",
+      industri: "PT Suzuki Indomobil Motor",
+      statusAkun: "BELUM_AKTIF",
+      statusTka: "BELUM_MERESPONS",
+      mapel1: null,
+      mapel2: null,
+    },
+
+    // TBKR - Teknik Bodi Kendaraan Ringan
+    {
+      nis: "22230601",
+      nama: "Zaky Setiawan",
+      jurusan: "TBKR",
+      kelas: "12 TBKR A",
+      industri: "PT Honda Prospect Motor Body & Paint",
+      statusAkun: "AKTIF",
+      statusTka: "IKUT",
+      mapel1: "TKR",
+      mapel2: "PKK",
+    },
+    {
+      nis: "22230602",
+      nama: "Anisa Putri",
+      jurusan: "TBKR",
+      kelas: "12 TBKR A",
+      industri: "Nasmoco Body & Paint Janti",
+      statusAkun: "AKTIF",
+      statusTka: "IKUT",
+      mapel1: "TKR",
+      mapel2: "DKV",
+    },
+    {
+      nis: "22230603",
+      nama: "Bella Novitasari",
+      jurusan: "TBKR",
+      kelas: "12 TBKR A",
+      industri: "Auto2000 Body & Paint Yogyakarta",
+      statusAkun: "BELUM_AKTIF",
+      statusTka: "BELUM_MERESPONS",
+      mapel1: null,
+      mapel2: null,
+    },
+
+    // TEK - Teknik Elektronika Komunikasi
+    {
+      nis: "22230701",
+      nama: "Cynthia Dewi",
+      jurusan: "TEK",
+      kelas: "12 TEK A",
+      industri: "PT Len Industri (Persero)",
+      statusAkun: "AKTIF",
+      statusTka: "IKUT",
+      mapel1: "TAV",
+      mapel2: "MEKATRONIKA",
+    },
+    {
+      nis: "22230702",
+      nama: "Dina Mariana",
+      jurusan: "TEK",
+      kelas: "12 TEK A",
+      industri: "PT Telkom Akses Regional 4",
+      statusAkun: "AKTIF",
+      statusTka: "TIDAK_IKUT",
+      mapel1: null,
+      mapel2: null,
+    },
+    {
+      nis: "22230703",
+      nama: "Elsa Permata",
+      jurusan: "TEK",
+      kelas: "12 TEK B",
+      industri: "PT Industri Telekomunikasi Indonesia (INTI)",
+      statusAkun: "AKTIF",
+      statusTka: "IKUT",
+      mapel1: "TAV",
+      mapel2: "PKK",
+    },
+    {
+      nis: "22230704",
+      nama: "Fany Anggraini",
+      jurusan: "TEK",
+      kelas: "12 TEK B",
+      industri: "Balai Monitoring Spektrum Frekuensi Radio DIY",
+      statusAkun: "BELUM_AKTIF",
+      statusTka: "BELUM_MERESPONS",
+      mapel1: null,
+      mapel2: null,
+    },
+
+    // TKI - Teknik Kimia Industri
+    {
+      nis: "22230801",
+      nama: "Gita Safitri",
+      jurusan: "TKI",
+      kelas: "12 TKI A",
+      industri: "PT Petrokimia Gresik",
+      statusAkun: "AKTIF",
+      statusTka: "IKUT",
+      mapel1: "KIMIA",
+      mapel2: "PKK",
+    },
+    {
+      nis: "22230802",
+      nama: "Hana Wulandari",
+      jurusan: "TKI",
+      kelas: "12 TKI A",
+      industri: "PT Pupuk Kujang Cikampek",
+      statusAkun: "AKTIF",
+      statusTka: "TIDAK_IKUT",
+      mapel1: null,
+      mapel2: null,
+    },
+    {
+      nis: "22230803",
+      nama: "Intan Kusuma",
+      jurusan: "TKI",
+      kelas: "12 TKI B",
+      industri: "PT Madu Baru PG Madukismo",
+      statusAkun: "AKTIF",
+      statusTka: "IKUT",
+      mapel1: "KIMIA",
+      mapel2: "PKK",
+    },
+    {
+      nis: "22230804",
+      nama: "Jasmin Nur",
+      jurusan: "TKI",
+      kelas: "12 TKI B",
+      industri: "PT Sarihusada Generasi Mahardhika",
+      statusAkun: "BELUM_AKTIF",
+      statusTka: "BELUM_MERESPONS",
+      mapel1: null,
+      mapel2: null,
+    },
+
+    // KA - Kimia Analisis (4 Tahun)
+    {
+      nis: "22230901",
+      nama: "Karin Rahmawati",
+      jurusan: "KA",
+      kelas: "13 KA A",
+      industri: "Balai Besar Standardisasi Industri Kulit, Karet & Plastik",
+      statusAkun: "AKTIF",
+      statusTka: "IKUT",
+      mapel1: "KIMIA_ANALISIS",
+      mapel2: "KIMIA",
+    },
+    {
+      nis: "22230902",
+      nama: "Lestari Handayani",
+      jurusan: "KA",
+      kelas: "13 KA A",
+      industri: "PT Saraswanti Indo Genetech",
+      statusAkun: "AKTIF",
+      statusTka: "TIDAK_IKUT",
+      mapel1: null,
+      mapel2: null,
+    },
+    {
+      nis: "22230903",
+      nama: "Maya Salsabila",
+      jurusan: "KA",
+      kelas: "13 KA B",
+      industri: "Balai Laboratorium Kesehatan dan Kalibrasi DIY",
+      statusAkun: "AKTIF",
+      statusTka: "IKUT",
+      mapel1: "KIMIA_ANALISIS",
+      mapel2: "PKK",
+    },
+    {
+      nis: "22230904",
+      nama: "Nabila Maharani",
+      jurusan: "KA",
+      kelas: "13 KA B",
+      industri: "PT Sucofindo Laboratorium Pengujian",
+      statusAkun: "BELUM_AKTIF",
+      statusTka: "BELUM_MERESPONS",
+      mapel1: null,
+      mapel2: null,
+    },
+
+    // TFLM - Teknik Fabrikasi Logam dan Manufaktur (4 Tahun)
+    {
+      nis: "22231011",
+      nama: "Olivia Cahyani",
+      jurusan: "TFLM",
+      kelas: "13 TFLM A",
+      industri: "PT Barata Indonesia (Persero)",
+      statusAkun: "AKTIF",
+      statusTka: "IKUT",
+      mapel1: "LAS",
+      mapel2: "TPM",
+    },
+    {
+      nis: "22231012",
+      nama: "Putri Maharani",
+      jurusan: "TFLM",
+      kelas: "13 TFLM A",
+      industri: "PT Pindad (Persero) Divisi Fabrikasi",
+      statusAkun: "AKTIF",
+      statusTka: "IKUT",
+      mapel1: "LAS",
+      mapel2: "PKK",
+    },
+    {
+      nis: "22231013",
+      nama: "Rizky Febriansyah",
+      jurusan: "TFLM",
+      kelas: "13 TFLM A",
+      industri: "PT Bukaka Teknik Utama Tbk",
+      statusAkun: "BELUM_AKTIF",
+      statusTka: "BELUM_MERESPONS",
+      mapel1: null,
+      mapel2: null,
+    },
+
+    // GP - Geologi Pertambangan (4 Tahun)
+    {
+      nis: "22231101",
+      nama: "Ahmad Zulkarnain",
+      jurusan: "GP",
+      kelas: "13 GP A",
+      industri: "PT Berau Coal Energy",
+      statusAkun: "AKTIF",
+      statusTka: "IKUT",
+      mapel1: "FISIKA",
+      mapel2: "MTK_LANJUT",
+    },
+    {
+      nis: "22231102",
+      nama: "Bima Arya",
+      jurusan: "GP",
+      kelas: "13 GP A",
+      industri: "PT Bukit Asam Tbk",
+      statusAkun: "AKTIF",
+      statusTka: "TIDAK_IKUT",
+      mapel1: null,
+      mapel2: null,
+    },
+    {
+      nis: "22231103",
+      nama: "Candra Kirana",
+      jurusan: "GP",
+      kelas: "13 GP B",
+      industri: "PT Kalimantan Prima Coal",
+      statusAkun: "AKTIF",
+      statusTka: "IKUT",
+      mapel1: "FISIKA",
+      mapel2: "PKK",
+    },
+    {
+      nis: "22231104",
+      nama: "Danang Supriadi",
+      jurusan: "GP",
+      kelas: "13 GP B",
+      industri: "Dinas ESDM DIY Seksi Pengawasan Tambang",
+      statusAkun: "BELUM_AKTIF",
+      statusTka: "BELUM_MERESPONS",
+      mapel1: null,
+      mapel2: null,
+    },
+
+    // SIJA - Sistem Informasi Jaringan dan Aplikasi (4 Tahun)
+    {
+      nis: "22231001",
+      nama: "Aditya Pratama",
+      jurusan: "SIJA",
+      kelas: "13 SIJA A",
+      email: "siswa.demo@gmail.com", // Demo Login Account
+      industri: "PT Kalimantan Prima Coal",
+      statusAkun: "AKTIF",
+      statusTka: "IKUT",
+      mapel1: "PPLG",
+      mapel2: "B_INGGRIS_LANJUT",
+    },
+    {
+      nis: "22231202",
+      nama: "Fikri Ramadhan",
+      jurusan: "SIJA",
+      kelas: "13 SIJA A",
+      industri: "PT Solusi Teknologi Nusantara",
+      statusAkun: "AKTIF",
+      statusTka: "IKUT",
+      mapel1: "PPLG",
+      mapel2: "AIJ",
+    },
+    {
+      nis: "22231203",
+      nama: "Gilang Perdana",
+      jurusan: "SIJA",
+      kelas: "13 SIJA A",
+      industri: "PT Telkom Akses Witel Yogyakarta",
+      statusAkun: "AKTIF",
+      statusTka: "TIDAK_IKUT",
+      mapel1: null,
+      mapel2: null,
+    },
+    {
+      nis: "22231204",
+      nama: "Hendra Gunawan",
+      jurusan: "SIJA",
+      kelas: "13 SIJA B",
+      industri: "Dinas Komunikasi dan Informatika DIY",
+      statusAkun: "AKTIF",
+      statusTka: "IKUT",
+      mapel1: "PPLG",
+      mapel2: "AIJ",
+    },
+    {
+      nis: "22231205",
+      nama: "Ilham Saputra",
+      jurusan: "SIJA",
+      kelas: "13 SIJA B",
+      industri: "Pusat Data Nasional Kominfo",
+      statusAkun: "BELUM_AKTIF",
+      statusTka: "BELUM_MERESPONS",
+      mapel1: null,
+      mapel2: null,
+    },
+  ];
+
+  for (const st of sampleStudents) {
+    const assignedClass = classMap[st.kelas];
+    const defaultEmail = (st as any).email || `${st.jurusan.toLowerCase()}.${st.nis}@sekolah.sch.id`;
+
+    await prisma.siswa.create({
+      data: {
+        nis: st.nis,
+        nama: st.nama,
+        email: defaultEmail,
+        jurusan: st.jurusan,
+        kelasId: assignedClass?.id || null,
+        namaKelas: st.kelas,
+        namaIndustriPkl: st.industri,
+        statusAkun: st.statusAkun,
+        tanggalAktivasi: st.statusAkun === "AKTIF" ? new Date(Date.now() - Math.floor(Math.random() * 86400000 * 5)) : null,
+        statusTka: st.statusTka,
+        mapelPilihan1: st.mapel1,
+        mapelPilihan2: st.mapel2,
       },
     });
   }
@@ -344,167 +826,133 @@ jumlah_lulus = 0
 for n in nilai:
     if n >= 75:
         jumlah_lulus += 1
-
-print(jumlah_lulus)
 \`\`\`
 
-Tentukan kategori (**Benar** atau **Salah**) untuk setiap pernyataan berikut berdasarkan program tersebut:`,
-      opsiJawaban: JSON.stringify({
-        categories: ["Benar", "Salah"],
-        statements: [
-          { id: 1, text: "Perulangan `for n in nilai:` digunakan untuk memeriksa setiap elemen nilai dalam daftar `nilai`" },
-          { id: 2, text: "Nilai 75 masuk kategori kondisi Lulus (`n >= 75`)" },
-          { id: 3, text: "Pada akhir program, isi variabel `jumlah_lulus` yang dicetak adalah 3" }
-        ]
-      }),
-      kunciJawaban: JSON.stringify([
-        { id: 1, answer: "Benar" },
-        { id: 2, answer: "Benar" },
-        { id: 3, answer: "Salah" }
+Berdasarkan kode di atas, tentukan kebenaran setiap pernyataan berikut (Benar / Salah)!`,
+      opsiJawaban: JSON.stringify([
+        { id: 1, pernyataan: "Variabel jumlah_lulus digunakan untuk menghitung banyaknya siswa yang tuntas.", answer: "Sesuai" },
+        { id: 2, pernyataan: "Nilai akhir variabel jumlah_lulus setelah perulangan selesai adalah 2.", answer: "Sesuai" },
+        { id: 3, pernyataan: "Nilai 70 dan 60 memenuhi kondisi percabangan `if n >= 75`.", answer: "Salah" },
       ]),
-      pembahasan: "Analisis eksekusi program:\n- Pernyataan 1: **BENAR** (Perulangan `for` melakukan iterasi memeriksa tiap elemen dalam list `[70, 85, 60, 90]`).\n- Pernyataan 2: **BENAR** (Operator `>=` berarti nilai 75 memenuhi kondisi).\n- Pernyataan 3: **SALAH** (Nilai yang memenuhi `n >= 75` adalah 85 dan 90, sehingga total `jumlah_lulus` adalah **2**, bukan 3).",
+      kunciJawaban: JSON.stringify([
+        { id: 1, answer: "Sesuai" },
+        { id: 2, answer: "Sesuai" },
+        { id: 3, answer: "Salah" },
+      ]),
+      pembahasan: `Analisis eksekusi program:
+1. Variabel 'jumlah_lulus' bertindak sebagai counter pencacah yang di-increment setiap kali ditemukan nilai yang >= 75. (Pernyataan 1: Sesuai/Benar).
+2. Elemen array:
+   - 70 >= 75 -> False
+   - 85 >= 75 -> True (counter = 1)
+   - 60 >= 75 -> False
+   - 90 >= 75 -> True (counter = 2)
+   Nilai akhir 'jumlah_lulus' adalah 2. (Pernyataan 2: Sesuai/Benar).
+3. Nilai 70 dan 60 bernilai lebih kecil dari 75, sehingga TIDAK memenuhi kondisi 'n >= 75'. (Pernyataan 3: Salah).`,
       status: "AKTIF",
       source: "KEMENDIKBUD_RESMI",
     },
-    // Soal 4: PPLG - MCMA (OOP Principles)
+    // Soal 4: AIJ
     {
-      mapel: "PPLG",
-      kisiKisiId: kisiKisiPplgResmi.id,
-      tipeSoal: "MCMA",
-      pertanyaan: "Dalam konsep Pemrograman Berorientasi Objek (OOP) pada pengembangan aplikasi perangkat lunak dan gim, manakah pernyataan-pernyataan berikut yang bernilai **BENAR**? *(Pilih lebih dari satu)*",
-      opsiJawaban: JSON.stringify([
-        { id: "A", label: "Enkapsulasi bertujuan menyembunyikan data internal objek dan hanya mengizinkan akses melalui method/accessor" },
-        { id: "B", label: "Access modifier 'private' membuat atribut hanya dapat diakses dari dalam class itu sendiri" },
-        { id: "C", label: "Inheritance memungkinkan class turunan (subclass) mewarisi atribut dan method dari class induk (superclass)" },
-        { id: "D", label: "Polymorphism method overriding mengharuskan nama method dan tipe parameter diubah total dari class induk" },
-        { id: "E", label: "Sebuah class hanya dapat membuat maksimal satu objek saja di dalam memori" }
-      ]),
-      kunciJawaban: JSON.stringify(["A", "B", "C"]),
-      pembahasan: "- A, B, C adalah prinsip fundamental OOP.\n- D salah karena method overriding mempertahankan nama dan signature method.\n- E salah karena satu class bisa diinstansiasi menjadi banyak objek.",
-      status: "AKTIF",
-      source: "AI_GEMINI",
-    },
-    // Soal 5: Matematika - Pilihan Ganda (Fungsi Kuadrat)
-    {
-      mapel: "MATEMATIKA",
-      kisiKisiId: kisiKisiMatematikaResmi.id,
+      mapel: "AIJ",
       tipeSoal: "PILIHAN_GANDA",
-      pertanyaan: "Diketahui fungsi kuadrat $f(x) = -2x^2 + 8x - 3$. Koordinat titik puncak (ekstrem) dari grafik fungsi tersebut adalah...",
+      pertanyaan: "Dalam perancangan VLAN pada switch manageable gedung bengkel SMKN 2 Depok, port yang menghubungkan switch utama ke router gateway harus dikonfigurasi dalam mode…",
       opsiJawaban: JSON.stringify([
-        { id: "A", label: "$(2, 5)$" },
-        { id: "B", label: "$(2, -5)$" },
-        { id: "C", label: "$(-2, 5)$" },
-        { id: "D", label: "$(4, 5)$" },
-        { id: "E", label: "$(-4, -3)$" }
-      ]),
-      kunciJawaban: "A",
-      pembahasan: "Untuk fungsi $f(x) = ax^2 + bx + c$ dengan $a = -2, b = 8, c = -3$:\n- $x_p = -\\frac{b}{2a} = -\\frac{8}{2(-2)} = 2$\n- $y_p = f(2) = -2(2)^2 + 8(2) - 3 = -8 + 16 - 3 = 5$\nKoordinat titik puncak adalah **$(2, 5)$** (Opsi A).",
-      status: "AKTIF",
-      source: "AI_GEMINI",
-    },
-    // Soal 6: Matematika - Pilihan Ganda (Integral Tentu)
-    {
-      mapel: "MATEMATIKA",
-      kisiKisiId: kisiKisiMatematikaResmi.id,
-      tipeSoal: "PILIHAN_GANDA",
-      pertanyaan: "Nilai dari integral tentu $\\int_{1}^{3} (3x^2 - 4x + 2) \\, dx$ adalah...",
-      opsiJawaban: JSON.stringify([
-        { id: "A", label: "$12$" },
-        { id: "B", label: "$14$" },
-        { id: "C", label: "$16$" },
-        { id: "D", label: "$18$" },
-        { id: "E", label: "$20$" }
+        { id: "A", label: "Access Port dengan Native VLAN" },
+        { id: "B", label: "Trunk Port dengan enkapsulasi IEEE 802.1Q" },
+        { id: "C", label: "Port Mirroring untuk monitoring lalu lintas data" },
+        { id: "D", label: "Dynamic Desirable tanpa enkapsulasi" },
+        { id: "E", label: "Loopback Port untuk routing internal" }
       ]),
       kunciJawaban: "B",
-      pembahasan: "$$\\int (3x^2 - 4x + 2) \\, dx = [x^3 - 2x^2 + 2x]_1^3$$\n$$F(3) = 27 - 18 + 6 = 15$$\n$$F(1) = 1 - 2 + 2 = 1$$\n$$F(3) - F(1) = 15 - 1 = 14$$ (Opsi B).",
+      pembahasan: "Trunk port (IEEE 802.1Q) berfungsi meneruskan frame beberapa VLAN sekaligus melalui satu jalur fisik menuju router (inter-VLAN routing / router-on-a-stick).",
       status: "AKTIF",
-      source: "AI_GEMINI",
+      source: "AI_GENERATED",
     },
-    // Soal 7: Matematika - MCMA (Matriks & Determinan)
+    // Soal 5: Matematika
+    {
+      mapel: "MATEMATIKA",
+      kisiKisiId: kisiKisiMatematikaResmi.id,
+      tipeSoal: "PILIHAN_GANDA",
+      pertanyaan: "Sebuah lintasan peluru di bengkel fabrikasi mengikuti fungsi kuadrat \\( h(t) = -2t^2 + 8t + 10 \\) meter, di mana \\( t \\) dalam detik. Tinggi maksimum yang dapat dicapai peluru tersebut adalah…",
+      opsiJawaban: JSON.stringify([
+        { id: "A", label: "16 meter" },
+        { id: "B", label: "18 meter" },
+        { id: "C", label: "20 meter" },
+        { id: "D", label: "22 meter" },
+        { id: "E", label: "24 meter" }
+      ]),
+      kunciJawaban: "B",
+      pembahasan: "Titik waktu puncak t = -b/(2a) = -8 / (2 * -2) = 2 detik. Tinggi maksimum h(2) = -2(2)^2 + 8(2) + 10 = -8 + 16 + 10 = 18 meter.",
+      status: "AKTIF",
+      source: "KEMENDIKBUD_RESMI",
+    },
+    // Soal 6: Matematika MCMA
     {
       mapel: "MATEMATIKA",
       kisiKisiId: kisiKisiMatematikaResmi.id,
       tipeSoal: "MCMA",
-      pertanyaan: "Diberikan matriks $A = \\begin{pmatrix} 2 & 1 \\\\ 4 & 3 \\end{pmatrix}$. Manakah pernyataan-pernyataan berikut yang bernilai **BENAR**? *(Pilih lebih dari satu)*",
+      pertanyaan: "Manakah pernyataan matematika berikut yang bernilai **BENAR** terkait sifat matriks dan determinan? *(Pilih 2 jawaban yang tepat)*",
       opsiJawaban: JSON.stringify([
-        { id: "A", label: "Determinan dari matriks $A$ adalah $|A| = 2$" },
-        { id: "B", label: "Matriks $A$ memiliki invers karena determinannya tidak sama dengan nol" },
-        { id: "C", label: "Invers matriks $A$ adalah $A^{-1} = \\frac{1}{2} \\begin{pmatrix} 3 & -1 \\\\ -4 & 2 \\end{pmatrix}$" },
-        { id: "D", label: "Transpose matriks $A$ adalah $A^T = \\begin{pmatrix} 3 & 4 \\\\ 1 & 2 \\end{pmatrix}$" },
-        { id: "E", label: "Determinan dari $A^T$ bernilai $-2$" }
+        { id: "A", label: "Jika det(A) = 0, maka matriks A tidak memiliki invers (matriks singular)." },
+        { id: "B", label: "Operasi perkalian matriks selalu bersifat komutatif (A x B = B x A)." },
+        { id: "C", label: "Determinan dari matriks transpos A^T selalu sama dengan det(A)." },
+        { id: "D", label: "Matriks identitas selalu memiliki nilai determinan sama dengan 0." }
       ]),
-      kunciJawaban: JSON.stringify(["A", "B", "C"]),
-      pembahasan: "1. $|A| = (2)(3) - (1)(4) = 6 - 4 = 2$ -> **BENAR (A)**\n2. Karena $|A| = 2 \\neq 0$, matriks memiliki invers -> **BENAR (B)**\n3. $A^{-1} = \\frac{1}{2} \\begin{pmatrix} 3 & -1 \\\\ -4 & 2 \\end{pmatrix}$ -> **BENAR (C)**\nPernyataan benar: **A, B, dan C**.",
+      kunciJawaban: JSON.stringify(["A", "C"]),
+      pembahasan: "- A: Benar, syarat matriks invertible adalah det(A) ≠ 0.\n- B: Salah, perkalian matriks umumnya tidak komutatif (AB ≠ BA).\n- C: Benar, det(A^T) = det(A).\n- D: Salah, det(I) = 1.",
       status: "AKTIF",
-      source: "AI_GEMINI",
+      source: "KEMENDIKBUD_RESMI",
     },
-    // Soal 8: Bahasa Indonesia - Pilihan Ganda (Ide Pokok Teks Ilmiah Industri)
+    // Soal 7: Bahasa Indonesia
     {
       mapel: "BAHASA_INDONESIA",
       tipeSoal: "PILIHAN_GANDA",
-      pertanyaan: "Bacalah kutipan teks berikut:\n\n*Transformasi digital pada lini manufaktur dan industri modern tidak sekadar berfokus pada pergantian perangkat keras analog menjadi otomatisasi robotik. Keberhasilan integrasi sistem siber-fisik sangat ditentukan oleh kesiapan sumber daya manusia dalam mengolah dan menginterpretasikan arus data analitik secara tepat waktu untuk pengambilan keputusan preventif.*\n\nIde pokok paragraf di atas adalah...",
+      pertanyaan: "Cermati kutipan teks laporan hasil observasi industri berikut:\n\n*\"Proses pengelasan SMAW pada rangka baja menggunakan elektroda berdiameter 3,2 mm. Operator harus menjaga jarak busur listrik secara konsisten agar tidak timbul cacat porositas.\"*\n\nMakna istilah teknis **porositas** dalam kutipan di atas adalah…",
       opsiJawaban: JSON.stringify([
-        { id: "A", label: "Pergantian perangkat keras analog menjadi mesin robotik di pabrik" },
-        { id: "B", label: "Faktor penentu utama keberhasilan integrasi transformasi digital industri" },
-        { id: "C", label: "Kelemahan tenaga kerja industri dalam mengoperasikan perangkat lunak analitik" },
-        { id: "D", label: "Biaya investasi teknologi siber-fisik pada industri manufaktur modern" },
-        { id: "E", label: "Tantangan kecepatan pengiriman data sensor pada sistem jaringan pabrik" }
+        { id: "A", label: "Keretakan pada permukaan logam akibat pendinginan cepat" },
+        { id: "B", label: "Cacat berupa rongga-rongga udara kecil di dalam logam las" },
+        { id: "C", label: "Penetrasi las yang tembus melebihi batas ketebalan pelat" },
+        { id: "D", label: "Percikan terak las yang menempel pada benda kerja" },
+        { id: "E", label: "Ketidaksejajaran sambungan pelat saat dilakukan tack weld" }
       ]),
       kunciJawaban: "B",
-      pembahasan: "Paragraf tersebut menegaskan bahwa transformasi digital tidak hanya soal mesin fisik, melainkan ditentukan oleh kesiapan SDM dalam interpretasi data (faktor penentu keberhasilan integrasi). Maka ide pokok yang tepat adalah **Opsi B**.",
+      pembahasan: "Porositas (porosity) pada teknik pengelasan adalah cacat las berupa lubang atau rongga-rongga udara kecil mirip pori-pori yang terjebak di dalam logam lasan.",
       status: "AKTIF",
-      source: "KEMENDIKBUD_RESMI",
+      source: "AI_GENERATED",
     },
-    // Soal 9: Bahasa Inggris - Pilihan Ganda (Technical Context & Passive Voice)
+    // Soal 8: Bahasa Inggris
     {
       mapel: "BAHASA_INGGRIS",
       tipeSoal: "PILIHAN_GANDA",
-      pertanyaan: "Read the technical notice below:\n\n*\"Before deploying the newly built microservice to the staging cluster, all automated regression tests ______ by the continuous integration pipeline to ensure zero downtime.\"*\n\nChoose the most appropriate phrase to complete the sentence:",
+      pertanyaan: "Read the workplace notice below:\n\n*\"All interns entering the mining geology laboratory must wear safety goggles, steel-toed boots, and high-visibility vests at all times. Failure to comply will result in immediate suspension of lab access.\"*\n\nWhat is the primary purpose of the notice?",
       opsiJawaban: JSON.stringify([
-        { id: "A", label: "must be executed" },
-        { id: "B", label: "has been executing" },
-        { id: "C", label: "was executed" },
-        { id: "D", label: "is executing" },
-        { id: "E", label: "to execute" }
-      ]),
-      kunciJawaban: "A",
-      pembahasan: "Subjek kalimat adalah 'all automated regression tests' (jamak/plural) yang menerima tindakan (pasif) dengan modal keharusan 'must'. Bentuk pasif modal yang benar adalah 'must be + V3' -> **must be executed** (Opsi A).",
-      status: "AKTIF",
-      source: "KEMENDIKBUD_RESMI",
-    },
-    // Soal 10: Administrasi Infrastruktur Jaringan - Pilihan Ganda (VLAN & Subnetting)
-    {
-      mapel: "ADMINISTRASI_INFRASTRUKTUR_JARINGAN",
-      tipeSoal: "PILIHAN_GANDA",
-      pertanyaan: "Pada topologi jaringan berbasis switch manageable, administrator ingin melewatkan beberapa VLAN ID (VLAN 10, VLAN 20, dan VLAN 30) melalui satu kabel uplink fisik menuju router gateway. Konfigurasi mode port switch yang wajib diterapkan pada antarmuka uplink tersebut adalah...",
-      opsiJawaban: JSON.stringify([
-        { id: "A", label: "Mode Access dengan PVID default 1" },
-        { id: "B", label: "Mode Trunk dengan enkapsulasi IEEE 802.1Q" },
-        { id: "C", label: "Mode Dynamic Auto tanpa tagging frame" },
-        { id: "D", label: "Mode Port Security dengan batasan single MAC" },
-        { id: "E", label: "Mode Loop Protect broadcast storm" }
+        { id: "A", label: "To invite interns to visit the mining geology laboratory" },
+        { id: "B", label: "To inform interns about PPE requirements and safety compliance in the lab" },
+        { id: "C", label: "To announce the schedule of geology equipment calibration" },
+        { id: "D", label: "To explain the procedure for testing mineral samples" },
+        { id: "E", label: "To distribute safety gear to new laboratory visitors" }
       ]),
       kunciJawaban: "B",
-      pembahasan: "Untuk melewatkan beberapa traffic VLAN (*multiple VLANs*) melalui satu sambungan fisik inter-switch atau switch-ke-router, port harus dikonfigurasi dalam mode **Trunk** menggunakan standar tagging frame **IEEE 802.1Q** (Opsi B).",
+      pembahasan: "Teks tersebut menyampaikan instruksi wajib pemakaian Alat Pelindung Diri (PPE: safety goggles, boots, vest) serta sanksi jika melanggar. Tujuannya adalah menginformasikan persyaratan keselamatan kerja dan kepatuhan.",
       status: "AKTIF",
-      source: "KEMENDIKBUD_RESMI",
-    }
+      source: "AI_GENERATED",
+    },
   ];
 
   for (const s of bankSoalData) {
     await prisma.soal.create({ data: s });
   }
 
-  // 7. Seed mock progres latihan siswa
+  // 7. Seed mock progres latihan siswa aktif di berbagai rombel kelas
   const allActiveSoal = await prisma.soal.findMany({ where: { status: "AKTIF" } });
-  const activeSiswa = await prisma.siswa.findMany({ where: { statusAkun: "AKTIF" }, take: 20 });
+  const activeSiswa = await prisma.siswa.findMany({ where: { statusAkun: "AKTIF" }, take: 25 });
 
   for (let sIdx = 0; sIdx < activeSiswa.length; sIdx++) {
     const siswa = activeSiswa[sIdx];
     for (let qIdx = 0; qIdx < allActiveSoal.length; qIdx++) {
       const q = allActiveSoal[qIdx];
       let isBenar = false;
-      let userAns = "";
+      let userAns: any = "";
 
       if (q.tipeSoal === "PILIHAN_GANDA") {
         const correct = q.kunciJawaban;
@@ -536,7 +984,7 @@ Tentukan kategori (**Benar** atau **Salah**) untuk setiap pernyataan berikut ber
     }
   }
 
-  console.log("Seeding selesai dengan Kurikulum dan Soal Resmi TKA Kemendikbud!");
+  console.log("Seeding selesai untuk 12 Jurusan Resmi SMKN 2 Depok Sleman!");
 }
 
 main()

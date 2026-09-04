@@ -15,8 +15,6 @@ import {
   RefreshCw,
   TrendingDown,
   Layers,
-  ChevronLeft,
-  ChevronRight,
 } from "lucide-react";
 import MathRenderer from "@/components/math/MathRenderer";
 
@@ -49,10 +47,6 @@ export default function AnalisisSoalPage() {
   const [selectedMapel, setSelectedMapel] = useState<string>("ALL");
   const [selectedDifficulty, setSelectedDifficulty] = useState<string>("ALL");
   const [expandedDistractorId, setExpandedDistractorId] = useState<string | null>(null);
-
-  // Pagination (10 data per halaman)
-  const [currentPage, setCurrentPage] = useState(1);
-  const itemsPerPage = 10;
 
   useEffect(() => {
     if (userRole === "GURU" && userMapel) {
@@ -220,205 +214,137 @@ export default function AnalisisSoalPage() {
           </span>
         </div>
 
-        {(() => {
-          const totalFiltered = filteredItems.length;
-          const totalPages = Math.ceil(totalFiltered / itemsPerPage) || 1;
-          const startIndex = (currentPage - 1) * itemsPerPage;
-          const endIndex = Math.min(startIndex + itemsPerPage, totalFiltered);
-          const paginatedItems = filteredItems.slice(startIndex, endIndex);
+        <div className="divide-y divide-slate-100">
+          {filteredItems.map((item, idx) => {
+            const isExpanded = expandedDistractorId === item.id;
 
-          return (
-            <>
-              <div className="divide-y divide-slate-100">
-                {paginatedItems.map((item, idx) => {
-                  const isExpanded = expandedDistractorId === item.id;
-
-                  return (
-                    <div key={item.id} className="p-6 hover:bg-slate-50/50 transition-colors space-y-4">
-                      {/* Meta & Tags */}
-                      <div className="flex flex-wrap items-center justify-between gap-2">
-                        <div className="flex items-center gap-2.5">
-                          <span className="w-7 h-7 rounded-lg bg-slate-100 text-slate-800 font-bold text-xs flex items-center justify-center">
-                            #{startIndex + idx + 1}
-                          </span>
-                          <span className="px-2.5 py-0.5 bg-blue-50 text-blue-700 text-xs font-bold rounded-md">
-                            {item.mapel}
-                          </span>
-                          <span className="text-xs font-semibold text-slate-600">
-                            Topik: {item.topik}
-                          </span>
-                        </div>
-
-                        <div className="flex items-center gap-2">
-                          {item.difficulty === "SULIT" && (
-                            <span className="px-3 py-1 bg-rose-100 text-rose-800 font-extrabold text-xs rounded-full flex items-center gap-1.5 border border-rose-200">
-                              <TrendingDown className="w-3.5 h-3.5" />
-                              <span>Sulit (Remedial)</span>
-                            </span>
-                          )}
-                          {item.difficulty === "SEDANG" && (
-                            <span className="px-3 py-1 bg-amber-100 text-amber-800 font-bold text-xs rounded-full border border-amber-200">
-                              Sedang
-                            </span>
-                          )}
-                          {item.difficulty === "MUDAH" && (
-                            <span className="px-3 py-1 bg-emerald-100 text-emerald-800 font-bold text-xs rounded-full border border-emerald-200">
-                              Mudah
-                            </span>
-                          )}
-                          {item.difficulty === "BELUM_DIKERJAKAN" && (
-                            <span className="px-3 py-1 bg-slate-100 text-slate-600 font-medium text-xs rounded-full">
-                              Belum Dikerjakan Siswa
-                            </span>
-                          )}
-                        </div>
-                      </div>
-
-                      {/* Question snippet */}
-                      <div className="p-4 bg-slate-50/70 rounded-2xl border border-slate-200/70 text-slate-900 text-sm">
-                        <MathRenderer content={item.pertanyaan} />
-                      </div>
-
-                      {/* Accuracy / Error Progress Bar */}
-                      <div className="grid grid-cols-1 md:grid-cols-12 gap-4 items-center">
-                        <div className="md:col-span-8 space-y-1.5">
-                          <div className="flex items-center justify-between text-xs font-bold">
-                            <span className="text-emerald-700 flex items-center gap-1">
-                              <CheckCircle2 className="w-3.5 h-3.5" /> Benar: {item.accuracyPercent}% ({item.correctAttempts} siswa)
-                            </span>
-                            <span className="text-rose-700 flex items-center gap-1">
-                              <XCircle className="w-3.5 h-3.5" /> Salah: {item.errorPercent}% ({item.wrongAttempts} siswa)
-                            </span>
-                          </div>
-
-                          {/* Visual bar */}
-                          <div className="h-3 w-full bg-rose-200 rounded-full overflow-hidden flex">
-                            <div
-                              style={{ width: `${item.accuracyPercent}%` }}
-                              className="h-full bg-emerald-500 transition-all duration-500"
-                            />
-                          </div>
-                        </div>
-
-                        <div className="md:col-span-4 flex items-center justify-end gap-2">
-                          <button
-                            onClick={() =>
-                              setExpandedDistractorId(isExpanded ? null : item.id)
-                            }
-                            className="px-3 py-2 bg-white hover:bg-slate-100 text-slate-700 border border-slate-200 text-xs font-bold rounded-xl transition-all cursor-pointer"
-                          >
-                            {isExpanded ? "Tutup Analisis Pengecoh" : "Cek Pilihan Pengecoh"}
-                          </button>
-
-                          {item.difficulty === "SULIT" && (
-                            <Link
-                              href={`/admin/generator-soal?topic=${encodeURIComponent(item.topik)}&mapel=${item.mapel}`}
-                              className="px-3 py-2 bg-indigo-50 hover:bg-indigo-100 text-indigo-700 border border-indigo-200 text-xs font-bold rounded-xl transition-all flex items-center gap-1.5"
-                            >
-                              <Sparkles className="w-3.5 h-3.5 text-indigo-600" />
-                              <span>AI Remedial</span>
-                            </Link>
-                          )}
-                        </div>
-                      </div>
-
-                      {/* Distractor Breakdown Section (Accordion) */}
-                      {isExpanded && (
-                        <div className="p-4 bg-slate-100/70 rounded-2xl border border-slate-200 space-y-3 animate-in fade-in duration-200">
-                          <div className="flex items-center justify-between text-xs font-bold text-slate-700">
-                            <span>Distribusi Pilihan Siswa (Distractor Analysis)</span>
-                            <span>Rata-Rata Waktu: {item.avgDurationSec} detik</span>
-                          </div>
-
-                          <div className="grid grid-cols-2 sm:grid-cols-4 gap-2">
-                            {Object.entries(item.distractorMap).map(([choice, count]) => {
-                              const isCorrectKey = choice === item.kunciJawaban;
-
-                              return (
-                                <div
-                                  key={choice}
-                                  className={`p-3 rounded-xl border text-xs ${
-                                    isCorrectKey
-                                      ? "bg-emerald-50 border-emerald-200 text-emerald-950 font-bold"
-                                      : "bg-white border-slate-200 text-slate-800"
-                                  }`}
-                                >
-                                  <div className="text-[10px] text-slate-400 uppercase font-mono truncate">
-                                    {isCorrectKey ? "Kunci Jawaban" : "Pilihan Terpilih"}
-                                  </div>
-                                  <div className="text-sm font-black truncate">{choice}</div>
-                                  <div className="text-[11px] text-slate-500 mt-1">
-                                    Dipilih oleh <strong>{count}</strong> siswa
-                                  </div>
-                                </div>
-                              );
-                            })}
-                          </div>
-                        </div>
-                      )}
-                    </div>
-                  );
-                })}
-              </div>
-
-              {/* Standard Pagination Controls (10 data per page) */}
-              <div className="p-4 bg-slate-50/70 border-t border-slate-200 flex flex-col sm:flex-row items-center justify-between gap-3 text-xs text-slate-500">
-                <div>
-                  Menampilkan <span className="font-bold text-slate-800">{totalFiltered > 0 ? startIndex + 1 : 0}</span> s.d.{" "}
-                  <span className="font-bold text-slate-800">{endIndex}</span> dari{" "}
-                  <span className="font-bold text-slate-800">{totalFiltered}</span> butir soal
-                </div>
-
-                <div className="flex items-center gap-1.5">
-                  <button
-                    onClick={() => setCurrentPage((p) => Math.max(p - 1, 1))}
-                    disabled={currentPage === 1}
-                    className="px-2.5 py-1.5 rounded-lg border border-slate-200 bg-white text-slate-600 hover:bg-slate-50 disabled:opacity-40 disabled:cursor-not-allowed cursor-pointer flex items-center gap-1 font-semibold"
-                  >
-                    <ChevronLeft className="w-3.5 h-3.5" />
-                    <span>Sebelumnya</span>
-                  </button>
-
-                  <div className="flex items-center gap-1">
-                    {Array.from({ length: totalPages }, (_, i) => i + 1).map((pg) => {
-                      if (pg === 1 || pg === totalPages || (pg >= currentPage - 1 && pg <= currentPage + 1)) {
-                        return (
-                          <button
-                            key={pg}
-                            onClick={() => setCurrentPage(pg)}
-                            className={`w-7 h-7 rounded-lg text-xs font-bold transition-all cursor-pointer ${
-                              currentPage === pg
-                                ? "bg-blue-600 text-white shadow-xs"
-                                : "bg-white border border-slate-200 text-slate-600 hover:bg-slate-50"
-                            }`}
-                          >
-                            {pg}
-                          </button>
-                        );
-                      } else if (pg === currentPage - 2 || pg === currentPage + 2) {
-                        return (
-                          <span key={pg} className="px-1 text-slate-400">
-                            ...
-                          </span>
-                        );
-                      }
-                      return null;
-                    })}
+            return (
+              <div key={item.id} className="p-6 hover:bg-slate-50/50 transition-colors space-y-4">
+                {/* Meta & Tags */}
+                <div className="flex flex-wrap items-center justify-between gap-2">
+                  <div className="flex items-center gap-2.5">
+                    <span className="w-7 h-7 rounded-lg bg-slate-100 text-slate-800 font-bold text-xs flex items-center justify-center">
+                      #{idx + 1}
+                    </span>
+                    <span className="px-2.5 py-0.5 bg-blue-50 text-blue-700 text-xs font-bold rounded-md">
+                      {item.mapel}
+                    </span>
+                    <span className="text-xs font-semibold text-slate-600">
+                      Topik: {item.topik}
+                    </span>
                   </div>
 
-                  <button
-                    onClick={() => setCurrentPage((p) => Math.min(p + 1, totalPages))}
-                    disabled={currentPage === totalPages || totalPages === 0}
-                    className="px-2.5 py-1.5 rounded-lg border border-slate-200 bg-white text-slate-600 hover:bg-slate-50 disabled:opacity-40 disabled:cursor-not-allowed cursor-pointer flex items-center gap-1 font-semibold"
-                  >
-                    <span>Selanjutnya</span>
-                    <ChevronRight className="w-3.5 h-3.5" />
-                  </button>
+                  <div className="flex items-center gap-2">
+                    {item.difficulty === "SULIT" && (
+                      <span className="px-3 py-1 bg-rose-100 text-rose-800 font-extrabold text-xs rounded-full flex items-center gap-1.5 border border-rose-200">
+                        <TrendingDown className="w-3.5 h-3.5" />
+                        <span>Sulit (Remedial)</span>
+                      </span>
+                    )}
+                    {item.difficulty === "SEDANG" && (
+                      <span className="px-3 py-1 bg-amber-100 text-amber-800 font-bold text-xs rounded-full border border-amber-200">
+                        Sedang
+                      </span>
+                    )}
+                    {item.difficulty === "MUDAH" && (
+                      <span className="px-3 py-1 bg-emerald-100 text-emerald-800 font-bold text-xs rounded-full border border-emerald-200">
+                        Mudah
+                      </span>
+                    )}
+                    {item.difficulty === "BELUM_DIKERJAKAN" && (
+                      <span className="px-3 py-1 bg-slate-100 text-slate-600 font-medium text-xs rounded-full">
+                        Belum Dikerjakan Siswa
+                      </span>
+                    )}
+                  </div>
                 </div>
+
+                {/* Question snippet */}
+                <div className="p-4 bg-slate-50/70 rounded-2xl border border-slate-200/70 text-slate-900 text-sm">
+                  <MathRenderer content={item.pertanyaan} />
+                </div>
+
+                {/* Accuracy / Error Progress Bar */}
+                <div className="grid grid-cols-1 md:grid-cols-12 gap-4 items-center">
+                  <div className="md:col-span-8 space-y-1.5">
+                    <div className="flex items-center justify-between text-xs font-bold">
+                      <span className="text-emerald-700 flex items-center gap-1">
+                        <CheckCircle2 className="w-3.5 h-3.5" /> Benar: {item.accuracyPercent}% ({item.correctAttempts} siswa)
+                      </span>
+                      <span className="text-rose-700 flex items-center gap-1">
+                        <XCircle className="w-3.5 h-3.5" /> Salah: {item.errorPercent}% ({item.wrongAttempts} siswa)
+                      </span>
+                    </div>
+
+                    {/* Visual bar */}
+                    <div className="h-3 w-full bg-rose-200 rounded-full overflow-hidden flex">
+                      <div
+                        style={{ width: `${item.accuracyPercent}%` }}
+                        className="h-full bg-emerald-500 transition-all duration-500"
+                      />
+                    </div>
+                  </div>
+
+                  <div className="md:col-span-4 flex items-center justify-end gap-2">
+                    <button
+                      onClick={() =>
+                        setExpandedDistractorId(isExpanded ? null : item.id)
+                      }
+                      className="px-3 py-2 bg-white hover:bg-slate-100 text-slate-700 border border-slate-200 text-xs font-bold rounded-xl transition-all cursor-pointer"
+                    >
+                      {isExpanded ? "Tutup Analisis Pengecoh" : "Cek Pilihan Pengecoh"}
+                    </button>
+
+                    {item.difficulty === "SULIT" && (
+                      <Link
+                        href={`/admin/generator-soal?topic=${encodeURIComponent(item.topik)}&mapel=${item.mapel}`}
+                        className="px-3 py-2 bg-indigo-50 hover:bg-indigo-100 text-indigo-700 border border-indigo-200 text-xs font-bold rounded-xl transition-all flex items-center gap-1.5"
+                      >
+                        <Sparkles className="w-3.5 h-3.5 text-indigo-600" />
+                        <span>AI Remedial</span>
+                      </Link>
+                    )}
+                  </div>
+                </div>
+
+                {/* Distractor Breakdown Section (Accordion) */}
+                {isExpanded && (
+                  <div className="p-4 bg-slate-100/70 rounded-2xl border border-slate-200 space-y-3 animate-in fade-in duration-200">
+                    <div className="flex items-center justify-between text-xs font-bold text-slate-700">
+                      <span>Distribusi Pilihan Siswa (Distractor Analysis)</span>
+                      <span>Rata-Rata Waktu: {item.avgDurationSec} detik</span>
+                    </div>
+
+                    <div className="grid grid-cols-2 sm:grid-cols-4 gap-2">
+                      {Object.entries(item.distractorMap).map(([choice, count]) => {
+                        const isCorrectKey = choice === item.kunciJawaban;
+
+                        return (
+                          <div
+                            key={choice}
+                            className={`p-3 rounded-xl border text-xs ${
+                              isCorrectKey
+                                ? "bg-emerald-50 border-emerald-200 text-emerald-950 font-bold"
+                                : "bg-white border-slate-200 text-slate-800"
+                            }`}
+                          >
+                            <div className="text-[10px] text-slate-400 uppercase font-mono truncate">
+                              {isCorrectKey ? "Kunci Jawaban" : "Pilihan Terpilih"}
+                            </div>
+                            <div className="text-sm font-black truncate">{choice}</div>
+                            <div className="text-[11px] text-slate-500 mt-1">
+                              Dipilih oleh <strong>{count}</strong> siswa
+                            </div>
+                          </div>
+                        );
+                      })}
+                    </div>
+                  </div>
+                )}
               </div>
-            </>
-          );
-        })()}
+            );
+          })}
+        </div>
       </div>
     </div>
   );

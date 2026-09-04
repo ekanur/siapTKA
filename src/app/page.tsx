@@ -481,7 +481,7 @@ export default async function LandingPage() {
                 Kesiapan Siswa Menghadapi TKA
               </h2>
               <p className="text-xs sm:text-sm text-surface-variant leading-relaxed">
-                Bergabunglah dengan siswa SIJA yang telah mempersiapkan diri untuk mengamankan nilai rapor dan seleksi prodi perguruan tinggi melalui latihan komprehensif.
+                Bergabunglah dengan siswa SMKN 2 Depok Sleman yang telah mempersiapkan diri untuk mengamankan nilai rapor dan seleksi prodi perguruan tinggi melalui latihan komprehensif.
               </p>
             </div>
 
@@ -507,7 +507,7 @@ export default async function LandingPage() {
               </div>
               <div>
                 <p className="text-sm font-bold text-on-background">Siswa Telah Konfirmasi</p>
-                <p className="text-xs text-on-surface-variant mt-0.5">Dari target 72 siswa SIJA kelas 13 PKL</p>
+                <p className="text-xs text-on-surface-variant mt-0.5">Dari total {totalSiswa} siswa terdaftar</p>
               </div>
             </div>
           </div>
@@ -558,7 +558,7 @@ export default async function LandingPage() {
 
           <div className="md:col-span-4 mt-6 pt-6 border-t border-outline-variant/30 flex flex-col sm:flex-row items-center justify-between text-xs text-on-surface-variant gap-2">
             <p>© 2026 Siap TKA - SMKN 2 Depok Sleman. Hak Cipta Dilindungi.</p>
-            <p className="text-[11px] text-outline">Versi 1.0.0 • Pilot Project JHIC</p>
+            <p className="text-[11px] text-outline">Versi 1.0.0 • SMKN 2 Depok Sleman</p>
           </div>
         </div>
       </footer>

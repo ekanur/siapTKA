@@ -23,6 +23,7 @@ import {
   Sparkles,
 } from "lucide-react";
 import { getSubjectDisplayName } from "@/lib/constants/subjects";
+import { DAFTAR_JURUSAN, getJurusanName } from "@/lib/constants/jurusan";
 
 export default function AdminSiswaPage() {
   const [students, setStudents] = useState<any[]>([]);
@@ -48,7 +49,7 @@ export default function AdminSiswaPage() {
     nis: "",
     nama: "",
     email: "",
-    jurusan: "SIJA",
+    jurusan: "DPIB",
     kelasId: "",
     namaIndustriPkl: "",
   });
@@ -58,7 +59,7 @@ export default function AdminSiswaPage() {
   // Modal Manage Classes
   const [isClassModalOpen, setIsClassModalOpen] = useState(false);
   const [newClassName, setNewClassName] = useState("");
-  const [newClassJurusan, setNewClassJurusan] = useState("SIJA");
+  const [newClassJurusan, setNewClassJurusan] = useState("DPIB");
   const [classSaving, setClassSaving] = useState(false);
   const [classMsg, setClassMsg] = useState<{ type: "success" | "error"; text: string } | null>(null);
 
@@ -316,7 +317,7 @@ export default function AdminSiswaPage() {
             Data Siswa & Manajemen Kelas
           </h1>
           <p className="text-xs text-slate-500 mt-1">
-            Kelola data siswa, alokasi kelas (13 SIJA A, 13 SIJA B, dst), tempat industri PKL, serta pemetaan mata pelajaran pilihan TKA.
+            Kelola data siswa, alokasi kelas untuk 12 Jurusan SMKN 2 Depok Sleman, tempat industri PKL, serta pemetaan mata pelajaran pilihan TKA.
           </p>
         </div>
 
@@ -634,7 +635,15 @@ export default function AdminSiswaPage() {
                   <label className="font-bold text-slate-700 block">Kelas *</label>
                   <select
                     value={formData.kelasId}
-                    onChange={(e) => setFormData({ ...formData, kelasId: e.target.value })}
+                    onChange={(e) => {
+                      const selId = e.target.value;
+                      const found = classes.find((c) => c.id === selId);
+                      setFormData({
+                        ...formData,
+                        kelasId: selId,
+                        jurusan: found?.jurusan || formData.jurusan,
+                      });
+                    }}
                     className="w-full px-3 py-2 rounded-xl border border-slate-300 font-semibold focus:ring-2 focus:ring-blue-500 cursor-pointer"
                   >
                     <option value="">-- Pilih Kelas --</option>
@@ -645,6 +654,21 @@ export default function AdminSiswaPage() {
                     ))}
                   </select>
                 </div>
+              </div>
+
+              <div className="space-y-1">
+                <label className="font-bold text-slate-700 block">Jurusan *</label>
+                <select
+                  value={formData.jurusan}
+                  onChange={(e) => setFormData({ ...formData, jurusan: e.target.value })}
+                  className="w-full px-3 py-2 rounded-xl border border-slate-300 font-semibold focus:ring-2 focus:ring-blue-500 cursor-pointer"
+                >
+                  {DAFTAR_JURUSAN.map((j) => (
+                    <option key={j.id} value={j.id}>
+                      {j.id} - {j.namaLengkap}
+                    </option>
+                  ))}
+                </select>
               </div>
 
               <div className="space-y-1">
@@ -750,7 +774,7 @@ export default function AdminSiswaPage() {
                   <input
                     type="text"
                     required
-                    placeholder="Nama Kelas (Contoh: 13 SIJA B, 13 KA A)"
+                    placeholder="Nama Kelas (Contoh: 12 DPIB A, 13 KA A)"
                     value={newClassName}
                     onChange={(e) => setNewClassName(e.target.value)}
                     className="w-full px-3 py-2 rounded-xl border border-slate-300 text-xs font-semibold bg-white focus:ring-2 focus:ring-blue-500"
@@ -762,11 +786,11 @@ export default function AdminSiswaPage() {
                     onChange={(e) => setNewClassJurusan(e.target.value)}
                     className="w-full px-3 py-2 rounded-xl border border-slate-300 text-xs font-semibold bg-white focus:ring-2 focus:ring-blue-500 cursor-pointer"
                   >
-                    <option value="SIJA">SIJA</option>
-                    <option value="KA">KA (Kimia Analisis)</option>
-                    <option value="KI">KI (Kimia Industri)</option>
-                    <option value="GP">GP (Geologi Pertambangan)</option>
-                    <option value="LAINNYA">Lainnya</option>
+                    {DAFTAR_JURUSAN.map((j) => (
+                      <option key={j.id} value={j.id}>
+                        {j.id} - {j.namaLengkap}
+                      </option>
+                    ))}
                   </select>
                 </div>
               </div>
@@ -796,7 +820,12 @@ export default function AdminSiswaPage() {
                   {classes.map((c) => (
                     <tr key={c.id} className="hover:bg-slate-50">
                       <td className="py-2.5 px-3 font-bold text-slate-900">{c.nama}</td>
-                      <td className="py-2.5 px-3 text-slate-500">{c.jurusan}</td>
+                      <td className="py-2.5 px-3 text-slate-600">
+                        <span className="font-semibold text-slate-800">{c.jurusan}</span>
+                        <span className="text-[11px] text-slate-400 block truncate max-w-[180px]">
+                          {getJurusanName(c.jurusan)}
+                        </span>
+                      </td>
                       <td className="py-2.5 px-3 text-center">
                         <span className="px-2 py-0.5 rounded-full bg-blue-100 text-blue-800 font-bold text-[10px]">
                           {c.totalSiswa} Siswa
@@ -840,7 +869,7 @@ export default function AdminSiswaPage() {
                 nis,nama,email,kelas,jurusan,namaIndustriPkl
               </code>
               <p className="text-[11px] text-slate-500">
-                Contoh isi kelas: <strong>13 SIJA A</strong>, <strong>13 SIJA B</strong>.
+                Contoh isi kelas: <strong>12 DPIB A</strong>, <strong>12 TITL A</strong>, <strong>13 KA A</strong>, <strong>13 SIJA A</strong>, dsb.
               </p>
             </div>
 
