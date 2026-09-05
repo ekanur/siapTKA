@@ -17,6 +17,7 @@ import {
   Layers,
 } from "lucide-react";
 import MathRenderer from "@/components/math/MathRenderer";
+import { MAPEL_WAJIB, MAPEL_PILIHAN_GROUPS, getSubjectDisplayName } from "@/lib/constants/subjects";
 
 interface AnalyzedQuestion {
   id: string;
@@ -97,7 +98,7 @@ export default function AnalisisSoalPage() {
           </h1>
           <p className="text-xs text-slate-500 mt-1">
             {userRole === "GURU"
-              ? `Mata Pelajaran: ${userMapel}. Evaluasi akurasi jawaban siswa untuk butir soal mata pelajaran Anda.`
+              ? `Mata Pelajaran: ${getSubjectDisplayName(userMapel)}. Evaluasi akurasi jawaban siswa untuk butir soal mata pelajaran Anda.`
               : "Evaluasi akurasi jawaban latihan siswa untuk mengidentifikasi tingkat kesukaran dan daya pembeda butir soal."}
           </p>
         </div>
@@ -157,26 +158,36 @@ export default function AnalisisSoalPage() {
       <div className="bg-white rounded-2xl p-4 border border-slate-200 shadow-sm flex flex-wrap items-center justify-between gap-3">
         {userRole === "GURU" ? (
           <div className="text-xs font-bold text-slate-800 px-3 py-1.5 bg-blue-50 border border-blue-200 rounded-xl">
-            Mata Pelajaran: {userMapel}
+            Mata Pelajaran: {getSubjectDisplayName(userMapel)}
           </div>
         ) : (
           <div className="flex flex-wrap items-center gap-2">
             <span className="text-xs font-bold text-slate-500 flex items-center gap-1.5 mr-1">
               <Filter className="w-3.5 h-3.5" /> Mapel:
             </span>
-            {["ALL", "MATEMATIKA", "BAHASA_INDONESIA", "BAHASA_INGGRIS", "PPLG", "TJKT"].map((m) => (
-              <button
-                key={m}
-                onClick={() => setSelectedMapel(m)}
-                className={`px-3 py-1.5 rounded-xl text-xs font-bold transition-all cursor-pointer ${
-                  selectedMapel === m
-                    ? "bg-blue-600 text-white shadow-xs"
-                    : "bg-slate-100 text-slate-700 hover:bg-slate-200"
-                }`}
-              >
-                {m === "ALL" ? "Semua" : m}
-              </button>
-            ))}
+            <select
+              value={selectedMapel}
+              onChange={(e) => setSelectedMapel(e.target.value)}
+              className="px-3 py-1.5 rounded-xl border border-slate-200 text-xs font-semibold text-slate-700 bg-white"
+            >
+              <option value="ALL">Semua Mapel</option>
+              <optgroup label="Mata Pelajaran Wajib (TKA)">
+                {MAPEL_WAJIB.map((item) => (
+                  <option key={item.id} value={item.id}>
+                    {item.name}
+                  </option>
+                ))}
+              </optgroup>
+              {MAPEL_PILIHAN_GROUPS.map((group) => (
+                <optgroup key={group.groupName} label={group.groupName}>
+                  {group.subjects.map((sub) => (
+                    <option key={sub.id} value={sub.id}>
+                      {sub.name}
+                    </option>
+                  ))}
+                </optgroup>
+              ))}
+            </select>
           </div>
         )}
 

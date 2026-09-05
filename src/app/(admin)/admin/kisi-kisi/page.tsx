@@ -13,7 +13,7 @@ import {
   Code2,
   FolderTree,
 } from "lucide-react";
-import { MAPEL_WAJIB, MAPEL_PILIHAN_GROUPS, getAllSubjectsList } from "@/lib/constants/subjects";
+import { MAPEL_WAJIB, MAPEL_PILIHAN_GROUPS, getAllSubjectsList, getSubjectDisplayName } from "@/lib/constants/subjects";
 
 export default function KisiKisiPage() {
   const [kisiKisiList, setKisiKisiList] = useState<any[]>([]);
@@ -126,23 +126,33 @@ export default function KisiKisiPage() {
       )}
 
       {/* Filter Tabs */}
-      <div className="flex flex-wrap items-center gap-2 bg-white p-2 rounded-2xl border border-slate-200 shadow-sm">
+      <div className="flex flex-wrap items-center gap-2 bg-white p-3 rounded-2xl border border-slate-200 shadow-sm">
         <span className="text-xs font-bold text-slate-500 px-2 flex items-center gap-1.5">
           <FolderTree className="w-3.5 h-3.5" /> Filter Mapel:
         </span>
-        {["ALL", "MATEMATIKA", "PPLG", "TKJ", "PKK"].map((m) => (
-          <button
-            key={m}
-            onClick={() => setSelectedFilterMapel(m)}
-            className={`px-3 py-1.5 rounded-xl text-xs font-bold transition-all cursor-pointer ${
-              selectedFilterMapel === m
-                ? "bg-blue-600 text-white shadow-sm"
-                : "bg-slate-50 text-slate-600 hover:bg-slate-100"
-            }`}
-          >
-            {m === "ALL" ? "Semua Mapel" : m}
-          </button>
-        ))}
+        <select
+          value={selectedFilterMapel}
+          onChange={(e) => setSelectedFilterMapel(e.target.value)}
+          className="px-3 py-1.5 rounded-xl border border-slate-200 text-xs font-semibold text-slate-700 bg-white"
+        >
+          <option value="ALL">Semua Mapel</option>
+          <optgroup label="Mata Pelajaran Wajib (TKA)">
+            {MAPEL_WAJIB.map((item) => (
+              <option key={item.id} value={item.id}>
+                {item.name}
+              </option>
+            ))}
+          </optgroup>
+          {MAPEL_PILIHAN_GROUPS.map((group) => (
+            <optgroup key={group.groupName} label={group.groupName}>
+              {group.subjects.map((sub) => (
+                <option key={sub.id} value={sub.id}>
+                  {sub.name}
+                </option>
+              ))}
+            </optgroup>
+          ))}
+        </select>
       </div>
 
       {/* Grid of Kisi-Kisi Cards */}
@@ -165,7 +175,7 @@ export default function KisiKisiPage() {
                 )}
                 <div>
                   <span className="text-xs font-extrabold text-slate-900 block">{item.topik}</span>
-                  <span className="text-[10px] text-blue-600 font-bold uppercase">{item.mapel}</span>
+                  <span className="text-[10px] text-blue-600 font-bold uppercase">{getSubjectDisplayName(item.mapel)}</span>
                 </div>
               </div>
               <span className="text-[11px] font-bold px-2 py-0.5 bg-slate-100 text-slate-600 rounded">
