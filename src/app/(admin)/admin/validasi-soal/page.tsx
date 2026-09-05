@@ -52,18 +52,16 @@ interface EditFormState {
 }
 
 export default function ValidasiSoalPage() {
-  const { data: session } = useSession();
+  const { data: session, status: authStatus } = useSession();
   const userRole = (session?.user as any)?.role;
   const userMapel = (session?.user as any)?.mapel;
 
   // Selected subject for drill-down.
-  // For GURU: locked to userMapel.
+  // For GURU: automatically locked to userMapel.
   // For ADMIN: null initially (showing subject grid overview first).
-  const [selectedMapel, setSelectedMapel] = useState<string | null>(
-    userRole === "GURU" && userMapel ? userMapel : null
-  );
+  const [selectedMapel, setSelectedMapel] = useState<string | null>(null);
 
-  // Soal list state (when inside a subject drill-down)
+  // Soal list state (when inside a subject drill-down or teacher view)
   const [soalList, setSoalList] = useState<any[]>([]);
   const [loading, setLoading] = useState(false);
   const [activeTab, setActiveTab] = useState<"MENUNGGU_VALIDASI" | "AKTIF" | "DITOLAK">("MENUNGGU_VALIDASI");
@@ -194,7 +192,59 @@ export default function ValidasiSoalPage() {
     };
   };
 
-  // Grand totals across all subjects for top stats bar
+  // Active subject cards: only include subjects where total questions > 0
+  // Excludes subjects with 0 questions to reduce resource load and focus on validation
+  const activeSubjectCards = useMemo(() => {
+    const matched = new Set<string>();
+    const list: {
+      id: string;
+      name: string;
+      category: string;
+      groupKey: string;
+      stats: { menunggu: number; aktif: number; ditolak: number; total: number };
+    }[] = [];
+
+    allSubjectCards.forEach((s) => {
+      const stats = getSubjectStats(s.id);
+      if (stats.total > 0) {
+        matched.add(s.id.toUpperCase());
+        Object.entries(SUBJECT_ALIASES).forEach(([alias, target]) => {
+          if (target === s.id.toUpperCase()) matched.add(alias);
+        });
+        list.push({ ...s, stats });
+      }
+    });
+
+    // Also include any subjects from summaryData not directly covered in allSubjectCards
+    Object.keys(summaryData).forEach((rawMapel) => {
+      const upper = rawMapel.toUpperCase();
+      if (!matched.has(upper)) {
+        const stats = getSubjectStats(rawMapel);
+        if (stats.total > 0) {
+          matched.add(upper);
+          list.push({
+            id: rawMapel,
+            name: getSubjectDisplayName(rawMapel),
+            category: "Mata Pelajaran Kejuruan / Pilihan",
+            groupKey: "SMK",
+            stats,
+          });
+        }
+      }
+    });
+
+    // Sort: subjects with pending validation first (highest menunggu count first), then alphabetical
+    list.sort((a, b) => {
+      if (b.stats.menunggu !== a.stats.menunggu) {
+        return b.stats.menunggu - a.stats.menunggu;
+      }
+      return a.name.localeCompare(b.name);
+    });
+
+    return list;
+  }, [allSubjectCards, summaryData]);
+
+  // Grand totals across only active subjects for top stats bar
   const grandStats = useMemo(() => {
     let menunggu = 0;
     let aktif = 0;
@@ -202,24 +252,35 @@ export default function ValidasiSoalPage() {
     let total = 0;
     let subjectsWithPending = 0;
 
-    allSubjectCards.forEach((s) => {
-      const stats = getSubjectStats(s.id);
-      menunggu += stats.menunggu;
-      aktif += stats.aktif;
-      ditolak += stats.ditolak;
-      total += stats.total;
-      if (stats.menunggu > 0) subjectsWithPending++;
+    activeSubjectCards.forEach((s) => {
+      menunggu += s.stats.menunggu;
+      aktif += s.stats.aktif;
+      ditolak += s.stats.ditolak;
+      total += s.stats.total;
+      if (s.stats.menunggu > 0) subjectsWithPending++;
     });
 
-    return { menunggu, aktif, ditolak, total, subjectsWithPending };
-  }, [allSubjectCards, summaryData]);
+    return {
+      totalSubjects: activeSubjectCards.length,
+      menunggu,
+      aktif,
+      ditolak,
+      total,
+      subjectsWithPending,
+    };
+  }, [activeSubjectCards]);
 
-  // Load questions when drill-down is active
-  const loadSoal = async () => {
-    if (!selectedMapel) return;
+  // Effective mapel: For GURU it is directly userMapel, for ADMIN it is selectedMapel
+  const currentMapel = userRole === "GURU" ? userMapel : selectedMapel;
+  const currentMapelStats = currentMapel ? getSubjectStats(currentMapel) : null;
+
+  // Load questions when drill-down is active or for Guru
+  const loadSoal = async (targetMapel?: string) => {
+    const mapelToFetch = targetMapel || currentMapel;
+    if (!mapelToFetch) return;
     setLoading(true);
     try {
-      const res = await fetch(`/api/admin/soal?status=${activeTab}&mapel=${selectedMapel}`);
+      const res = await fetch(`/api/admin/soal?status=${activeTab}&mapel=${mapelToFetch}`);
       const data = await res.json();
       if (data.success) {
         setSoalList(data.soal);
@@ -232,10 +293,10 @@ export default function ValidasiSoalPage() {
   };
 
   useEffect(() => {
-    if (selectedMapel) {
-      loadSoal();
+    if (currentMapel) {
+      loadSoal(currentMapel);
     }
-  }, [selectedMapel, activeTab]);
+  }, [currentMapel, activeTab]);
 
   // Single question status update
   const handleUpdateStatus = async (id: string, newStatus: "AKTIF" | "DITOLAK") => {
@@ -283,7 +344,7 @@ export default function ValidasiSoalPage() {
       if (data.success) {
         setStatusMsg(data.message);
         if (userRole === "ADMIN") loadSummary();
-        if (selectedMapel) loadSoal();
+        if (currentMapel) loadSoal();
       } else {
         alert(data.error || "Gagal melakukan verifikasi penuh.");
       }
@@ -519,7 +580,7 @@ export default function ValidasiSoalPage() {
           { id: 3, text: "", answer: "Benar" },
         ]);
         setActiveTab("AKTIF");
-        if (selectedMapel) loadSoal();
+        if (currentMapel) loadSoal();
         if (userRole === "ADMIN") loadSummary();
       } else {
         alert(data.error || "Gagal menambah soal.");
@@ -557,11 +618,11 @@ export default function ValidasiSoalPage() {
     setEditingForm({ ...editingForm, kunciMcma: next });
   };
 
-  // Filtered Subject Cards for Admin
+  // Filtered Subject Cards for Admin Overview (Only subjects with total > 0)
   const filteredSubjectCards = useMemo(() => {
-    return allSubjectCards.filter((s) => {
-      const stats = getSubjectStats(s.id);
-      if (subjectCategoryFilter === "PENDING" && stats.menunggu === 0) return false;
+    return activeSubjectCards.filter((s) => {
+      if (subjectCategoryFilter === "PENDING" && s.stats.menunggu === 0) return false;
+      if (subjectCategoryFilter === "DONE" && s.stats.menunggu > 0) return false;
       if (subjectCategoryFilter === "WAJIB" && s.groupKey !== "WAJIB") return false;
       if (subjectCategoryFilter === "AKADEMIK" && s.groupKey !== "AKADEMIK") return false;
       if (subjectCategoryFilter === "SMK" && s.groupKey !== "SMK") return false;
@@ -576,12 +637,34 @@ export default function ValidasiSoalPage() {
       }
       return true;
     });
-  }, [allSubjectCards, subjectCategoryFilter, searchSubject, summaryData]);
+  }, [activeSubjectCards, subjectCategoryFilter, searchSubject]);
 
   // =========================================================================
   // VIEW 1: ADMIN SUBJECT OVERVIEW (Shown only to Admin when no mapel is selected)
+  // For Guru, showAdminSubjectOverview is ALWAYS false.
   // =========================================================================
   const showAdminSubjectOverview = userRole === "ADMIN" && !selectedMapel;
+
+  if (authStatus === "loading") {
+    return (
+      <div className="flex flex-col items-center justify-center py-24 space-y-3">
+        <div className="w-8 h-8 border-4 border-blue-600 border-t-transparent rounded-full animate-spin" />
+        <p className="text-xs text-slate-500 font-medium">Memuat data sesi pengguna...</p>
+      </div>
+    );
+  }
+
+  if (userRole === "GURU" && !userMapel) {
+    return (
+      <div className="p-8 text-center bg-white rounded-3xl border border-amber-200 space-y-3 my-8">
+        <AlertCircle className="w-10 h-10 text-amber-500 mx-auto" />
+        <h3 className="font-bold text-slate-800 text-sm">Mata Pelajaran Belum Ditugaskan</h3>
+        <p className="text-xs text-slate-500 max-w-md mx-auto">
+          Akun Guru Anda belum dikaitkan dengan mata pelajaran tertentu. Silakan hubungi Administrator untuk mengatur penugasan mata pelajaran di menu Manajemen Pengguna.
+        </p>
+      </div>
+    );
+  }
 
   return (
     <div className="space-y-6">
@@ -597,10 +680,10 @@ export default function ValidasiSoalPage() {
           </h1>
           <p className="text-xs text-slate-500 mt-1">
             {userRole === "GURU"
-              ? `Login sebagai Guru Mapel ${getSubjectDisplayName(userMapel)}. Anda dapat memvalidasi dan menambahkan butir soal untuk mapel Anda.`
+              ? `Login sebagai Guru Mapel ${getSubjectDisplayName(userMapel)}. Anda dapat langsung memvalidasi dan menambahkan butir soal untuk mapel Anda.`
               : showAdminSubjectOverview
-              ? "Tinjauan kesiapan butir soal per mata pelajaran dengan fitur Full Verifikasi instan sebelum membuka butir soal."
-              : `Mata Pelajaran: ${getSubjectDisplayName(selectedMapel || "")}. Kelola dan verifikasi butir soal secara spesifik.`}
+              ? "Tinjauan kesiapan butir soal per mata pelajaran dengan fitur Full Verifikasi instan. Hanya mapel yang memiliki butir soal (> 0) yang ditampilkan."
+              : `Mata Pelajaran: ${getSubjectDisplayName(currentMapel || "")}. Kelola dan verifikasi butir soal secara spesifik.`}
           </p>
         </div>
 
@@ -616,8 +699,8 @@ export default function ValidasiSoalPage() {
 
           <button
             onClick={() => {
-              if (selectedMapel) {
-                setManualMapel(selectedMapel);
+              if (currentMapel) {
+                setManualMapel(currentMapel);
               }
               setIsManualModalOpen(true);
             }}
@@ -646,9 +729,9 @@ export default function ValidasiSoalPage() {
           {/* Top Aggregated Stats Bar */}
           <div className="grid grid-cols-2 sm:grid-cols-4 gap-3.5">
             <div className="p-4 rounded-2xl bg-white border border-slate-200 shadow-2xs space-y-1">
-              <span className="text-[11px] font-bold text-slate-500 uppercase tracking-wider">Total Mapel Terdaftar</span>
-              <div className="text-2xl font-black text-slate-900">{allSubjectCards.length} Mapel</div>
-              <span className="text-[10px] text-slate-400">3 Wajib + 69 Pilihan TKA</span>
+              <span className="text-[11px] font-bold text-slate-500 uppercase tracking-wider">Mapel dengan Soal</span>
+              <div className="text-2xl font-black text-slate-900">{grandStats.totalSubjects} Mapel</div>
+              <span className="text-[10px] text-slate-400">Hanya mapel dengan &gt; 0 butir soal</span>
             </div>
 
             <div className="p-4 rounded-2xl bg-amber-50/60 border border-amber-200 shadow-2xs space-y-1">
@@ -689,15 +772,16 @@ export default function ValidasiSoalPage() {
                 type="text"
                 value={searchSubject}
                 onChange={(e) => setSearchSubject(e.target.value)}
-                placeholder="Cari nama mapel (mis: Matematika, PPLG, Mesin)..."
+                placeholder="Cari nama mapel aktif (mis: Matematika, PPLG, Mesin)..."
                 className="w-full pl-9 pr-4 py-2 bg-slate-50 border border-slate-200 rounded-xl text-xs text-slate-800 placeholder:text-slate-400 focus:bg-white focus:outline-hidden focus:border-blue-500 font-medium"
               />
             </div>
 
             <div className="flex items-center gap-1.5 overflow-x-auto pb-1 text-xs no-scrollbar">
               {[
-                { id: "ALL", label: "Semua Mapel" },
+                { id: "ALL", label: `Semua Mapel Aktif (${grandStats.totalSubjects})` },
                 { id: "PENDING", label: `⏳ Perlu Validasi (${grandStats.subjectsWithPending})` },
+                { id: "DONE", label: `✓ Selesai Validasi (${grandStats.totalSubjects - grandStats.subjectsWithPending})` },
                 { id: "WAJIB", label: "Mapel Wajib" },
                 { id: "AKADEMIK", label: "Pilihan Akademik" },
                 { id: "SMK", label: "Kejuruan SMK" },
@@ -720,14 +804,24 @@ export default function ValidasiSoalPage() {
           {/* Subjects Grid */}
           {loadingSummary ? (
             <div className="text-center py-16 text-slate-400 text-xs">Memuat ringkasan mata pelajaran...</div>
+          ) : activeSubjectCards.length === 0 ? (
+            <div className="text-center py-16 bg-white rounded-3xl border border-dashed border-slate-200 p-8 space-y-3">
+              <div className="w-12 h-12 rounded-2xl bg-blue-50 text-blue-600 flex items-center justify-center mx-auto">
+                <BookOpen className="w-6 h-6" />
+              </div>
+              <h3 className="font-bold text-slate-800 text-sm">Tidak Ada Mata Pelajaran yang Membutuhkan Validasi</h3>
+              <p className="text-xs text-slate-500 max-w-md mx-auto">
+                Saat ini belum ada butir soal yang diinputkan atau semua soal sudah berstatus aktif. Gunakan tombol "Input Soal Manual" atau "Generator Soal" untuk memasukkan soal baru.
+              </p>
+            </div>
           ) : filteredSubjectCards.length === 0 ? (
             <div className="text-center py-16 bg-slate-50 rounded-3xl border border-dashed border-slate-200 text-slate-400 text-xs">
-              Tidak ditemukan mata pelajaran yang cocok dengan pencarian "{searchSubject}".
+              Tidak ditemukan mata pelajaran aktif yang cocok dengan filter atau kata kunci "{searchSubject}".
             </div>
           ) : (
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
               {filteredSubjectCards.map((sub) => {
-                const stats = getSubjectStats(sub.id);
+                const stats = sub.stats;
                 const hasPending = stats.menunggu > 0;
 
                 return (
@@ -833,7 +927,7 @@ export default function ValidasiSoalPage() {
                 className="px-3.5 py-1.5 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-700 text-xs font-bold flex items-center gap-1.5 transition-colors cursor-pointer"
               >
                 <ArrowLeft className="w-4 h-4" />
-                <span>Kembali ke Ringkasan Semua Mapel</span>
+                <span>Kembali ke Ringkasan Mapel</span>
               </button>
 
               <div className="flex items-center gap-2">
@@ -841,23 +935,12 @@ export default function ValidasiSoalPage() {
                 <select
                   value={selectedMapel || ""}
                   onChange={(e) => setSelectedMapel(e.target.value)}
-                  className="px-3 py-1 rounded-xl border border-slate-200 text-xs font-bold text-slate-800 bg-white"
+                  className="px-3 py-1.5 rounded-xl border border-slate-200 text-xs font-bold text-slate-800 bg-white"
                 >
-                  <optgroup label="Mata Pelajaran Wajib (TKA)">
-                    {MAPEL_WAJIB.map((item) => (
-                      <option key={item.id} value={item.id}>
-                        {item.name}
-                      </option>
-                    ))}
-                  </optgroup>
-                  {MAPEL_PILIHAN_GROUPS.map((group) => (
-                    <optgroup key={group.groupName} label={group.groupName}>
-                      {group.subjects.map((sub) => (
-                        <option key={sub.id} value={sub.id}>
-                          {sub.name}
-                        </option>
-                      ))}
-                    </optgroup>
+                  {activeSubjectCards.map((sub) => (
+                    <option key={sub.id} value={sub.id}>
+                      {sub.name} ({sub.stats.menunggu > 0 ? `⏳ ${sub.stats.menunggu} pending / ` : ""}{sub.stats.total} butir)
+                    </option>
                   ))}
                 </select>
               </div>
@@ -868,13 +951,13 @@ export default function ValidasiSoalPage() {
           <div className="bg-gradient-to-r from-blue-600 to-indigo-700 text-white rounded-3xl p-5 sm:p-6 shadow-md flex flex-col sm:flex-row sm:items-center justify-between gap-4">
             <div className="space-y-1">
               <span className="text-[11px] font-bold text-blue-200 uppercase tracking-wider">
-                Mata Pelajaran Aktif
+                {userRole === "GURU" ? "Mata Pelajaran Anda (Guru)" : "Mata Pelajaran Aktif"}
               </span>
               <h2 className="text-xl sm:text-2xl font-black tracking-tight">
-                {getSubjectDisplayName(selectedMapel || "")}
+                {getSubjectDisplayName(currentMapel || "")}
               </h2>
               <p className="text-xs text-blue-100">
-                Kode: <code className="bg-white/20 px-1.5 py-0.5 rounded font-mono font-bold">{selectedMapel}</code>
+                Kode: <code className="bg-white/20 px-1.5 py-0.5 rounded font-mono font-bold">{currentMapel}</code>
               </p>
             </div>
 
@@ -882,7 +965,7 @@ export default function ValidasiSoalPage() {
             {activeTab === "MENUNGGU_VALIDASI" && soalList.length > 0 && (
               <button
                 type="button"
-                onClick={() => selectedMapel && handleBulkApprove(selectedMapel)}
+                onClick={() => currentMapel && handleBulkApprove(currentMapel)}
                 className="px-4 py-2.5 bg-amber-400 hover:bg-amber-300 text-amber-950 font-black rounded-xl text-xs transition-all flex items-center gap-2 shadow-sm cursor-pointer shrink-0"
               >
                 <Zap className="w-4 h-4 fill-amber-950" />
@@ -895,33 +978,51 @@ export default function ValidasiSoalPage() {
           <div className="flex items-center gap-2 border-b border-slate-200 pb-3">
             <button
               onClick={() => setActiveTab("MENUNGGU_VALIDASI")}
-              className={`px-4 py-2 rounded-xl text-xs font-bold transition-all cursor-pointer ${
+              className={`px-4 py-2 rounded-xl text-xs font-bold transition-all cursor-pointer flex items-center gap-1.5 ${
                 activeTab === "MENUNGGU_VALIDASI"
                   ? "bg-amber-100 text-amber-900 shadow-xs"
                   : "text-slate-500 hover:bg-slate-100"
               }`}
             >
-              Menunggu Validasi
+              <Clock className="w-3.5 h-3.5" />
+              <span>Menunggu Validasi</span>
+              {currentMapelStats && currentMapelStats.menunggu > 0 && (
+                <span className="px-1.5 py-0.5 rounded-full bg-amber-500 text-white text-[10px] font-black">
+                  {currentMapelStats.menunggu}
+                </span>
+              )}
             </button>
             <button
               onClick={() => setActiveTab("AKTIF")}
-              className={`px-4 py-2 rounded-xl text-xs font-bold transition-all cursor-pointer ${
+              className={`px-4 py-2 rounded-xl text-xs font-bold transition-all cursor-pointer flex items-center gap-1.5 ${
                 activeTab === "AKTIF"
                   ? "bg-emerald-100 text-emerald-900 shadow-xs"
                   : "text-slate-500 hover:bg-slate-100"
               }`}
             >
-              Bank Soal Aktif
+              <CheckCircle2 className="w-3.5 h-3.5" />
+              <span>Bank Soal Aktif</span>
+              {currentMapelStats && currentMapelStats.aktif > 0 && (
+                <span className="px-1.5 py-0.5 rounded-full bg-emerald-600 text-white text-[10px] font-black">
+                  {currentMapelStats.aktif}
+                </span>
+              )}
             </button>
             <button
               onClick={() => setActiveTab("DITOLAK")}
-              className={`px-4 py-2 rounded-xl text-xs font-bold transition-all cursor-pointer ${
+              className={`px-4 py-2 rounded-xl text-xs font-bold transition-all cursor-pointer flex items-center gap-1.5 ${
                 activeTab === "DITOLAK"
                   ? "bg-rose-100 text-rose-900 shadow-xs"
                   : "text-slate-500 hover:bg-slate-100"
               }`}
             >
-              Ditolak
+              <XCircle className="w-3.5 h-3.5" />
+              <span>Ditolak</span>
+              {currentMapelStats && currentMapelStats.ditolak > 0 && (
+                <span className="px-1.5 py-0.5 rounded-full bg-rose-500 text-white text-[10px] font-black">
+                  {currentMapelStats.ditolak}
+                </span>
+              )}
             </button>
           </div>
 
