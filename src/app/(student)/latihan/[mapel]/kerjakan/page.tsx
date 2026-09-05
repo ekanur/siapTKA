@@ -28,6 +28,7 @@ import MathRenderer from "@/components/math/MathRenderer";
 import PilihanGandaView from "@/components/quiz/PilihanGandaView";
 import McmaView from "@/components/quiz/McmaView";
 import PgkKategoriView from "@/components/quiz/PgkKategoriView";
+import { normalizeOpsiJawaban } from "@/lib/quiz/normalize";
 
 export default function QuizRunnerPage() {
   const params = useParams();
@@ -126,11 +127,7 @@ export default function QuizRunnerPage() {
   // Helper parser
   const parsedOptions = React.useMemo(() => {
     if (!currentQ) return null;
-    try {
-      return JSON.parse(currentQ.opsiJawaban);
-    } catch {
-      return null;
-    }
+    return normalizeOpsiJawaban(currentQ.opsiJawaban);
   }, [currentQ]);
 
   // Answer handler for PG Single

@@ -22,7 +22,8 @@ import {
   RefreshCw,
 } from "lucide-react";
 import MathRenderer from "@/components/math/MathRenderer";
-import { buildGeminiPrompt } from "@/lib/ai/gemini-service";
+import { buildGeminiPrompt, normalizeOpsiJawaban, normalizeKunciJawaban } from "@/lib/quiz/normalize";
+import { MAPEL_WAJIB, MAPEL_PILIHAN_GROUPS } from "@/lib/constants/subjects";
 
 // Pusmendik framework presets covering multiple vocational disciplines
 const PUSMENDIK_PRESETS = [
@@ -83,7 +84,7 @@ const PUSMENDIK_PRESETS = [
     batasan: "Tegangan kerja 380V/220V dengan proteksi MCB dan TOR standar PUIL 2011.",
   },
   {
-    mapel: "TP",
+    mapel: "TPM",
     label: "Teknik Pemesinan: Parameter Bubut CNC",
     elemen: "Teknik Pemesinan Bubut dan Frais",
     subElemen: "Perhitungan Parameter Pemotongan (Cutting Speed & Feed Rate)",
@@ -360,34 +361,22 @@ export default function GeneratorSoalPage() {
                 onChange={(e) => setMapel(e.target.value)}
                 className="w-full px-3.5 py-2.5 rounded-xl border border-slate-200 text-xs font-bold text-slate-800 bg-white cursor-pointer focus:ring-2 focus:ring-blue-500"
               >
-                <optgroup label="Mata Pelajaran Wajib">
-                  <option value="MATEMATIKA">Matematika</option>
-                  <option value="BAHASA_INDONESIA">Bahasa Indonesia</option>
-                  <option value="BAHASA_INGGRIS">Bahasa Inggris</option>
+                <optgroup label="Mata Pelajaran Wajib (TKA)">
+                  {MAPEL_WAJIB.map((item) => (
+                    <option key={item.id} value={item.id}>
+                      {item.name}
+                    </option>
+                  ))}
                 </optgroup>
-                <optgroup label="Kejuruan SMKN 2 Depok (12 Jurusan)">
-                  <option value="SIJA">Sistem Informasi, Jaringan & Aplikasi (SIJA)</option>
-                  <option value="DPIB">Desain Pemodelan dan Informasi Bangunan (DPIB)</option>
-                  <option value="TITL">Teknik Instalasi Tenaga Listrik (TITL)</option>
-                  <option value="TOI">Teknik Otomasi Industri (TOI)</option>
-                  <option value="TP">Teknik Pemesinan (TP)</option>
-                  <option value="TKR">Teknik Kendaraan Ringan (TKR)</option>
-                  <option value="TBKR">Teknik Bodi Kendaraan Ringan (TBKR)</option>
-                  <option value="TEK">Teknik Elektronika Komunikasi (TEK)</option>
-                  <option value="TKI">Teknik Kimia Industri (TKI)</option>
-                  <option value="KA">Kimia Analisis (KA)</option>
-                  <option value="TFLM">Teknik Fabrikasi Logam dan Manufaktur (TFLM)</option>
-                  <option value="GP">Geologi Pertambangan (GP)</option>
-                </optgroup>
-                <optgroup label="Rumpun Kejuruan Lainnya">
-                  <option value="PPLG">Pengembangan Perangkat Lunak & Gim (PPLG)</option>
-                  <option value="AIJ">Administrasi Infrastruktur Jaringan (AIJ)</option>
-                  <option value="TKJ">Teknik Jaringan Komputer (TKJ)</option>
-                  <option value="DKV">Desain Komunikasi Visual (DKV)</option>
-                  <option value="ANIMASI">Animasi</option>
-                  <option value="PKK">Produk Kreatif & Kewirausahaan (PKK)</option>
-                  <option value="AKL">Akuntansi & Keuangan Lembaga (AKL)</option>
-                </optgroup>
+                {MAPEL_PILIHAN_GROUPS.map((group) => (
+                  <optgroup key={group.groupName} label={group.groupName}>
+                    {group.subjects.map((sub) => (
+                      <option key={sub.id} value={sub.id}>
+                        {sub.name}
+                      </option>
+                    ))}
+                  </optgroup>
+                ))}
               </select>
             </div>
 
@@ -597,24 +586,9 @@ export default function GeneratorSoalPage() {
 
           <div className="space-y-4">
             {generatedResults.map((q, idx) => {
-              // Parse options if stored as string
-              let parsedOpsi = q.opsiJawaban;
-              if (typeof parsedOpsi === "string") {
-                try {
-                  parsedOpsi = JSON.parse(parsedOpsi);
-                } catch (e) {
-                  parsedOpsi = [];
-                }
-              }
-
-              let parsedKunci = q.kunciJawaban;
-              if (typeof parsedKunci === "string" && (parsedKunci.startsWith("[") || parsedKunci.startsWith("{"))) {
-                try {
-                  parsedKunci = JSON.parse(parsedKunci);
-                } catch (e) {
-                  // Keep as string
-                }
-              }
+              // Parse & Normalize options and answer keys
+              const parsedOpsi = normalizeOpsiJawaban(q.opsiJawaban);
+              const parsedKunci = normalizeKunciJawaban(q.kunciJawaban, q.tipeSoal);
 
               return (
                 <div key={q.id || idx} className="bg-white rounded-3xl border border-slate-200 p-6 shadow-sm space-y-4">
@@ -637,11 +611,13 @@ export default function GeneratorSoalPage() {
                         Pilihan Jawaban (A-E):
                       </span>
                       <div className="grid grid-cols-1 gap-2">
-                        {parsedOpsi.map((opt: any) => {
-                          const isCorrect = opt.id === parsedKunci;
+                        {parsedOpsi.map((opt: any, oIdx: number) => {
+                          const optId = String(opt.id || opt.kunci || opt.key || String.fromCharCode(65 + oIdx)).toUpperCase();
+                          const optLabel = String(opt.label || opt.teks || opt.text || opt.value || "");
+                          const isCorrect = optId === String(parsedKunci).toUpperCase();
                           return (
                             <div
-                              key={opt.id}
+                              key={optId}
                               className={`p-3 rounded-xl border text-xs flex items-start gap-2.5 ${
                                 isCorrect
                                   ? "bg-emerald-50 border-emerald-300 text-emerald-950 font-bold"
@@ -653,10 +629,10 @@ export default function GeneratorSoalPage() {
                                   isCorrect ? "bg-emerald-600 text-white" : "bg-white text-slate-600 border border-slate-200"
                                 }`}
                               >
-                                {opt.id}
+                                {optId}
                               </span>
                               <div className="flex-1">
-                                <MathRenderer content={opt.label || ""} />
+                                <MathRenderer content={optLabel} />
                               </div>
                               {isCorrect && (
                                 <span className="text-[10px] font-black text-emerald-700 bg-emerald-100 px-2 py-0.5 rounded-md uppercase">
@@ -677,11 +653,16 @@ export default function GeneratorSoalPage() {
                         Pilihan Jawaban Kompleks (Multi-Jawaban):
                       </span>
                       <div className="grid grid-cols-1 gap-2">
-                        {parsedOpsi.map((opt: any) => {
-                          const isCorrect = Array.isArray(parsedKunci) && parsedKunci.includes(opt.id);
+                        {parsedOpsi.map((opt: any, oIdx: number) => {
+                          const optId = String(opt.id || opt.kunci || opt.key || String.fromCharCode(65 + oIdx)).toUpperCase();
+                          const optLabel = String(opt.label || opt.teks || opt.text || opt.value || "");
+                          const isCorrect = Array.isArray(parsedKunci)
+                            ? parsedKunci.includes(optId)
+                            : String(parsedKunci).toUpperCase().includes(optId);
+
                           return (
                             <div
-                              key={opt.id}
+                              key={optId}
                               className={`p-3 rounded-xl border text-xs flex items-start gap-2.5 ${
                                 isCorrect
                                   ? "bg-emerald-50 border-emerald-300 text-emerald-950 font-bold"
@@ -693,10 +674,10 @@ export default function GeneratorSoalPage() {
                                   isCorrect ? "bg-emerald-600 text-white" : "bg-white text-slate-600 border border-slate-200"
                                 }`}
                               >
-                                {opt.id}
+                                {optId}
                               </span>
                               <div className="flex-1">
-                                <MathRenderer content={opt.label || ""} />
+                                <MathRenderer content={optLabel} />
                               </div>
                               {isCorrect && (
                                 <span className="text-[10px] font-black text-emerald-700 bg-emerald-100 px-2 py-0.5 rounded-md uppercase">

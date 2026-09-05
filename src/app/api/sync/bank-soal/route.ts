@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import prisma from "@/lib/prisma";
 import { encryptAnswerKey, encryptExplanation } from "@/lib/security/crypto";
+import { normalizeOpsiJawaban } from "@/lib/quiz/normalize";
 
 export const dynamic = "force-dynamic";
 
@@ -42,7 +43,7 @@ export async function GET(request: Request) {
       topik: q.kisiKisi?.topik || "Latihan Mandiri TKA",
       tipeSoal: q.tipeSoal,
       pertanyaan: q.pertanyaan,
-      opsiJawaban: q.opsiJawaban,
+      opsiJawaban: JSON.stringify(normalizeOpsiJawaban(q.opsiJawaban)),
       kunciJawaban: encryptAnswerKey(q.kunciJawaban, q.id),
       pembahasan: encryptExplanation(q.pembahasan || "", q.id),
       status: q.status,

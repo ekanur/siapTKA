@@ -1,4 +1,13 @@
 import { GoogleGenerativeAI } from "@google/generative-ai";
+import {
+  normalizeOpsiJawaban,
+  normalizeKunciJawaban,
+  buildGeminiPrompt,
+  GeneratePromptParams,
+} from "@/lib/quiz/normalize";
+
+export { normalizeOpsiJawaban, normalizeKunciJawaban, buildGeminiPrompt };
+export type { GeneratePromptParams };
 
 export interface GenerateParams {
   mapel: string;
@@ -40,7 +49,7 @@ export interface GenerationResponse {
  */
 export function getGeminiApiStatus() {
   const rawKey = process.env.GEMINI_API_KEY || "";
-  const cleanKey = rawKey.trim();
+  const cleanKey = rawKey.replace(/^["']|["']$/g, "").trim();
   const isConfigured = Boolean(cleanKey && cleanKey !== "your-gemini-api-key");
 
   let maskedKey: string | null = null;
@@ -57,104 +66,6 @@ export function getGeminiApiStatus() {
     maskedKey,
     model: "gemini-3.6-flash",
   };
-}
-
-/**
- * Membangun prompt Gemini AI yang secara ketat (strictly grounded)
- * mengacu pada 7 parameter input form matriks asesmen TKA Pusmendik.
- */
-export function buildGeminiPrompt(params: GenerateParams): string {
-  const count = params.jumlahSoal || 3;
-  const elemen = params.elemen || params.kisiKisi?.topik || "Materi Asesmen Standar";
-  const subElemen = params.subElemen || params.kisiKisi?.muatan || "Sub-Materi Asesmen";
-  const kompetensi = params.kompetensi || params.kisiKisi?.kompetensi || "Kompetensi penalaran akademik tingkat tinggi (HOTS)";
-  const batasan = params.batasan || params.kisiKisi?.matriksAsesmen || "Standar kerangka asesmen nasional Pusmendik";
-  const mapel = params.mapel || "MATEMATIKA";
-  const tipeSoal = params.tipeSoal || "PILIHAN_GANDA";
-
-  const tipeSoalLabel =
-    tipeSoal === "PILIHAN_GANDA"
-      ? "Pilihan Ganda Tunggal (1 Kunci Jawaban Benar dari 5 Opsi A-E)"
-      : tipeSoal === "MCMA"
-      ? "Pilihan Ganda Kompleks Multi-Jawaban / MCMA (Pilih lebih dari satu opsi benar)"
-      : "Pilihan Ganda Kompleks Kategori (Matriks Pernyataan: Benar/Salah atau Sesuai/Tidak Sesuai)";
-
-  return `Anda adalah Pakar Asesmen Akademik & Kejuruan serta Pembuat Soal Ujian Nasional / Tes Kemampuan Akademik (TKA) Standar Resmi Pusmendik Kemendikdasmen RI.
-
-TUGAS UTAMA ANDA:
-Hasilkan tepat ${count} butir soal latihan baru berkualitas tinggi dengan tingkat kognitif HOTS (Higher Order Thinking Skills: C3/C4/C5 - Aplikasi, Analisis, Evaluasi, dan Pemecahan Masalah Nyata) yang WAJIB SECARA KETAT MENGACU PADA MATRIKS ASESMEN BERIKUT:
-
-============================================================
-MATRIKS ASESMEN & PARAMETER ACUAN FORM:
-============================================================
-1. MATA PELAJARAN: ${mapel}
-2. BENTUK SOAL: ${tipeSoalLabel} (${tipeSoal})
-3. JUMLAH BUTIR SOAL: ${count} butir
-4. ELEMEN / MATERI POKOK: ${elemen}
-5. SUB-ELEMEN / SUB-MATERI: ${subElemen}
-6. KOMPETENSI / INDIKATOR ASESMEN: ${kompetensi}
-7. BATASAN RUANG LINGKUP & KONTEKS: ${batasan}
-============================================================
-
-INSTRUKSI KONTEN & RELEVANSI KETAT (CRITICAL REQUIREMENTS):
-1. RELEVANSI 100% TERHADAP FORM: Seluruh stimulus narasi/kasus, pertanyaan, opsi jawaban, dan pembahasan WAJIB berakar secara spesifik pada Elemen "${elemen}" dan Sub-Elemen "${subElemen}". DILARANG membuat soal materi lain.
-2. PENGUJIAN KOMPETENSI: Setiap butir soal harus secara langsung mengukur kemampuan siswa dalam: "${kompetensi}".
-3. KEPATUHAN BATASAN RUANG LINGKUP: Patuhi batasan konteks: "${batasan}". Segala batasan variabel, asumsi, jenis alat, kedalaman rumus, ataupun skenario tidak boleh melampaui batasan ini.
-4. STIMULUS REALISTIS & KONTEKSTUAL: Setiap butir soal harus diawali dengan stimulus situasi nyata, permasalahan industri/PKL, data teknis, eksperimen, tabel, atau kasus konkret yang relevan bagi siswa SMK.
-5. NOTASI SAINS & MATEMATIKA: Gunakan notasi LaTeX standar untuk rumus atau persamaan matematika/fisika/kimia ($...$ untuk inline, $$...$$ untuk display blok).
-
-KETENTUAN STRUKTUR JSON SESUAI BENTUK SOAL:
-${
-  tipeSoal === "PILIHAN_GANDA"
-    ? `- "tipeSoal": "PILIHAN_GANDA"
-- "opsiJawaban": Array of 5 objek:
-  [
-    {"id": "A", "label": "Deskripsi opsi A..."},
-    {"id": "B", "label": "Deskripsi opsi B..."},
-    {"id": "C", "label": "Deskripsi opsi C..."},
-    {"id": "D", "label": "Deskripsi opsi D..."},
-    {"id": "E", "label": "Deskripsi opsi E..."}
-  ]
-- "kunciJawaban": Tepat satu string huruf kapital ("A", "B", "C", "D", atau "E").
-- Pengecoh (distractor) harus logis, mencerminkan miskonsepsi umum siswa.`
-    : tipeSoal === "MCMA"
-    ? `- "tipeSoal": "MCMA"
-- "opsiJawaban": Array of 5 objek (A, B, C, D, E).
-- "kunciJawaban": Array berisi 2 hingga 4 huruf string opsi yang bernilai BENAR, contoh: ["A", "C"] atau ["B", "D", "E"].
-- Pertanyaan harus secara eksplisit menyertakan instruksi: "(Pilihlah lebih dari satu jawaban yang benar)".`
-    : `- "tipeSoal": "PGK_KATEGORI"
-- "opsiJawaban": Objek matriks pernyataan:
-  {
-    "categories": ["Benar", "Salah"],
-    "statements": [
-      {"id": 1, "text": "Pernyataan 1..."},
-      {"id": 2, "text": "Pernyataan 2..."},
-      {"id": 3, "text": "Pernyataan 3..."},
-      {"id": 4, "text": "Pernyataan 4..."}
-    ]
-  }
-- "kunciJawaban": Array evaluasi setiap pernyataan:
-  [
-    {"id": 1, "answer": "Benar"},
-    {"id": 2, "answer": "Salah"},
-    {"id": 3, "answer": "Benar"},
-    {"id": 4, "answer": "Salah"}
-  ]`
-}
-
-6. PEMBAHASAN: Wajib menyertakan "pembahasan" yang komprehensif, menguraikan langkah rasional atau matematis langkah demi langkah, mengaitkan dengan Elemen "${elemen}", menjelaskan pembuktian jawaban benar, serta alasan mengapa opsi lain tidak tepat.
-
-FORMAT OUTPUT:
-Keluarkan HANYA array JSON valid (tanpa pembungkus markdown seperti \`\`\`json, tanpa komentar di luar JSON).
-[
-  {
-    "pertanyaan": "Teks stimulus dan pertanyaan lengkap...",
-    "tipeSoal": "${tipeSoal}",
-    "opsiJawaban": ...,
-    "kunciJawaban": ...,
-    "pembahasan": "Pembahasan rinci..."
-  }
-]`;
 }
 
 /**
@@ -176,7 +87,7 @@ function cleanJsonOutput(text: string): string {
 /**
  * Fungsi utama generate soal:
  * 1. Mengecek ketersediaan GEMINI_API_KEY dari .env
- * 2. Jika ada, memanggil Google Generative AI (Gemini 1.5 Flash)
+ * 2. Jika ada, memanggil Google Generative AI (Gemini 3.6/3.7 Flash)
  * 3. Menangani error status seperti Rate Limit (429) atau Invalid Key (400/403)
  * 4. Jika key belum diisi atau mengalami limit, beralih ke Mesin Simulasi Kontekstual
  *    yang tetap secara cerdas menyusun soal berdasarkan 7 parameter form pengguna.
@@ -198,7 +109,7 @@ export async function generateSoalWithGemini(params: GenerateParams): Promise<Ge
     };
   }
 
-  const rawKey = process.env.GEMINI_API_KEY!.trim();
+  const rawKey = (process.env.GEMINI_API_KEY || "").replace(/^["']|["']$/g, "").trim();
 
   try {
     const genAI = new GoogleGenerativeAI(rawKey);
@@ -239,7 +150,16 @@ export async function generateSoalWithGemini(params: GenerateParams): Promise<Ge
     const rawText = result.response.text();
     const cleanedText = cleanJsonOutput(rawText);
     const parsed = JSON.parse(cleanedText);
-    const soalList: GeneratedSoalResult[] = Array.isArray(parsed) ? parsed : [parsed];
+    const rawSoalList = Array.isArray(parsed) ? parsed : [parsed];
+
+    // Lakukan normalisasi ketat pada setiap butir soal hasil AI
+    const soalList: GeneratedSoalResult[] = rawSoalList.map((item: any) => ({
+      pertanyaan: item.pertanyaan || "Pertanyaan Asesmen TKA",
+      tipeSoal: item.tipeSoal || params.tipeSoal,
+      opsiJawaban: normalizeOpsiJawaban(item.opsiJawaban),
+      kunciJawaban: normalizeKunciJawaban(item.kunciJawaban, item.tipeSoal || params.tipeSoal),
+      pembahasan: item.pembahasan || "Pembahasan komprehensif butir soal.",
+    }));
 
     return {
       success: true,
@@ -259,7 +179,12 @@ export async function generateSoalWithGemini(params: GenerateParams): Promise<Ge
     if (errorMsg.includes("429") || errorMsg.includes("quota") || errorMsg.includes("ResourceExhausted")) {
       statusApi = "RATE_LIMITED";
       notice = "Kuota limit Gemini API tercapai (Rate Limit / Quota Exceeded).";
-    } else if (errorMsg.includes("API_KEY_INVALID") || errorMsg.includes("400") || errorMsg.includes("403") || errorMsg.includes("unregistered")) {
+    } else if (
+      errorMsg.includes("API_KEY_INVALID") ||
+      errorMsg.includes("400") ||
+      errorMsg.includes("403") ||
+      errorMsg.includes("unregistered")
+    ) {
       statusApi = "INVALID_KEY";
       notice = "GEMINI_API_KEY pada file .env tidak valid atau ditolak oleh Google.";
     }
@@ -306,7 +231,10 @@ export function generateContextualSimulatedQuestions(params: GenerateParams): Ge
       if (isMath) {
         pertanyaan = `Dalam konteks materi **${elemen}** (khususnya kajian **${subElemen}**), seorang analis dihadapkan pada model fungsi terapan $f(x) = ${i + 1}x^2 - ${i * 4}x + ${i * 2 + 1}$. Berdasarkan indikator asesmen: *"${kompetensi}"*, dengan batasan ruang lingkup: *"${batasan}"*, maka nilai kritis atau nilai optimum fungsi tersebut adalah...`;
         opsiJawaban = [
-          { id: "A", label: `$x = \\frac{${i * 2}}{${i + 1}}$ dengan nilai minimum $f(x) = ${i * 2 + 1 - ((i * 4) * (i * 4)) / (4 * (i + 1))}$` },
+          {
+            id: "A",
+            label: `$x = \\frac{${i * 2}}{${i + 1}}$ dengan nilai minimum $f(x) = ${i * 2 + 1 - ((i * 4) * (i * 4)) / (4 * (i + 1))}$`,
+          },
           { id: "B", label: `$x = -\\frac{${i * 2}}{${i + 1}}$ dengan nilai maksimum tak terdefinisi` },
           { id: "C", label: `$x = ${i * 4}$ dengan nilai diskriminan $D < 0$` },
           { id: "D", label: `$x = 0$ menghasilkan akar bilangan imajiner` },

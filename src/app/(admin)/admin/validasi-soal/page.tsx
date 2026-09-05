@@ -18,6 +18,8 @@ import {
   BookOpen,
 } from "lucide-react";
 import MathRenderer from "@/components/math/MathRenderer";
+import { normalizeOpsiJawaban, normalizeKunciJawaban } from "@/lib/quiz/normalize";
+import { MAPEL_WAJIB, MAPEL_PILIHAN_GROUPS } from "@/lib/constants/subjects";
 
 export default function ValidasiSoalPage() {
   const { data: session } = useSession();
@@ -264,11 +266,22 @@ export default function ValidasiSoalPage() {
               className="px-3 py-1.5 rounded-xl border border-slate-200 text-xs font-semibold text-slate-700 bg-white"
             >
               <option value="ALL">Semua Mapel</option>
-              <option value="MATEMATIKA">Matematika</option>
-              <option value="BAHASA_INDONESIA">Bahasa Indonesia</option>
-              <option value="BAHASA_INGGRIS">Bahasa Inggris</option>
-              <option value="PPLG">Kejuruan PPLG</option>
-              <option value="AIJ">Kejuruan AIJ</option>
+              <optgroup label="Mata Pelajaran Wajib (TKA)">
+                {MAPEL_WAJIB.map((item) => (
+                  <option key={item.id} value={item.id}>
+                    {item.name}
+                  </option>
+                ))}
+              </optgroup>
+              {MAPEL_PILIHAN_GROUPS.map((group) => (
+                <optgroup key={group.groupName} label={group.groupName}>
+                  {group.subjects.map((sub) => (
+                    <option key={sub.id} value={sub.id}>
+                      {sub.name}
+                    </option>
+                  ))}
+                </optgroup>
+              ))}
             </select>
           </div>
         )}
@@ -287,12 +300,8 @@ export default function ValidasiSoalPage() {
       ) : (
         <div className="space-y-4">
           {soalList.map((item, idx) => {
-            let parsedOpsi: any = [];
-            try {
-              parsedOpsi = typeof item.opsiJawaban === "string" ? JSON.parse(item.opsiJawaban) : item.opsiJawaban;
-            } catch (e) {
-              parsedOpsi = [];
-            }
+            const parsedOpsi = normalizeOpsiJawaban(item.opsiJawaban);
+            const parsedKunci = normalizeKunciJawaban(item.kunciJawaban, item.tipeSoal);
 
             return (
               <div
@@ -357,23 +366,31 @@ export default function ValidasiSoalPage() {
                 </div>
 
                 {/* Options Preview */}
-                {Array.isArray(parsedOpsi) && (
+                {Array.isArray(parsedOpsi) && parsedOpsi.length > 0 && (
                   <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 pt-2">
-                    {parsedOpsi.map((op: any, oIdx: number) => (
-                      <div
-                        key={oIdx}
-                        className={`p-2.5 rounded-xl border text-xs flex items-start gap-2 ${
-                          String(item.kunciJawaban).includes(op.id)
-                            ? "bg-emerald-50/60 border-emerald-300 text-emerald-950 font-semibold"
-                            : "bg-slate-50 border-slate-200 text-slate-700"
-                        }`}
-                      >
-                        <span className="font-bold shrink-0">{op.id}.</span>
-                        <div className="leading-relaxed">
-                          <MathRenderer content={op.label || ""} />
+                    {parsedOpsi.map((op: any, oIdx: number) => {
+                      const opId = String(op.id || op.kunci || op.key || String.fromCharCode(65 + oIdx)).toUpperCase();
+                      const opLabel = String(op.label || op.teks || op.text || op.value || "");
+                      const isCorrect = Array.isArray(parsedKunci)
+                        ? parsedKunci.includes(opId)
+                        : String(parsedKunci).toUpperCase().includes(opId);
+
+                      return (
+                        <div
+                          key={oIdx}
+                          className={`p-2.5 rounded-xl border text-xs flex items-start gap-2 ${
+                            isCorrect
+                              ? "bg-emerald-50/60 border-emerald-300 text-emerald-950 font-semibold"
+                              : "bg-slate-50 border-slate-200 text-slate-700"
+                          }`}
+                        >
+                          <span className="font-bold shrink-0">{opId}.</span>
+                          <div className="leading-relaxed">
+                            <MathRenderer content={opLabel} />
+                          </div>
                         </div>
-                      </div>
-                    ))}
+                      );
+                    })}
                   </div>
                 )}
 
@@ -428,11 +445,22 @@ export default function ValidasiSoalPage() {
                       onChange={(e) => setManualMapel(e.target.value)}
                       className="w-full px-3 py-2 rounded-xl border border-slate-300 font-bold text-slate-800"
                     >
-                      <option value="MATEMATIKA">Matematika</option>
-                      <option value="BAHASA_INDONESIA">Bahasa Indonesia</option>
-                      <option value="BAHASA_INGGRIS">Bahasa Inggris</option>
-                      <option value="PPLG">Kejuruan PPLG</option>
-                      <option value="AIJ">Kejuruan AIJ</option>
+                      <optgroup label="Mata Pelajaran Wajib (TKA)">
+                        {MAPEL_WAJIB.map((item) => (
+                          <option key={item.id} value={item.id}>
+                            {item.name}
+                          </option>
+                        ))}
+                      </optgroup>
+                      {MAPEL_PILIHAN_GROUPS.map((group) => (
+                        <optgroup key={group.groupName} label={group.groupName}>
+                          {group.subjects.map((sub) => (
+                            <option key={sub.id} value={sub.id}>
+                              {sub.name}
+                            </option>
+                          ))}
+                        </optgroup>
+                      ))}
                     </select>
                   )}
                 </div>

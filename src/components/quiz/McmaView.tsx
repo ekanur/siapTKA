@@ -37,9 +37,11 @@ export default function McmaView({
         <span>Pilihlah satu atau lebih jawaban yang menurut Anda benar.</span>
       </div>
 
-      {options.map((opt) => {
-        const isSelected = selectedOptions.includes(opt.id);
-        const isExpected = correctOptions.includes(opt.id);
+      {options.map((opt, oIdx) => {
+        const optId = String((opt as any).id || (opt as any).kunci || (opt as any).key || String.fromCharCode(65 + oIdx)).toUpperCase();
+        const optLabel = String((opt as any).label || (opt as any).teks || (opt as any).text || (opt as any).value || (typeof opt === "string" ? opt : ""));
+        const isSelected = selectedOptions.includes(optId);
+        const isExpected = correctOptions.includes(optId);
         const isWronglyPicked = isSubmitted && isSelected && !isExpected;
         const isMissed = isSubmitted && !isSelected && isExpected;
 
@@ -62,10 +64,10 @@ export default function McmaView({
 
         return (
           <button
-            key={opt.id}
+            key={optId}
             type="button"
             disabled={disabled || isSubmitted}
-            onClick={() => onToggle(opt.id)}
+            onClick={() => onToggle(optId)}
             className={`w-full text-left p-4 rounded-xl border-2 transition-all flex items-start gap-3.5 group cursor-pointer disabled:cursor-default ${containerClass}`}
           >
             <div className="pt-0.5 shrink-0 text-slate-500 group-hover:text-blue-600">
@@ -77,11 +79,11 @@ export default function McmaView({
             </div>
 
             <div className="w-7 h-7 rounded-md bg-slate-100 flex items-center justify-center font-bold text-xs text-slate-700 shrink-0">
-              {opt.id}
+              {optId}
             </div>
 
             <div className="flex-1 pt-0.5">
-              <MathRenderer content={opt.label} />
+              <MathRenderer content={optLabel} />
             </div>
 
             {isSubmitted && isSelected && isExpected && (

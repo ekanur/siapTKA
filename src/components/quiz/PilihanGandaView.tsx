@@ -30,9 +30,11 @@ export default function PilihanGandaView({
 }: PilihanGandaViewProps) {
   return (
     <div className="space-y-3 mt-4">
-      {options.map((opt) => {
-        const isSelected = selectedOption === opt.id;
-        const isCorrect = correctOption === opt.id;
+      {options.map((opt, oIdx) => {
+        const optId = String((opt as any).id || (opt as any).kunci || (opt as any).key || String.fromCharCode(65 + oIdx)).toUpperCase();
+        const optLabel = String((opt as any).label || (opt as any).teks || (opt as any).text || (opt as any).value || (typeof opt === "string" ? opt : ""));
+        const isSelected = selectedOption === optId;
+        const isCorrect = correctOption === optId;
         const isWrong = isSubmitted && isSelected && !isCorrect;
 
         let containerClass =
@@ -52,10 +54,10 @@ export default function PilihanGandaView({
 
         return (
           <button
-            key={opt.id}
+            key={optId}
             type="button"
             disabled={disabled || isSubmitted}
-            onClick={() => onSelect(opt.id)}
+            onClick={() => onSelect(optId)}
             className={`w-full text-left p-4 rounded-xl border-2 transition-all flex items-start gap-3.5 group cursor-pointer disabled:cursor-default ${containerClass}`}
           >
             <div
@@ -69,11 +71,11 @@ export default function PilihanGandaView({
                   : "bg-slate-100 text-slate-700 group-hover:bg-blue-100 group-hover:text-blue-700"
               }`}
             >
-              {opt.id}
+              {optId}
             </div>
 
             <div className="flex-1 pt-0.5">
-              <MathRenderer content={opt.label} />
+              <MathRenderer content={optLabel} />
             </div>
 
             {isSubmitted && isCorrect && (
