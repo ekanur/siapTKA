@@ -55,7 +55,7 @@ export function getGeminiApiStatus() {
   return {
     isConfigured,
     maskedKey,
-    model: "gemini-1.5-flash",
+    model: "gemini-3.6-flash",
   };
 }
 
@@ -202,15 +202,40 @@ export async function generateSoalWithGemini(params: GenerateParams): Promise<Ge
 
   try {
     const genAI = new GoogleGenerativeAI(rawKey);
-    const model = genAI.getGenerativeModel({
-      model: "gemini-1.5-flash",
-      generationConfig: {
-        responseMimeType: "application/json",
-        temperature: 0.7,
-      },
-    });
+    const candidateModels = [
+      "gemini-3.6-flash",
+      "gemini-3.7-flash",
+      "gemini-2.5-flash-lite",
+      "gemini-flash-latest",
+      "gemini-1.5-flash",
+    ];
 
-    const result = await model.generateContent(prompt);
+    let result = null;
+    let successfulModel = "gemini-3.6-flash";
+    let lastError: any = null;
+
+    for (const modelName of candidateModels) {
+      try {
+        const model = genAI.getGenerativeModel({
+          model: modelName,
+          generationConfig: {
+            responseMimeType: "application/json",
+            temperature: 0.7,
+          },
+        });
+        result = await model.generateContent(prompt);
+        successfulModel = modelName;
+        break;
+      } catch (err: any) {
+        lastError = err;
+        console.warn(`Model ${modelName} tidak tersedia/gagal, beralih ke kandidat berikutnya...`, err.message);
+      }
+    }
+
+    if (!result) {
+      throw lastError || new Error("Seluruh kandidat model Gemini gagal merespon.");
+    }
+
     const rawText = result.response.text();
     const cleanedText = cleanJsonOutput(rawText);
     const parsed = JSON.parse(cleanedText);
@@ -221,7 +246,7 @@ export async function generateSoalWithGemini(params: GenerateParams): Promise<Ge
       soal: soalList,
       source: "AI_GEMINI",
       statusApi: "READY",
-      message: `Berhasil men-generate ${soalList.length} butir soal menggunakan Google Gemini AI (Model: gemini-1.5-flash) secara presisi merujuk pada matriks asesmen yang Anda inputkan.`,
+      message: `Berhasil men-generate ${soalList.length} butir soal menggunakan Google Gemini AI (Model: ${successfulModel}) secara presisi merujuk pada matriks asesmen yang Anda inputkan.`,
       promptUsed: prompt,
     };
   } catch (error: any) {
