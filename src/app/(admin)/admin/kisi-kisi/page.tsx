@@ -225,21 +225,22 @@ export default function KisiKisiPage() {
                     onChange={(e) => setMapel(e.target.value)}
                     className="w-full p-2.5 bg-slate-50 border border-slate-300 rounded-xl font-bold"
                   >
-                    <optgroup label="⭐ Mapel Wajib">
-                      <option value="MATEMATIKA">Matematika</option>
-                      <option value="BAHASA_INDONESIA">Bahasa Indonesia</option>
-                      <option value="BAHASA_INGGRIS">Bahasa Inggris</option>
+                    <optgroup label="Mata Pelajaran Wajib (TKA)">
+                      {MAPEL_WAJIB.map((item) => (
+                        <option key={item.id} value={item.id}>
+                          {item.name}
+                        </option>
+                      ))}
                     </optgroup>
-                    <optgroup label="💻 Rumpun TIK (Kejuruan)">
-                      <option value="PPLG">PPLG (Pengembangan Perangkat Lunak & Gim)</option>
-                      <option value="TKJ">TKJ (Teknik Jaringan Komputer)</option>
-                      <option value="SIJA">SIJA (Sistem Informatika Jaringan & Aplikasi)</option>
-                      <option value="DKV">DKV (Desain Komunikasi Visual)</option>
-                    </optgroup>
-                    <optgroup label="🏭 Rumpun Lain & SMK">
-                      <option value="PKK">Produk Kreatif & Kewirausahaan (PKK)</option>
-                      <option value="B_INGGRIS_LANJUT">Bahasa Inggris Lanjutan</option>
-                    </optgroup>
+                    {MAPEL_PILIHAN_GROUPS.map((group) => (
+                      <optgroup key={group.groupName} label={group.groupName}>
+                        {group.subjects.map((sub) => (
+                          <option key={sub.id} value={sub.id}>
+                            {sub.name}
+                          </option>
+                        ))}
+                      </optgroup>
+                    ))}
                   </select>
                 </div>
                 <div>

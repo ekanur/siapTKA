@@ -13,109 +13,82 @@ export const MAPEL_WAJIB = [
 
 export const MAPEL_PILIHAN_GROUPS: { groupName: string; subjects: SubjectOption[] }[] = [
   {
-    groupName: "Rumpun TIK (Teknologi Informasi & Komunikasi)",
-    subjects: [
-      { id: "PPLG", name: "Pengembangan Perangkat Lunak & Gim (PPLG / RPL)", category: "TIK", isVocational: true },
-      { id: "AIJ", name: "Administrasi Infrastruktur Jaringan", category: "TIK", isVocational: true },
-      { id: "TKJ", name: "Teknik Jaringan Komputer & Telekomunikasi (TKJ)", category: "TIK", isVocational: true },
-      { id: "SIJA", name: "Sistem Informatika, Jaringan & Aplikasi (SIJA)", category: "TIK", isVocational: true },
-      { id: "DKV", name: "Desain Komunikasi Visual (DKV)", category: "TIK", isVocational: true },
-      { id: "ANIMASI", name: "Animasi", category: "TIK", isVocational: true },
-      { id: "PENGEMBANGAN_GIM", name: "Pengembangan Gim", category: "TIK", isVocational: true },
-    ],
-  },
-  {
-    groupName: "Khusus SMK (Kewirausahaan & Vokasi)",
-    subjects: [
-      { id: "PKK", name: "Produk atau Projek Kreatif dan Kewirausahaan (PKK)", category: "SMK", isVocational: true },
-    ],
-  },
-  {
-    groupName: "Rumpun Teknologi & Rekayasa (Kejuruan Teknik)",
-    subjects: [
-      { id: "DPIB", name: "Desain Pemodelan dan Informasi Bangunan (DPIB)", category: "Teknik Konstruksi", isVocational: true },
-      { id: "TITL", name: "Teknik Instalasi Tenaga Listrik (TITL)", category: "Teknik Ketenagalistrikan", isVocational: true },
-      { id: "TOI", name: "Teknik Otomasi Industri (TOI)", category: "Teknik Elektronika", isVocational: true },
-      { id: "TPM", name: "Teknik Pemesinan (TPM)", category: "Teknik Mesin", isVocational: true },
-      { id: "TKR", name: "Teknik Kendaraan Ringan (TKR)", category: "Teknik Otomotif", isVocational: true },
-      { id: "TBKR", name: "Teknik Bodi Kendaraan Ringan (TBKR)", category: "Teknik Otomotif", isVocational: true },
-      { id: "TEK", name: "Teknik Elektronika Komunikasi (TEK)", category: "Teknik Elektronika", isVocational: true },
-      { id: "TKI", name: "Teknik Kimia Industri (TKI)", category: "Teknik Kimia", isVocational: true },
-      { id: "TFLM", name: "Teknik Fabrikasi Logam dan Manufaktur (TFLM)", category: "Teknik Mesin", isVocational: true },
-      { id: "GP", name: "Geologi Pertambangan (GP)", category: "Geologi Pertambangan", isVocational: true },
-      { id: "TSM", name: "Teknik Sepeda Motor", category: "Teknik Otomotif", isVocational: true },
-      { id: "TAB", name: "Teknik Alat Berat", category: "Teknik Otomotif", isVocational: true },
-      { id: "TMI", name: "Teknik Mekanik Industri", category: "Teknik Mesin", isVocational: true },
-      { id: "LAS", name: "Teknik Pengelasan", category: "Teknik Mesin", isVocational: true },
-      { id: "TAV", name: "Teknik Audio Video", category: "Teknik Elektronika", isVocational: true },
-      { id: "MEKATRONIKA", name: "Teknik Mekatronika", category: "Teknik Elektronika", isVocational: true },
-      { id: "TJTL", name: "Teknik Jaringan Tenaga Listrik", category: "Teknik Ketenagalistrikan", isVocational: true },
-      { id: "BKP", name: "Konstruksi dan Perawatan Bangunan Sipil", category: "Teknik Konstruksi", isVocational: true },
-      { id: "TKP", name: "Teknik Konstruksi dan Perumahan", category: "Teknik Konstruksi", isVocational: true },
-    ],
-  },
-  {
-    groupName: "Rumpun Bisnis, Manajemen & Pariwisata",
-    subjects: [
-      { id: "AKL", name: "Akuntansi", category: "Bisnis & Manajemen", isVocational: true },
-      { id: "PERBANKAN", name: "Layanan Perbankan & Syariah", category: "Bisnis & Manajemen", isVocational: true },
-      { id: "MPLB", name: "Manajemen Perkantoran dan Layanan Bisnis", category: "Bisnis & Manajemen", isVocational: true },
-      { id: "LOGISTIK", name: "Manajemen Logistik", category: "Bisnis & Manajemen", isVocational: true },
-      { id: "BISNIS_DIGITAL", name: "Bisnis Digital", category: "Pemasaran", isVocational: true },
-      { id: "KULINER", name: "Kuliner (Tata Boga)", category: "Pariwisata & Kuliner", isVocational: true },
-      { id: "PERHOTELAN", name: "Perhotelan", category: "Pariwisata & Kuliner", isVocational: true },
-      { id: "BUSANA", name: "Tata Busana (Desain dan Produksi Busana)", category: "Seni Rupa & Kriya", isVocational: true },
-    ],
-  },
-  {
-    groupName: "Rumpun Agribisnis & Agriteknologi",
-    subjects: [
-      { id: "ATPH", name: "Agribisnis Tanaman Pangan dan Hortikultura", category: "Agribisnis", isVocational: true },
-      { id: "PERKEBUNAN", name: "Agribisnis Tanaman Perkebunan", category: "Agribisnis", isVocational: true },
-      { id: "PETERNAKAN", name: "Agribisnis Ternak Ruminansia / Unggas", category: "Agribisnis", isVocational: true },
-      { id: "PERIKANAN", name: "Agribisnis Perikanan Air Tawar", category: "Agribisnis", isVocational: true },
-      { id: "APHP", name: "Agribisnis Pengolahan Hasil Pertanian", category: "Agriteknologi", isVocational: true },
-    ],
-  },
-  {
-    groupName: "Rumpun Kesehatan, Pekerjaan Sosial & Kimia",
-    subjects: [
-      { id: "KEPERAWATAN", name: "Layanan Penunjang Keperawatan", category: "Kesehatan", isVocational: true },
-      { id: "FARMASI", name: "Farmasi Klinis dan Komunitas", category: "Kesehatan", isVocational: true },
-      { id: "KA", name: "Kimia Analisis (KA)", category: "Kimia", isVocational: true },
-    ],
-  },
-  {
-    groupName: "Rumpun MIPA & Teknologi (Akademik)",
+    groupName: "Mata Pelajaran Pilihan Akademik (Umum)",
     subjects: [
       { id: "MTK_LANJUT", name: "Matematika Tingkat Lanjut", category: "MIPA" },
+      { id: "B_INDO_LANJUT", name: "Bahasa Indonesia Tingkat Lanjut", category: "Bahasa" },
+      { id: "B_INGGRIS_LANJUT", name: "Bahasa Inggris Tingkat Lanjut", category: "Bahasa" },
       { id: "FISIKA", name: "Fisika", category: "MIPA" },
       { id: "KIMIA", name: "Kimia", category: "MIPA" },
       { id: "BIOLOGI", name: "Biologi", category: "MIPA" },
-    ],
-  },
-  {
-    groupName: "Rumpun Bahasa Lanjut & Asing",
-    subjects: [
-      { id: "B_INDO_LANJUT", name: "Bahasa Indonesia Tingkat Lanjut", category: "Bahasa" },
-      { id: "B_INGGRIS_LANJUT", name: "Bahasa Inggris Tingkat Lanjut", category: "Bahasa" },
-      { id: "B_JEPANG", name: "Bahasa Jepang", category: "Bahasa" },
-      { id: "B_MANDARIN", name: "Bahasa Mandarin", category: "Bahasa" },
-      { id: "B_JERMAN", name: "Bahasa Jerman", category: "Bahasa" },
-      { id: "B_PRANCIS", name: "Bahasa Prancis", category: "Bahasa" },
-      { id: "B_KOREA", name: "Bahasa Korea", category: "Bahasa" },
-      { id: "B_ARAB", name: "Bahasa Arab", category: "Bahasa" },
-    ],
-  },
-  {
-    groupName: "Rumpun Sosial & Humaniora",
-    subjects: [
+      { id: "PPKN", name: "Pendidikan Pancasila dan Kewarganegaraan", category: "Soshum" },
       { id: "EKONOMI", name: "Ekonomi", category: "Soshum" },
       { id: "GEOGRAFI", name: "Geografi", category: "Soshum" },
       { id: "SOSIOLOGI", name: "Sosiologi", category: "Soshum" },
       { id: "SEJARAH", name: "Sejarah", category: "Soshum" },
       { id: "ANTROPOLOGI", name: "Antropologi", category: "Soshum" },
-      { id: "PPKN", name: "Pendidikan Pancasila dan Kewarganegaraan (PPKn)", category: "Soshum" },
+      { id: "B_PRANCIS", name: "Bahasa Prancis", category: "Bahasa" },
+      { id: "B_JERMAN", name: "Bahasa Jerman", category: "Bahasa" },
+      { id: "B_JEPANG", name: "Bahasa Jepang", category: "Bahasa" },
+      { id: "B_MANDARIN", name: "Bahasa Mandarin", category: "Bahasa" },
+      { id: "B_KOREA", name: "Bahasa Korea", category: "Bahasa" },
+      { id: "B_ARAB", name: "Bahasa Arab", category: "Bahasa" },
+    ],
+  },
+  {
+    groupName: "Mata Pelajaran Kejuruan SMK",
+    subjects: [
+      { id: "PKK", name: "SMK - Produk atau Projek Kreatif dan Kewirausahaan", category: "SMK", isVocational: true },
+      { id: "TPG", name: "SMK - Teknik Perawatan Gedung", category: "Konstruksi & Properti", isVocational: true },
+      { id: "BKP", name: "SMK - Konstruksi dan Perawatan Bangunan Sipil", category: "Konstruksi & Properti", isVocational: true },
+      { id: "TKP", name: "SMK - Teknik Konstruksi dan Perumahan", category: "Konstruksi & Properti", isVocational: true },
+      { id: "DPIB", name: "SMK - Desain Pemodelan dan Informasi Bangunan", category: "Konstruksi & Properti", isVocational: true },
+      { id: "TF", name: "SMK - Teknik Furnitur", category: "Konstruksi & Properti", isVocational: true },
+      { id: "TM", name: "SMK - Teknik Mesin", category: "Teknologi & Rekayasa", isVocational: true },
+      { id: "TO", name: "SMK - Teknik Otomotif", category: "Teknologi & Rekayasa", isVocational: true },
+      { id: "TPFL", name: "SMK - Teknik Pengelasan dan Fabrikasi Logam", category: "Teknologi & Rekayasa", isVocational: true },
+      { id: "LOGISTIK", name: "SMK - Teknik Logistik", category: "Bisnis & Manajemen", isVocational: true },
+      { id: "TE", name: "SMK - Teknik Elektronika", category: "Teknologi & Rekayasa", isVocational: true },
+      { id: "TPU", name: "SMK - Teknik Pesawat Udara", category: "Teknologi & Rekayasa", isVocational: true },
+      { id: "TKK", name: "SMK - Teknik Konstruksi Kapal", category: "Teknologi & Rekayasa", isVocational: true },
+      { id: "KA", name: "SMK - Kimia Analisis", category: "Kimia", isVocational: true },
+      { id: "TKI", name: "SMK - Teknik Kimia Industri", category: "Kimia", isVocational: true },
+      { id: "TT", name: "SMK - Teknik Tekstil", category: "Teknologi & Rekayasa", isVocational: true },
+      { id: "TITL", name: "SMK - Teknik Ketenagalistrikan", category: "Teknologi & Rekayasa", isVocational: true },
+      { id: "TET", name: "SMK - Teknik Energi Terbarukan", category: "Teknologi & Rekayasa", isVocational: true },
+      { id: "TG", name: "SMK - Teknik Geospasial", category: "Teknologi & Rekayasa", isVocational: true },
+      { id: "GP", name: "SMK - Teknik Geologi Pertambangan", category: "Teknologi & Rekayasa", isVocational: true },
+      { id: "TP", name: "SMK - Teknik Perminyakan", category: "Teknologi & Rekayasa", isVocational: true },
+      { id: "PPLG", name: "SMK - Pengembangan Perangkat Lunak dan Gim", category: "TIK", isVocational: true },
+      { id: "TJKT", name: "SMK - Teknik Jaringan Komputer dan Telekomunikasi", category: "TIK", isVocational: true },
+      { id: "LK", name: "SMK - Layanan Kesehatan", category: "Kesehatan", isVocational: true },
+      { id: "TLM", name: "SMK - Teknik Laboratorium Medik", category: "Kesehatan", isVocational: true },
+      { id: "FARMASI", name: "SMK - Teknologi Farmasi", category: "Kesehatan", isVocational: true },
+      { id: "PS", name: "SMK - Pekerjaan Sosial", category: "Kesehatan", isVocational: true },
+      { id: "AT", name: "SMK - Agribisnis Tanaman", category: "Agribisnis", isVocational: true },
+      { id: "ATER", name: "SMK - Agribisnis Ternak", category: "Agribisnis", isVocational: true },
+      { id: "AP", name: "SMK - Agribisnis Perikanan", category: "Agribisnis", isVocational: true },
+      { id: "UPT", name: "SMK - Usaha Pertanian Terpadu", category: "Agribisnis", isVocational: true },
+      { id: "APHP", name: "SMK - Agriteknologi Pengolahan Hasil Pertanian", category: "Agribisnis", isVocational: true },
+      { id: "KH", name: "SMK - Kehutanan", category: "Agribisnis", isVocational: true },
+      { id: "TKPI", name: "SMK - Teknika Kapal Penangkap Ikan", category: "Kemaritiman", isVocational: true },
+      { id: "NKPI", name: "SMK - Nautika Kapal Penangkap Ikan", category: "Kemaritiman", isVocational: true },
+      { id: "TKN", name: "SMK - Teknika Kapal Niaga", category: "Kemaritiman", isVocational: true },
+      { id: "NKN", name: "SMK - Nautika Kapal Niaga", category: "Kemaritiman", isVocational: true },
+      { id: "PEMASARAN", name: "SMK - Pemasaran", category: "Bisnis & Manajemen", isVocational: true },
+      { id: "MPLB", name: "SMK - Manajemen Perkantoran dan Layanan Bisnis", category: "Bisnis & Manajemen", isVocational: true },
+      { id: "AKL", name: "SMK - Akuntansi dan Keuangan Lembaga", category: "Bisnis & Manajemen", isVocational: true },
+      { id: "ULP", name: "SMK - Usaha Layanan Pariwisata", category: "Pariwisata", isVocational: true },
+      { id: "PERHOTELAN", name: "SMK - Perhotelan", category: "Pariwisata", isVocational: true },
+      { id: "KULINER", name: "SMK - Kuliner", category: "Pariwisata", isVocational: true },
+      { id: "KS", name: "SMK - Kecantikan dan Spa", category: "Pariwisata", isVocational: true },
+      { id: "SR", name: "SMK - Seni Rupa", category: "Seni & Ekraf", isVocational: true },
+      { id: "DKV", name: "SMK - Desain Komunikasi Visual", category: "Seni & Ekraf", isVocational: true },
+      { id: "DPK", name: "SMK - Desain dan Produksi Kriya", category: "Seni & Ekraf", isVocational: true },
+      { id: "SP", name: "SMK - Seni Pertunjukan", category: "Seni & Ekraf", isVocational: true },
+      { id: "BP", name: "SMK - Broadcasting dan Perfilman", category: "Seni & Ekraf", isVocational: true },
+      { id: "ANIMASI", name: "SMK - Animasi", category: "Seni & Ekraf", isVocational: true },
+      { id: "BUSANA", name: "SMK - Busana", category: "Seni & Ekraf", isVocational: true },
     ],
   },
 ];
@@ -128,17 +101,61 @@ export function getAllSubjectsList(): SubjectOption[] {
   return list;
 }
 
+export const SUBJECT_ALIASES: Record<string, string> = {
+  AIJ: "TJKT",
+  TKJ: "TJKT",
+  SIJA: "TJKT",
+  TPM: "TM",
+  TKR: "TO",
+  TBKR: "TO",
+  TSM: "TO",
+  TAB: "TO",
+  LAS: "TPFL",
+  TFLM: "TPFL",
+  TEK: "TE",
+  TOI: "TE",
+  OTOMASI: "TE",
+  MEKATRONIKA: "TE",
+  TAV: "TE",
+  TJTL: "TITL",
+  KIMIA_ANALISIS: "KA",
+  KEPERAWATAN: "LK",
+  ATPH: "AT",
+  PERKEBUNAN: "AT",
+  PETERNAKAN: "ATER",
+  PERIKANAN: "AP",
+  BISNIS_DIGITAL: "PEMASARAN",
+  PERBANKAN: "AKL",
+};
+
 export function getSubjectDisplayName(codeOrId: string, short = false): string {
   if (!codeOrId) return "-";
-  const upper = codeOrId.toUpperCase();
+  let upper = codeOrId.toUpperCase().trim();
+
+  // Check alias
+  if (SUBJECT_ALIASES[upper]) {
+    upper = SUBJECT_ALIASES[upper];
+  }
+
   if (upper === "MATEMATIKA") return short ? "Matematika" : "Matematika (Wajib)";
   if (upper === "BAHASA_INDONESIA") return short ? "Bahasa Indonesia" : "Bahasa Indonesia (Wajib)";
   if (upper === "BAHASA_INGGRIS") return short ? "Bahasa Inggris" : "Bahasa Inggris (Wajib)";
-  if (upper === "AIJ" || upper === "ADMINISTRASI_INFRASTRUKTUR_JARINGAN") return "Administrasi Infrastruktur Jaringan";
-  if (upper === "PPLG") return short ? "PPLG" : "Pengembangan Perangkat Lunak & Gim (PPLG / RPL)";
 
-  const found = getAllSubjectsList().find((s) => s.id.toUpperCase() === upper || s.name.toUpperCase().includes(upper));
-  return found ? (short ? found.id : found.name) : codeOrId;
+  const found = getAllSubjectsList().find(
+    (s) =>
+      s.id.toUpperCase() === upper ||
+      s.name.toUpperCase() === upper ||
+      s.name.toUpperCase().replace(/^SMK - /, "") === upper
+  );
+
+  if (found) {
+    if (short) {
+      return found.name.replace(/^SMK - /, "");
+    }
+    return found.name;
+  }
+
+  return codeOrId;
 }
 
 export interface SubjectTkaDetail {
@@ -150,16 +167,30 @@ export interface SubjectTkaDetail {
 }
 
 export function getSubjectTkaDetail(codeOrId: string): SubjectTkaDetail {
-  const norm = (codeOrId || "").replace(/-/g, "_").toUpperCase();
+  let norm = (codeOrId || "").replace(/-/g, "_").toUpperCase();
+  if (SUBJECT_ALIASES[norm]) {
+    norm = SUBJECT_ALIASES[norm];
+  }
 
   if (norm === "PPLG") {
     return {
       id: "PPLG",
-      name: "Rekayasa Perangkat Lunak (PPLG)",
+      name: "SMK - Pengembangan Perangkat Lunak dan Gim",
       categoryTag: "Pemrograman Web & Gim",
       isWajib: false,
       deskripsiTka:
         "Tes Kemampuan Akademik (TKA) pada Program Keahlian Pengembangan Perangkat Lunak dan Gim (PPLG) bertujuan mengukur penguasaan konsep, penalaran, dan penerapan pengetahuan dasar kejuruan dalam bidang pengembangan perangkat lunak dan gim. Ruang lingkup asesmen mencakup proses bisnis pengembangan perangkat lunak dan gim, perkembangan teknologi dan dunia kerja, profesi serta Kewirausahaan bidang PPLG, K3LH dan budaya kerja industri, penggunaan perangkat dan tools pengembangan, dasar basis data, pengelolaan aset dan antarmuka pengguna, algoritma, pemrograman terstruktur, serta pemrograman berorientasi objek pada konteks proyek perangkat lunak dan gim.",
+    };
+  }
+
+  if (norm === "TJKT") {
+    return {
+      id: "TJKT",
+      name: "SMK - Teknik Jaringan Komputer dan Telekomunikasi",
+      categoryTag: "Infrastruktur & Jaringan Komputer",
+      isWajib: false,
+      deskripsiTka:
+        "Tes Kemampuan Akademik (TKA) Teknik Jaringan Komputer dan Telekomunikasi (TJKT / SIJA / AIJ) mengukur kompetensi perencanaan, konfigurasi, dan pemeliharaan arsitektur jaringan komputer. Ruang lingkup asesmen mencakup VLAN trunking (IEEE 802.1Q), routing dinamis (OSPF & BGP), manajemen bandwidth, firewall access control list (ACL), Network Address Translation (NAT), serta analisis troubleshooting konektivitas server.",
     };
   }
 
@@ -193,17 +224,6 @@ export function getSubjectTkaDetail(codeOrId: string): SubjectTkaDetail {
       isWajib: true,
       deskripsiTka:
         "Tes Kemampuan Akademik (TKA) Bahasa Inggris mengukur kecakapan pemahaman teks teknis (technical manuals, software documentations, system logs), penalaran kontekstual kejuruan, tata bahasa profesional (passive voice, conditional clauses, imperative procedures), serta komunikasi global.",
-    };
-  }
-
-  if (norm === "AIJ" || norm === "ADMINISTRASI_INFRASTRUKTUR_JARINGAN") {
-    return {
-      id: "ADMINISTRASI_INFRASTRUKTUR_JARINGAN",
-      name: "Administrasi Infrastruktur Jaringan",
-      categoryTag: "Infrastruktur & Jaringan Komputer",
-      isWajib: false,
-      deskripsiTka:
-        "Tes Kemampuan Akademik (TKA) Administrasi Infrastruktur Jaringan (AIJ) mengukur kompetensi perencanaan, konfigurasi, dan pemeliharaan arsitektur jaringan komputer. Ruang lingkup asesmen mencakup VLAN trunking (IEEE 802.1Q), routing dinamis (OSPF & BGP), manajemen bandwidth, firewall access control list (ACL), Network Address Translation (NAT), serta analisis troubleshooting konektivitas server.",
     };
   }
 

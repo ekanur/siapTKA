@@ -15,6 +15,7 @@ import {
   GraduationCap,
   Lock,
 } from "lucide-react";
+import { MAPEL_WAJIB, MAPEL_PILIHAN_GROUPS } from "@/lib/constants/subjects";
 
 export default function MasterPenggunaPage() {
   const { data: session } = useSession();
@@ -367,11 +368,22 @@ export default function MasterPenggunaPage() {
                       onChange={(e) => setFormData({ ...formData, mapel: e.target.value })}
                       className="w-full px-3.5 py-2 rounded-xl border border-slate-300 font-bold text-slate-900 bg-white"
                     >
-                      <option value="MATEMATIKA">Matematika</option>
-                      <option value="BAHASA_INDONESIA">Bahasa Indonesia</option>
-                      <option value="BAHASA_INGGRIS">Bahasa Inggris</option>
-                      <option value="PPLG">Kejuruan PPLG</option>
-                      <option value="AIJ">Kejuruan AIJ</option>
+                      <optgroup label="Mata Pelajaran Wajib (TKA)">
+                        {MAPEL_WAJIB.map((item) => (
+                          <option key={item.id} value={item.id}>
+                            {item.name}
+                          </option>
+                        ))}
+                      </optgroup>
+                      {MAPEL_PILIHAN_GROUPS.map((group) => (
+                        <optgroup key={group.groupName} label={group.groupName}>
+                          {group.subjects.map((sub) => (
+                            <option key={sub.id} value={sub.id}>
+                              {sub.name}
+                            </option>
+                          ))}
+                        </optgroup>
+                      ))}
                     </select>
                   </div>
                 )}

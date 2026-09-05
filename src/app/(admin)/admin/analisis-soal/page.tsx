@@ -164,7 +164,7 @@ export default function AnalisisSoalPage() {
             <span className="text-xs font-bold text-slate-500 flex items-center gap-1.5 mr-1">
               <Filter className="w-3.5 h-3.5" /> Mapel:
             </span>
-            {["ALL", "MATEMATIKA", "BAHASA_INDONESIA", "BAHASA_INGGRIS", "PPLG", "AIJ"].map((m) => (
+            {["ALL", "MATEMATIKA", "BAHASA_INDONESIA", "BAHASA_INGGRIS", "PPLG", "TJKT"].map((m) => (
               <button
                 key={m}
                 onClick={() => setSelectedMapel(m)}
