@@ -13,6 +13,20 @@ export async function GET(request: Request) {
     const userMapel = (session?.user as any)?.mapel;
 
     const { searchParams } = new URL(request.url);
+    const isSummary = searchParams.get("summary") === "true";
+
+    // Summary endpoint for Admin overview
+    if (isSummary) {
+      const grouped = await prisma.soal.groupBy({
+        by: ["mapel", "status"],
+        _count: { id: true },
+      });
+      return NextResponse.json({
+        success: true,
+        summary: grouped,
+      });
+    }
+
     const status = searchParams.get("status");
     let mapel = searchParams.get("mapel");
 
@@ -115,7 +129,35 @@ export async function PUT(request: Request) {
     const userMapel = (session?.user as any)?.mapel;
 
     const body = await request.json();
-    const { id, status, pertanyaan, opsiJawaban, kunciJawaban, pembahasan } = body;
+    const { id, status, bulkApproveMapel, pertanyaan, opsiJawaban, kunciJawaban, pembahasan } = body;
+
+    // Bulk approve / Full Verifikasi for a specific subject
+    if (bulkApproveMapel) {
+      if (userRole !== "ADMIN" && userMapel !== bulkApproveMapel) {
+        return NextResponse.json({ success: false, error: "Akses tidak diizinkan." }, { status: 403 });
+      }
+      const norm = bulkApproveMapel.replace(/-/g, "_").toUpperCase();
+      const whereMapel =
+        norm === "AIJ" || norm === "ADMINISTRASI_INFRASTRUKTUR_JARINGAN"
+          ? { in: ["ADMINISTRASI_INFRASTRUKTUR_JARINGAN", "AIJ"] }
+          : norm;
+
+      const result = await prisma.soal.updateMany({
+        where: {
+          mapel: whereMapel,
+          status: "MENUNGGU_VALIDASI",
+        },
+        data: {
+          status: "AKTIF",
+        },
+      });
+
+      return NextResponse.json({
+        success: true,
+        count: result.count,
+        message: `Berhasil memvalidasi penuh ${result.count} butir soal menjadi AKTIF untuk mata pelajaran ${bulkApproveMapel}.`,
+      });
+    }
 
     if (!id) {
       return NextResponse.json({ success: false, error: "ID soal wajib disertakan" }, { status: 400 });
