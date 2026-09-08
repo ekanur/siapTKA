@@ -19,6 +19,7 @@ import {
   ShieldCheck,
   GraduationCap,
 } from "lucide-react";
+import { getSubjectDisplayName } from "@/lib/constants/subjects";
 
 export default function AdminLayout({ children }: { children: React.ReactNode }) {
   const pathname = usePathname();
@@ -78,6 +79,11 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
 
   const guruNavItems = [
     {
+      name: "Dashboard Guru",
+      href: "/admin/dashboard",
+      icon: LayoutDashboard,
+    },
+    {
       name: "Validasi & Input Soal",
       href: "/admin/validasi-soal",
       icon: CheckSquare,
@@ -122,7 +128,7 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
               <div>
                 <h1 className="font-extrabold text-lg text-white leading-tight">siapTKA</h1>
                 <p className="text-[11px] text-cyan-400 font-bold uppercase tracking-wider">
-                  {userRole === "GURU" ? `Guru: ${userMapel || "Mapel"}` : "Portal Administrator"}
+                  {userRole === "GURU" ? `Guru: ${getSubjectDisplayName(userMapel, true)}` : "Portal Administrator"}
                 </p>
               </div>
             </div>
@@ -138,7 +144,7 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
           {userRole === "GURU" && (
             <div className="mx-4 mt-3 px-3 py-2 rounded-xl bg-blue-950/60 border border-blue-800/60 flex items-center gap-2 text-xs text-blue-300">
               <GraduationCap className="w-4 h-4 text-cyan-400 shrink-0" />
-              <span className="font-medium truncate">Mata Pelajaran: <strong>{userMapel}</strong></span>
+              <span className="font-medium truncate">Mata Pelajaran: <strong>{getSubjectDisplayName(userMapel)}</strong></span>
             </div>
           )}
 
