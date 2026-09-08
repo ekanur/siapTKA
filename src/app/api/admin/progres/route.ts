@@ -37,136 +37,148 @@ export async function GET(request: Request) {
       mapel = userMapel;
     }
 
-    const progressWhere: any = {};
-    if (mapel !== "ALL") {
-      const norm = mapel.replace(/-/g, "_").toUpperCase();
-      const matchedMapels = [norm];
-      Object.entries(SUBJECT_ALIASES).forEach(([alias, target]) => {
-        if (target === norm) matchedMapels.push(alias);
-      });
-      if (SUBJECT_ALIASES[norm]) {
-        matchedMapels.push(SUBJECT_ALIASES[norm]);
-      }
-      progressWhere.soal = { mapel: { in: matchedMapels } };
-    }
+    const WAJIB_CODES = ["MATEMATIKA", "BAHASA_INDONESIA", "BAHASA_INGGRIS"];
+    const normMapel = mapel.replace(/-/g, "_").toUpperCase().trim();
+    const canonicalMapel = SUBJECT_ALIASES[normMapel] || normMapel;
+    const isWajib = mapel === "ALL" || WAJIB_CODES.includes(normMapel) || WAJIB_CODES.includes(canonicalMapel);
 
-    if (kelas !== "ALL") {
-      progressWhere.siswa = {
-        OR: [{ kelasId: kelas }, { namaKelas: kelas }],
-      };
-    }
+    // Subject aliases matching
+    const matchingCodes = [canonicalMapel, normMapel];
+    Object.entries(SUBJECT_ALIASES).forEach(([alias, target]) => {
+      if (target === canonicalMapel) matchingCodes.push(alias);
+    });
+    const uniqueMatchingCodes = Array.from(new Set(matchingCodes));
 
-    const records = await prisma.progresLatihan.findMany({
-      where: progressWhere,
-      include: {
-        siswa: {
-          select: {
-            id: true,
-            nis: true,
-            nama: true,
-            email: true,
-            jurusan: true,
-            kelasId: true,
-            namaKelas: true,
-            namaIndustriPkl: true,
-            statusTka: true,
-            mapelPilihan1: true,
-            mapelPilihan2: true,
-          },
-        },
-        soal: {
-          select: {
-            id: true,
-            mapel: true,
-            tipeSoal: true,
-          },
-        },
+    // Fetch all students to evaluate class & subject enrollment
+    const allStudents = await prisma.siswa.findMany({
+      select: {
+        id: true,
+        nis: true,
+        nama: true,
+        email: true,
+        jurusan: true,
+        kelasId: true,
+        namaKelas: true,
+        namaIndustriPkl: true,
+        statusTka: true,
+        mapelPilihan1: true,
+        mapelPilihan2: true,
       },
-      orderBy: { syncedAt: "desc" },
+      orderBy: { nama: "asc" },
     });
 
-    const totalSubmissions = records.length;
-    const correctCount = records.filter((r) => r.isBenar).length;
+    // Check if student takes the active mapel
+    const isStudentTakingMapel = (s: any): boolean => {
+      if (s.statusTka === "TIDAK_IKUT") return false;
+      if (isWajib) return true;
+      return isSubjectAllowedForStudent(canonicalMapel, s).allowed;
+    };
+
+    // Determine target students:
+    // Level 2 (kelas !== "ALL"): only students in that class who take this subject
+    // Level 1 (kelas === "ALL"): all students taking this subject
+    let eligibleStudents = allStudents.filter(isStudentTakingMapel);
+    if (kelas !== "ALL") {
+      eligibleStudents = eligibleStudents.filter(
+        (s) => s.namaKelas === kelas || s.kelasId === kelas
+      );
+    }
+    const eligibleStudentIds = eligibleStudents.map((s) => s.id);
+
+    // Fetch progress records
+    const progressWhere: any = {};
+    if (eligibleStudentIds.length > 0) {
+      progressWhere.siswaId = { in: eligibleStudentIds };
+    } else {
+      progressWhere.siswaId = "NONE";
+    }
+
+    // When viewing Level 1, only load records for this mapel if mapel !== "ALL"
+    if (kelas === "ALL" && mapel !== "ALL") {
+      progressWhere.soal = { mapel: { in: uniqueMatchingCodes } };
+    }
+
+    const records =
+      eligibleStudentIds.length > 0
+        ? await prisma.progresLatihan.findMany({
+            where: progressWhere,
+            include: {
+              siswa: {
+                select: {
+                  id: true,
+                  nis: true,
+                  nama: true,
+                  email: true,
+                  jurusan: true,
+                  kelasId: true,
+                  namaKelas: true,
+                  namaIndustriPkl: true,
+                  statusTka: true,
+                  mapelPilihan1: true,
+                  mapelPilihan2: true,
+                },
+              },
+              soal: {
+                select: {
+                  id: true,
+                  mapel: true,
+                  tipeSoal: true,
+                },
+              },
+            },
+            orderBy: { syncedAt: "desc" },
+          })
+        : [];
+
+    // Filter active submissions for this mapel (for KPI)
+    const activeSubmissions = records.filter((r) => {
+      const mCode = (r.soal?.mapel || "").toUpperCase().trim();
+      return (
+        mapel === "ALL" ||
+        uniqueMatchingCodes.includes(mCode) ||
+        uniqueMatchingCodes.includes(SUBJECT_ALIASES[mCode] || mCode)
+      );
+    });
+
+    const totalSubmissions = activeSubmissions.length;
+    const correctCount = activeSubmissions.filter((r) => r.isBenar).length;
     const overallAccuracy =
       totalSubmissions > 0 ? Math.round((correctCount / totalSubmissions) * 100) : 0;
 
-    // Build Student Map
+    // Build Student Map initialized with eligible students
     const studentMap: { [siswaId: string]: any } = {};
 
-    // If viewing a specific class, fetch all students in that class so 0-attempt students are also listed
-    if (kelas !== "ALL") {
-      const classStudents = await prisma.siswa.findMany({
-        where: {
-          OR: [{ kelasId: kelas }, { namaKelas: kelas }],
-        },
-        select: {
-          id: true,
-          nis: true,
-          nama: true,
-          email: true,
-          jurusan: true,
-          kelasId: true,
-          namaKelas: true,
-          namaIndustriPkl: true,
-          statusTka: true,
-          mapelPilihan1: true,
-          mapelPilihan2: true,
-        },
-        orderBy: { nama: "asc" },
-      });
-
-      classStudents.forEach((s) => {
-        studentMap[s.id] = {
-          id: s.id,
-          nis: s.nis,
-          nama: s.nama,
-          email: s.email,
-          jurusan: s.jurusan,
-          namaKelas: s.namaKelas || kelas,
-          industri: s.namaIndustriPkl,
-          mapelPilihan1: s.mapelPilihan1,
-          mapelPilihan2: s.mapelPilihan2,
-          statusTka: s.statusTka,
-          totalPengerjaan: 0,
-          totalBenar: 0,
-          totalSkor: 0,
-          lastSync: null,
-          mapelProgress: {},
-        };
-      });
-    }
+    eligibleStudents.forEach((s) => {
+      studentMap[s.id] = {
+        id: s.id,
+        nis: s.nis,
+        nama: s.nama,
+        email: s.email,
+        jurusan: s.jurusan,
+        namaKelas: s.namaKelas || kelas || "Tanpa Kelas",
+        industri: s.namaIndustriPkl,
+        mapelPilihan1: s.mapelPilihan1,
+        mapelPilihan2: s.mapelPilihan2,
+        statusTka: s.statusTka,
+        totalPengerjaan: 0,
+        totalBenar: 0,
+        totalSkor: 0,
+        lastSync: null,
+        mapelProgress: {},
+      };
+    });
 
     // Process progress records
     records.forEach((r) => {
       const s = r.siswa;
-      if (!studentMap[s.id]) {
-        studentMap[s.id] = {
-          id: s.id,
-          nis: s.nis,
-          nama: s.nama,
-          email: s.email,
-          jurusan: s.jurusan,
-          namaKelas: s.namaKelas || "Tanpa Kelas",
-          industri: s.namaIndustriPkl,
-          mapelPilihan1: s.mapelPilihan1,
-          mapelPilihan2: s.mapelPilihan2,
-          statusTka: s.statusTka,
-          totalPengerjaan: 0,
-          totalBenar: 0,
-          totalSkor: 0,
-          lastSync: r.syncedAt,
-          mapelProgress: {},
-        };
-      }
+      if (!studentMap[s.id]) return;
 
       let mCode = (r.soal?.mapel || "LAINNYA").toUpperCase().trim();
       if (SUBJECT_ALIASES[mCode]) mCode = SUBJECT_ALIASES[mCode];
 
       // Zero-Trust: only accumulate exercises for authorized subjects (3 Wajib + chosen electives)
       const auth = isSubjectAllowedForStudent(mCode, s);
-      if (!auth.allowed) {
-        return;
-      }
+      if (!auth.allowed) return;
 
       if (!studentMap[s.id].mapelProgress[mCode]) {
         studentMap[s.id].mapelProgress[mCode] = {
@@ -176,19 +188,28 @@ export async function GET(request: Request) {
         };
       }
 
-      studentMap[s.id].totalPengerjaan++;
-      if (r.isBenar) studentMap[s.id].totalBenar++;
-      studentMap[s.id].totalSkor += r.skor;
-
       studentMap[s.id].mapelProgress[mCode].totalPengerjaan++;
       if (r.isBenar) studentMap[s.id].mapelProgress[mCode].totalBenar++;
 
-      if (
-        !studentMap[s.id].lastSync ||
-        new Date(r.syncedAt) > new Date(studentMap[s.id].lastSync)
-      ) {
-        studentMap[s.id].lastSync = r.syncedAt;
+      // Only accumulate to student's table metrics if this question belongs to the active mapel
+      const isRecordForActiveMapel =
+        mapel === "ALL" ||
+        uniqueMatchingCodes.includes(mCode) ||
+        uniqueMatchingCodes.includes((r.soal?.mapel || "").toUpperCase().trim());
+
+      if (isRecordForActiveMapel) {
+        studentMap[s.id].totalPengerjaan++;
+        if (r.isBenar) studentMap[s.id].totalBenar++;
+        studentMap[s.id].totalSkor += r.skor;
+
+        if (
+          !studentMap[s.id].lastSync ||
+          new Date(r.syncedAt) > new Date(studentMap[s.id].lastSync)
+        ) {
+          studentMap[s.id].lastSync = r.syncedAt;
+        }
       }
+
       if (
         !studentMap[s.id].mapelProgress[mCode].lastSync ||
         new Date(r.syncedAt) > new Date(studentMap[s.id].mapelProgress[mCode].lastSync)
@@ -307,8 +328,7 @@ export async function GET(request: Request) {
       };
     });
 
-    // Compute progress comparison per class
-    // Include all registered classes
+    // Compute progress comparison per class (Level 1)
     const registeredClasses = await prisma.kelas.findMany({
       select: {
         nama: true,
@@ -316,78 +336,88 @@ export async function GET(request: Request) {
       orderBy: { nama: "asc" },
     });
 
-    const classMap: {
-      [className: string]: {
-        totalSkor: number;
-        totalPengerjaan: number;
-        totalBenar: number;
-        students: Set<string>;
-      };
-    } = {};
-
-    registeredClasses.forEach((k) => {
-      classMap[k.nama] = {
-        totalSkor: 0,
-        totalPengerjaan: 0,
-        totalBenar: 0,
-        students: new Set(),
-      };
+    const allClassesSet = new Set<string>();
+    registeredClasses.forEach((k) => allClassesSet.add(k.nama));
+    allStudents.forEach((s) => {
+      if (s.namaKelas) allClassesSet.add(s.namaKelas);
     });
+    const classList = Array.from(allClassesSet).sort((a, b) => a.localeCompare(b));
 
-    records.forEach((r) => {
-      const className = r.siswa.namaKelas || "Tanpa Kelas";
-      if (!classMap[className]) {
-        classMap[className] = {
-          totalSkor: 0,
-          totalPengerjaan: 0,
-          totalBenar: 0,
-          students: new Set(),
-        };
+    const classProgressSummary: any[] = [];
+
+    for (const className of classList) {
+      const studentsInThisClass = allStudents.filter(
+        (s) => s.namaKelas === className || s.kelasId === className
+      );
+      const eligibleInThisClass = studentsInThisClass.filter(isStudentTakingMapel);
+
+      // Mapel Pilihan: ONLY show classes that have at least 1 student taking this subject
+      // Mapel Wajib / ALL: show all classes
+      if (!isWajib && eligibleInThisClass.length === 0) {
+        continue;
       }
-      classMap[className].totalSkor += r.skor;
-      classMap[className].totalPengerjaan++;
-      if (r.isBenar) classMap[className].totalBenar++;
-      classMap[className].students.add(r.siswa.id);
-    });
 
-    // Class Progress Summary with user-specified thresholds:
-    // 0 - 50%: Progres Lambat
-    // 51 - 75%: Progres Cukup
-    // 76 - 100%: Progres Bagus
-    const classProgressSummary = Object.entries(classMap)
-      .filter(([_, val]) => val.totalPengerjaan > 0 || kelas !== "ALL")
-      .map(([namaKelas, val]) => {
-        const avgScore =
-          val.totalPengerjaan > 0 ? Math.round((val.totalBenar / val.totalPengerjaan) * 100) : 0;
-        let status: "LAMBAT" | "CUKUP" | "BAGUS" = "LAMBAT";
-        let statusLabel = "Progres Lambat";
+      const eligibleIds = new Set(eligibleInThisClass.map((s) => s.id));
+      let classPengerjaan = 0;
+      let classBenar = 0;
+      const attemptedStudents = new Set<string>();
 
-        if (avgScore > 75) {
-          status = "BAGUS";
-          statusLabel = "Progres Bagus";
-        } else if (avgScore > 50) {
-          status = "CUKUP";
-          statusLabel = "Progres Cukup";
-        } else {
-          status = "LAMBAT";
-          statusLabel = "Progres Lambat";
+      records.forEach((r) => {
+        if (eligibleIds.has(r.siswaId)) {
+          const mCode = (r.soal?.mapel || "").toUpperCase().trim();
+          const matches =
+            mapel === "ALL" ||
+            uniqueMatchingCodes.includes(mCode) ||
+            uniqueMatchingCodes.includes(SUBJECT_ALIASES[mCode] || mCode);
+
+          if (matches) {
+            classPengerjaan++;
+            if (r.isBenar) classBenar++;
+            attemptedStudents.add(r.siswaId);
+          }
         }
-
-        return {
-          namaKelas,
-          totalSiswaAktif: val.students.size,
-          totalPengerjaan: val.totalPengerjaan,
-          avgScore,
-          status,
-          statusLabel,
-        };
       });
+
+      const avgScore =
+        classPengerjaan > 0 ? Math.round((classBenar / classPengerjaan) * 100) : 0;
+
+      let status: "LAMBAT" | "CUKUP" | "BAGUS" = "LAMBAT";
+      let statusLabel = "Progres Lambat";
+
+      if (avgScore > 75) {
+        status = "BAGUS";
+        statusLabel = "Progres Bagus";
+      } else if (avgScore > 50) {
+        status = "CUKUP";
+        statusLabel = "Progres Cukup";
+      } else {
+        status = "LAMBAT";
+        statusLabel = "Progres Lambat";
+      }
+
+      classProgressSummary.push({
+        namaKelas: className,
+        totalSiswa: eligibleInThisClass.length,
+        totalSiswaAktif: attemptedStudents.size,
+        totalPengerjaan: classPengerjaan,
+        totalBenar: classBenar,
+        avgScore,
+        status,
+        statusLabel,
+      });
+    }
 
     // Sort classProgressSummary: classes with LAMBAT first, then CUKUP, then BAGUS
     classProgressSummary.sort((a, b) => {
       const pMap = { LAMBAT: 1, CUKUP: 2, BAGUS: 3 };
-      if (pMap[a.status] !== pMap[b.status]) {
-        return pMap[a.status] - pMap[b.status];
+      if (
+        pMap[a.status as "LAMBAT" | "CUKUP" | "BAGUS"] !==
+        pMap[b.status as "LAMBAT" | "CUKUP" | "BAGUS"]
+      ) {
+        return (
+          pMap[a.status as "LAMBAT" | "CUKUP" | "BAGUS"] -
+          pMap[b.status as "LAMBAT" | "CUKUP" | "BAGUS"]
+        );
       }
       return a.avgScore - b.avgScore;
     });
@@ -433,6 +463,7 @@ export async function GET(request: Request) {
       currentMapel: mapel,
       currentKelas: kelas,
       isGuru: userRole === "GURU",
+      isWajib,
       summary: {
         totalSubmissions,
         uniqueStudents: studentList.length,

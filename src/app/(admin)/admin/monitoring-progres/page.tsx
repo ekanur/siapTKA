@@ -42,7 +42,11 @@ import {
   CartesianGrid,
   Legend,
 } from "recharts";
-import { getSubjectDisplayName } from "@/lib/constants/subjects";
+import {
+  getSubjectDisplayName,
+  MAPEL_WAJIB,
+  MAPEL_PILIHAN_GROUPS,
+} from "@/lib/constants/subjects";
 
 export default function MonitoringProgresPage() {
   const { data: session } = useSession();
@@ -167,12 +171,53 @@ export default function MonitoringProgresPage() {
           </h1>
           <p className="text-xs text-slate-500 mt-1">
             {userRole === "GURU"
-              ? `Mata Pelajaran: ${getSubjectDisplayName(userMapel)}. Pantau capaian latihan, skor rata-rata, dan deteksi rombel dengan progres lambat untuk percepatan bimbingan.`
+              ? `Mata Pelajaran: ${getSubjectDisplayName(userMapel)}. Menampilkan daftar rombel kelas yang memiliki siswa yang memilih mata pelajaran ini pada Onboarding TKA.`
+              : selectedMapel !== "ALL"
+              ? `Mata Pelajaran: ${getSubjectDisplayName(selectedMapel)}. Menampilkan rombel kelas yang siswanya mengambil mata pelajaran ini.`
               : "Pantau intensitas latihan mandiri per rombel kelas terlebih dahulu, lalu buka detail capaian siswa per rombel."}
           </p>
         </div>
 
-        <div className="flex items-center gap-2">
+        <div className="flex items-center gap-2.5 flex-wrap">
+          {userRole === "ADMIN" && (
+            <div className="flex items-center gap-2 bg-white px-3 py-1.5 rounded-2xl border border-slate-200 shadow-2xs">
+              <span className="text-xs font-bold text-slate-500 whitespace-nowrap">Filter Mapel:</span>
+              <select
+                value={selectedMapel}
+                onChange={(e) => {
+                  setSelectedMapel(e.target.value);
+                  setSelectedClassDetail(null);
+                }}
+                className="bg-transparent text-xs font-bold text-slate-800 focus:outline-hidden cursor-pointer"
+              >
+                <option value="ALL">Semua Mata Pelajaran (Komparasi Global)</option>
+                <optgroup label="Mata Pelajaran Wajib TKA (Semua Kelas)">
+                  {MAPEL_WAJIB.map((m) => (
+                    <option key={m.id} value={m.id}>
+                      {m.name}
+                    </option>
+                  ))}
+                </optgroup>
+                {MAPEL_PILIHAN_GROUPS.map((g) => (
+                  <optgroup key={g.groupName} label={g.groupName}>
+                    {g.subjects.map((s) => (
+                      <option key={s.id} value={s.id}>
+                        {s.name}
+                      </option>
+                    ))}
+                  </optgroup>
+                ))}
+              </select>
+            </div>
+          )}
+
+          {userRole === "GURU" && userMapel && (
+            <div className="inline-flex items-center gap-2 px-3 py-2 bg-blue-50 border border-blue-200 text-blue-800 rounded-2xl text-xs font-bold shadow-2xs">
+              <BookOpen className="w-3.5 h-3.5 text-blue-600" />
+              <span>Mapel: <strong>{getSubjectDisplayName(userMapel)}</strong></span>
+            </div>
+          )}
+
           <button
             onClick={() => {
               if (selectedClassDetail) {
@@ -251,11 +296,11 @@ export default function MonitoringProgresPage() {
                   Status Progres: <strong>0-50% Progres Lambat</strong> •{" "}
                   <strong>51-75% Progres Cukup</strong> •{" "}
                   <strong>76-100% Progres Bagus</strong>. Klik baris kelas untuk membuka capaian
-                  siswa.
+                  siswa yang mengambil mata pelajaran ini.
                 </p>
               </div>
               <span className="text-[11px] font-bold text-slate-500 bg-slate-100 px-3 py-1 rounded-full self-start sm:self-auto">
-                {data?.classProgressSummary?.length || 0} Rombel Terdeteksi
+                {data?.classProgressSummary?.length || 0} Rombel Terdeteksi {userRole === "GURU" || selectedMapel !== "ALL" ? `(${getSubjectDisplayName(userRole === "GURU" ? userMapel : selectedMapel)})` : ""}
               </span>
             </div>
 
@@ -264,7 +309,7 @@ export default function MonitoringProgresPage() {
                 <thead className="bg-slate-50 text-slate-500 uppercase tracking-wider font-extrabold border-b border-slate-200 text-[10px]">
                   <tr>
                     <th className="py-3 px-4">Nama Kelas</th>
-                    <th className="py-3 px-4 text-center">Siswa Aktif</th>
+                    <th className="py-3 px-4 text-center">Siswa Mengambil Mapel</th>
                     <th className="py-3 px-4 text-center">Total Pengerjaan</th>
                     <th className="py-3 px-4 text-center">Rata-Rata Skor</th>
                     <th className="py-3 px-4 text-center">Status Progres</th>
@@ -274,8 +319,10 @@ export default function MonitoringProgresPage() {
                 <tbody className="divide-y divide-slate-100 font-medium text-slate-700">
                   {!data?.classProgressSummary || data.classProgressSummary.length === 0 ? (
                     <tr>
-                      <td colSpan={6} className="py-8 text-center text-slate-400">
-                        Belum ada rekaman latihan untuk komparasi kelas.
+                      <td colSpan={6} className="py-12 text-center text-slate-400">
+                        {userRole === "GURU" || selectedMapel !== "ALL"
+                          ? `Tidak ditemukan rombel kelas yang memiliki siswa yang mengambil mata pelajaran ${getSubjectDisplayName(userRole === "GURU" ? userMapel : selectedMapel)} pada Onboarding TKA.`
+                          : "Belum ada rekaman latihan untuk komparasi kelas."}
                       </td>
                     </tr>
                   ) : (
@@ -295,7 +342,14 @@ export default function MonitoringProgresPage() {
                             {cls.namaKelas}
                           </td>
                           <td className="py-3 px-4 text-center font-semibold text-slate-800">
-                            {cls.totalSiswaAktif} Siswa
+                            <div className="font-extrabold text-slate-900">
+                              {cls.totalSiswa ?? cls.totalSiswaAktif} Siswa
+                            </div>
+                            <div className="text-[10px] text-slate-400 font-medium">
+                              {cls.totalSiswaAktif > 0
+                                ? `${cls.totalSiswaAktif} aktif berlatih`
+                                : "Belum ada pengerjaan"}
+                            </div>
                           </td>
                           <td className="py-3 px-4 text-center font-bold text-blue-600">
                             {cls.totalPengerjaan} Butir
@@ -460,6 +514,9 @@ export default function MonitoringProgresPage() {
                 <h2 className="text-xl font-black text-slate-900">
                   Capaian Latihan Siswa: {selectedClassDetail.namaKelas}
                 </h2>
+                <span className="px-2.5 py-0.5 rounded-full bg-blue-50 text-blue-800 text-xs font-bold border border-blue-200">
+                  Mapel: {getSubjectDisplayName(userRole === "GURU" ? userMapel : selectedMapel)}
+                </span>
                 <span className="px-2.5 py-0.5 rounded-full bg-blue-100 text-blue-800 text-xs font-bold">
                   Rata-Rata Skor: {selectedClassDetail.avgScore}/100
                 </span>
@@ -483,7 +540,7 @@ export default function MonitoringProgresPage() {
 
             <div className="flex items-center gap-2">
               <span className="text-xs font-bold text-slate-500 bg-slate-100 px-3 py-2 rounded-xl">
-                {selectedClassDetail.totalSiswaAktif} Siswa Aktif •{" "}
+                {selectedClassDetail.totalSiswa ?? selectedClassDetail.totalSiswaAktif} Siswa Mengambil •{" "}
                 {selectedClassDetail.totalPengerjaan} Butir Selesai
               </span>
             </div>
@@ -502,8 +559,9 @@ export default function MonitoringProgresPage() {
               />
             </div>
             <div className="text-xs text-slate-500">
-              Menampilkan <strong>{totalFiltered}</strong> siswa di kelas{" "}
-              {selectedClassDetail.namaKelas}
+              Menampilkan <strong>{totalFiltered}</strong> siswa yang mengambil mata pelajaran{" "}
+              <strong>{getSubjectDisplayName(userRole === "GURU" ? userMapel : selectedMapel)}</strong>{" "}
+              di kelas {selectedClassDetail.namaKelas}
             </div>
           </div>
 
@@ -533,7 +591,7 @@ export default function MonitoringProgresPage() {
                   ) : paginatedStudents.length === 0 ? (
                     <tr>
                       <td colSpan={8} className="py-12 text-center text-slate-400">
-                        Belum ada siswa terdaftar pada rombel ini.
+                        Tidak ada siswa di kelas {selectedClassDetail.namaKelas} yang mengambil mata pelajaran {getSubjectDisplayName(userRole === "GURU" ? userMapel : selectedMapel)}.
                       </td>
                     </tr>
                   ) : (
