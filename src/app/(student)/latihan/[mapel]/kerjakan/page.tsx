@@ -25,13 +25,48 @@ import {
 } from "lucide-react";
 import { clientDb, CachedSoal, OfflineSubmission } from "@/lib/db/client-db";
 import { downloadActiveBankSoal, syncPendingSubmissions } from "@/lib/sync/sync-manager";
-import { verifySingleChoice, verifyMcma, verifyPgkKategori } from "@/lib/security/crypto";
+import {
+  verifySingleChoice,
+  verifyMcma,
+  verifyPgkKategori,
+  decryptAnswerKey,
+  decryptExplanation,
+} from "@/lib/security/crypto";
 import MathRenderer from "@/components/math/MathRenderer";
 import PilihanGandaView from "@/components/quiz/PilihanGandaView";
 import McmaView from "@/components/quiz/McmaView";
 import PgkKategoriView from "@/components/quiz/PgkKategoriView";
 import { normalizeOpsiJawaban } from "@/lib/quiz/normalize";
 import { isSubjectAllowedForStudent, getSubjectDisplayName } from "@/lib/constants/subjects";
+
+function getDecryptedSingleChoice(soalId: string, kunci: string | undefined): string | undefined {
+  if (!kunci) return undefined;
+  return decryptAnswerKey(kunci, soalId);
+}
+
+function getDecryptedMcma(soalId: string, kunci: any): string[] {
+  if (!kunci) return [];
+  if (Array.isArray(kunci)) return kunci;
+  const decrypted = decryptAnswerKey(String(kunci), soalId);
+  try {
+    const parsed = JSON.parse(decrypted);
+    return Array.isArray(parsed) ? parsed : [String(parsed)];
+  } catch {
+    return [decrypted];
+  }
+}
+
+function getDecryptedPgkKategori(soalId: string, kunci: any): { id: number; answer: string }[] {
+  if (!kunci) return [];
+  if (Array.isArray(kunci)) return kunci;
+  const decrypted = decryptAnswerKey(String(kunci), soalId);
+  try {
+    const parsed = JSON.parse(decrypted);
+    return Array.isArray(parsed) ? parsed : [];
+  } catch {
+    return [];
+  }
+}
 
 export default function QuizRunnerPage() {
   const params = useParams();
@@ -552,7 +587,7 @@ export default function QuizRunnerPage() {
                 selectedOption={answers[currentQ.id] || null}
                 onSelect={handleSelectPg}
                 isSubmitted={isCurrentSubmitted}
-                correctOption={isCurrentSubmitted ? currentQ.kunciJawaban : undefined}
+                correctOption={isCurrentSubmitted ? getDecryptedSingleChoice(currentQ.id, currentQ.kunciJawaban) : undefined}
               />
             )}
 
@@ -563,13 +598,7 @@ export default function QuizRunnerPage() {
                 selectedOptions={answers[currentQ.id] || []}
                 onToggle={handleToggleMcma}
                 isSubmitted={isCurrentSubmitted}
-                correctOptions={
-                  isCurrentSubmitted
-                    ? typeof currentQ.kunciJawaban === "string"
-                      ? JSON.parse(currentQ.kunciJawaban)
-                      : currentQ.kunciJawaban
-                    : []
-                }
+                correctOptions={isCurrentSubmitted ? getDecryptedMcma(currentQ.id, currentQ.kunciJawaban) : []}
               />
             )}
 
@@ -580,13 +609,7 @@ export default function QuizRunnerPage() {
                 userChoices={answers[currentQ.id] || []}
                 onSelectCategory={handleSelectPgkCategory}
                 isSubmitted={isCurrentSubmitted}
-                expectedAnswers={
-                  isCurrentSubmitted
-                    ? typeof currentQ.kunciJawaban === "string"
-                      ? JSON.parse(currentQ.kunciJawaban)
-                      : currentQ.kunciJawaban
-                    : []
-                }
+                expectedAnswers={isCurrentSubmitted ? getDecryptedPgkKategori(currentQ.id, currentQ.kunciJawaban) : []}
               />
             )}
 
@@ -631,7 +654,7 @@ export default function QuizRunnerPage() {
                   <span>Kunci & Pembahasan Langkah Demi Langkah</span>
                 </div>
                 <div className="text-xs text-slate-800 leading-relaxed font-normal">
-                  <MathRenderer content={currentQ.pembahasan} />
+                  <MathRenderer content={decryptExplanation(currentQ.pembahasan, currentQ.id)} />
                 </div>
               </div>
             )}
