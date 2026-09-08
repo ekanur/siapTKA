@@ -288,9 +288,16 @@ export default function QuizRunnerPage() {
       const cached = localStorage.getItem("siaptka_student_profile");
       if (cached) {
         try {
-          studentId = JSON.parse(cached).id;
+          const parsed = JSON.parse(cached);
+          studentId = parsed.id || parsed.nis || parsed.email;
         } catch {}
       }
+    }
+    if (!studentId && (session?.user as any)?.nis) {
+      studentId = (session?.user as any)?.nis;
+    }
+    if (!studentId && session?.user?.email) {
+      studentId = session.user.email;
     }
     if (!studentId) studentId = "siswa-demo-id";
 

@@ -77,7 +77,10 @@ export async function syncPendingSubmissions(): Promise<{ success: boolean; sync
     const result = await res.json();
 
     // Mark as SYNCED in Dexie
-    const syncedIds: string[] = result.syncedIds || pendingList.map((s) => s.id);
+    const syncedIds: string[] = Array.isArray(result.syncedIds)
+      ? result.syncedIds
+      : pendingList.map((s) => s.id);
+
     await clientDb.transaction("rw", clientDb.offlineSubmissions, clientDb.syncMeta, async () => {
       for (const id of syncedIds) {
         await clientDb.offlineSubmissions.update(id, {
@@ -85,10 +88,12 @@ export async function syncPendingSubmissions(): Promise<{ success: boolean; sync
           syncedAt: Date.now(),
         });
       }
-      await clientDb.syncMeta.put({
-        key: "lastSubmissionSync",
-        value: new Date().toISOString(),
-      });
+      if (syncedIds.length > 0) {
+        await clientDb.syncMeta.put({
+          key: "lastSubmissionSync",
+          value: new Date().toISOString(),
+        });
+      }
     });
 
     return { success: true, syncedCount: syncedIds.length };
