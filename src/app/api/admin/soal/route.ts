@@ -3,6 +3,7 @@ import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/auth";
 import prisma from "@/lib/prisma";
 import { encryptAnswerKey, encryptExplanation, isEncrypted } from "@/lib/security/crypto";
+import { SUBJECT_ALIASES, getSubjectDisplayName } from "@/lib/constants/subjects";
 
 export const dynamic = "force-dynamic";
 
@@ -38,12 +39,13 @@ export async function GET(request: Request) {
     const where: any = {};
     if (status && status !== "ALL") where.status = status;
     if (mapel && mapel !== "ALL") {
-      const norm = mapel.replace(/-/g, "_").toUpperCase();
-      if (norm === "AIJ" || norm === "ADMINISTRASI_INFRASTRUKTUR_JARINGAN") {
-        where.mapel = { in: ["ADMINISTRASI_INFRASTRUKTUR_JARINGAN", "AIJ"] };
-      } else {
-        where.mapel = norm;
-      }
+      const norm = mapel.replace(/-/g, "_").toUpperCase().trim();
+      const canonical = SUBJECT_ALIASES[norm] || norm;
+      const matchingCodes = [canonical, norm];
+      Object.entries(SUBJECT_ALIASES).forEach(([alias, target]) => {
+        if (target === canonical) matchingCodes.push(alias);
+      });
+      where.mapel = { in: Array.from(new Set(matchingCodes)) };
     }
 
     const list = await prisma.soal.findMany({
@@ -125,18 +127,28 @@ export async function PUT(request: Request) {
 
     // Bulk approve / Full Verifikasi for a specific subject
     if (bulkApproveMapel) {
-      if (userRole !== "ADMIN" && userMapel !== bulkApproveMapel) {
-        return NextResponse.json({ success: false, error: "Akses tidak diizinkan." }, { status: 403 });
+      const userNorm = userMapel ? userMapel.replace(/-/g, "_").toUpperCase().trim() : null;
+      const userCanonical = userNorm ? (SUBJECT_ALIASES[userNorm] || userNorm) : null;
+
+      const targetNorm = bulkApproveMapel.replace(/-/g, "_").toUpperCase().trim();
+      const targetCanonical = SUBJECT_ALIASES[targetNorm] || targetNorm;
+
+      if (userRole !== "ADMIN" && userCanonical !== targetCanonical) {
+        return NextResponse.json(
+          { success: false, error: "Akses tidak diizinkan. Anda hanya dapat memvalidasi mata pelajaran yang diampu." },
+          { status: 403 }
+        );
       }
-      const norm = bulkApproveMapel.replace(/-/g, "_").toUpperCase();
-      const whereMapel =
-        norm === "AIJ" || norm === "ADMINISTRASI_INFRASTRUKTUR_JARINGAN"
-          ? { in: ["ADMINISTRASI_INFRASTRUKTUR_JARINGAN", "AIJ"] }
-          : norm;
+
+      const matchingCodes = [targetCanonical, targetNorm];
+      Object.entries(SUBJECT_ALIASES).forEach(([alias, target]) => {
+        if (target === targetCanonical) matchingCodes.push(alias);
+      });
+      const uniqueMatchingCodes = Array.from(new Set(matchingCodes));
 
       const result = await prisma.soal.updateMany({
         where: {
-          mapel: whereMapel,
+          mapel: { in: uniqueMatchingCodes },
           status: "MENUNGGU_VALIDASI",
         },
         data: {
@@ -144,10 +156,12 @@ export async function PUT(request: Request) {
         },
       });
 
+      const displayMapelName = getSubjectDisplayName(targetCanonical);
+
       return NextResponse.json({
         success: true,
         count: result.count,
-        message: `Berhasil memvalidasi penuh ${result.count} butir soal menjadi AKTIF untuk mata pelajaran ${bulkApproveMapel}.`,
+        message: `Berhasil memvalidasi penuh ${result.count} butir soal menjadi AKTIF untuk mata pelajaran ${displayMapelName}.`,
       });
     }
 
@@ -158,8 +172,12 @@ export async function PUT(request: Request) {
     // Teacher can only edit questions of their subject
     if (userRole === "GURU" && userMapel) {
       const existing = await prisma.soal.findUnique({ where: { id } });
-      if (existing && existing.mapel !== userMapel) {
-        return NextResponse.json({ success: false, error: "Anda tidak berhak mengedit soal di luar mapel Anda." }, { status: 403 });
+      if (existing) {
+        const existingCanonical = SUBJECT_ALIASES[existing.mapel.toUpperCase().trim()] || existing.mapel.toUpperCase().trim();
+        const userCanonical = SUBJECT_ALIASES[userMapel.toUpperCase().trim()] || userMapel.toUpperCase().trim();
+        if (existingCanonical !== userCanonical) {
+          return NextResponse.json({ success: false, error: "Anda tidak berhak mengedit soal di luar mapel Anda." }, { status: 403 });
+        }
       }
     }
 
@@ -198,8 +216,12 @@ export async function DELETE(request: Request) {
     // Teacher guard
     if (userRole === "GURU" && userMapel) {
       const existing = await prisma.soal.findUnique({ where: { id } });
-      if (existing && existing.mapel !== userMapel) {
-        return NextResponse.json({ success: false, error: "Anda tidak berhak menghapus soal di luar mapel Anda." }, { status: 403 });
+      if (existing) {
+        const existingCanonical = SUBJECT_ALIASES[existing.mapel.toUpperCase().trim()] || existing.mapel.toUpperCase().trim();
+        const userCanonical = SUBJECT_ALIASES[userMapel.toUpperCase().trim()] || userMapel.toUpperCase().trim();
+        if (existingCanonical !== userCanonical) {
+          return NextResponse.json({ success: false, error: "Anda tidak berhak menghapus soal di luar mapel Anda." }, { status: 403 });
+        }
       }
     }
 

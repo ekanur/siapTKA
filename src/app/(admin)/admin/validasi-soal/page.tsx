@@ -177,10 +177,8 @@ export default function ValidasiSoalPage() {
   };
 
   useEffect(() => {
-    if (userRole === "ADMIN") {
-      loadSummary();
-    }
-  }, [userRole]);
+    loadSummary();
+  }, []);
 
   // Calculate stats for a given subject (incorporating aliases if any)
   const getSubjectStats = (subId: string) => {
@@ -326,7 +324,7 @@ export default function ValidasiSoalPage() {
       if (data.success) {
         setStatusMsg(data.message);
         loadSoal();
-        if (userRole === "ADMIN") loadSummary();
+        loadSummary();
       }
     } catch (err) {
       console.error(err);
@@ -337,14 +335,21 @@ export default function ValidasiSoalPage() {
   const handleBulkApprove = async (mapelCode: string) => {
     const displayName = getSubjectDisplayName(mapelCode);
     const stats = getSubjectStats(mapelCode);
-    if (stats.menunggu === 0) {
+    const pendingCount =
+      stats.menunggu > 0
+        ? stats.menunggu
+        : activeTab === "MENUNGGU_VALIDASI" && soalList.length > 0
+        ? soalList.length
+        : 0;
+
+    if (pendingCount === 0) {
       alert(`Tidak ada butir soal yang menunggu validasi untuk ${displayName}.`);
       return;
     }
 
     if (
       !confirm(
-        `FULL VERIFIKASI: Apakah Anda yakin ingin menyetujui sekaligus seluruh ${stats.menunggu} butir soal menunggu validasi pada mata pelajaran "${displayName}" menjadi Bank Soal AKTIF?`
+        `FULL VERIFIKASI: Apakah Anda yakin ingin menyetujui sekaligus seluruh ${pendingCount} butir soal menunggu validasi pada mata pelajaran "${displayName}" menjadi Bank Soal AKTIF?`
       )
     ) {
       return;
@@ -359,7 +364,7 @@ export default function ValidasiSoalPage() {
       const data = await res.json();
       if (data.success) {
         setStatusMsg(data.message);
-        if (userRole === "ADMIN") loadSummary();
+        loadSummary();
         if (currentMapel) loadSoal();
       } else {
         alert(data.error || "Gagal melakukan verifikasi penuh.");
@@ -377,7 +382,7 @@ export default function ValidasiSoalPage() {
       if (data.success) {
         setStatusMsg("Soal berhasil dihapus.");
         loadSoal();
-        if (userRole === "ADMIN") loadSummary();
+        loadSummary();
       }
     } catch (err) {
       console.error(err);
@@ -511,7 +516,7 @@ export default function ValidasiSoalPage() {
         setStatusMsg("Revisi butir soal dan opsi jawaban berhasil disimpan.");
         setEditingForm(null);
         loadSoal();
-        if (userRole === "ADMIN") loadSummary();
+        loadSummary();
       } else {
         alert(data.error || "Gagal menyimpan revisi.");
       }
@@ -597,7 +602,7 @@ export default function ValidasiSoalPage() {
         ]);
         setActiveTab("AKTIF");
         if (currentMapel) loadSoal();
-        if (userRole === "ADMIN") loadSummary();
+        loadSummary();
       } else {
         alert(data.error || "Gagal menambah soal.");
       }
@@ -978,14 +983,14 @@ export default function ValidasiSoalPage() {
             </div>
 
             {/* Quick Full Verifikasi Button inside drilldown */}
-            {activeTab === "MENUNGGU_VALIDASI" && soalList.length > 0 && (
+            {((currentMapelStats && currentMapelStats.menunggu > 0) || (activeTab === "MENUNGGU_VALIDASI" && soalList.length > 0)) && (
               <button
                 type="button"
                 onClick={() => currentMapel && handleBulkApprove(currentMapel)}
                 className="px-4 py-2.5 bg-amber-400 hover:bg-amber-300 text-amber-950 font-black rounded-xl text-xs transition-all flex items-center gap-2 shadow-sm cursor-pointer shrink-0"
               >
                 <Zap className="w-4 h-4 fill-amber-950" />
-                <span>Full Verifikasi ({soalList.length} Butir)</span>
+                <span>Full Verifikasi ({currentMapelStats?.menunggu || soalList.length} Butir)</span>
               </button>
             )}
           </div>

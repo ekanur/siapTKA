@@ -55,3 +55,4 @@ export const config = {
     "/admin/generator-soal",
   ],
 };
+
