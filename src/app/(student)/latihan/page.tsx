@@ -5,6 +5,7 @@ import { useSession, signOut } from "next-auth/react";
 import Link from "next/link";
 import {
   BookOpen,
+  FileCheck,
   Wifi,
   WifiOff,
   RefreshCw,
@@ -370,15 +371,17 @@ export default function LatihanHubPage() {
             <nav className="flex items-center gap-1 sm:gap-1.5">
               <Link
                 href="/latihan"
-                className="px-3 py-1.5 rounded-xl text-xs sm:text-sm font-bold bg-blue-50 text-blue-600 border border-blue-100 transition-all"
+                className="px-3 py-1.5 rounded-xl text-xs sm:text-sm font-bold bg-blue-50 text-blue-600 border border-blue-100 transition-all flex items-center gap-1.5 shadow-xs"
               >
-                Latihan
+                <BookOpen className="w-3.5 h-3.5 sm:w-4 sm:h-4 text-blue-600" />
+                <span>Latihan</span>
               </Link>
               <Link
                 href="/onboarding-tka"
-                className="px-3 py-1.5 rounded-xl text-xs sm:text-sm font-semibold text-slate-600 hover:text-slate-900 hover:bg-slate-100 transition-all"
+                className="px-3 py-1.5 rounded-xl text-xs sm:text-sm font-semibold text-slate-600 hover:text-slate-900 hover:bg-slate-100 transition-all flex items-center gap-1.5"
               >
-                Konfirmasi
+                <FileCheck className="w-3.5 h-3.5 sm:w-4 sm:h-4 text-slate-500" />
+                <span>Konfirmasi</span>
               </Link>
             </nav>
           </div>
