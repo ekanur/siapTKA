@@ -27,7 +27,6 @@ import {
   Check,
   Flame,
   Minus,
-  FileText,
   Calendar,
 } from "lucide-react";
 import {
@@ -959,38 +958,6 @@ export default function MonitoringProgresPage() {
                   </div>
                 )}
               </div>
-
-              {/* SECTION C: Latihan Mapel Tambahan / Eksplorasi (Jika Ada) */}
-              {selectedStudent.subjectBreakdown?.some((s: any) => s.category === "LAINNYA") && (
-                <div className="space-y-3 pt-2">
-                  <h4 className="font-extrabold text-slate-700 text-xs flex items-center gap-2">
-                    <FileText className="w-3.5 h-3.5 text-slate-500" />
-                    <span>Latihan Tambahan / Mapel Lain yang Pernah Dikerjakan</span>
-                  </h4>
-
-                  <div className="space-y-2">
-                    {selectedStudent.subjectBreakdown
-                      .filter((sub: any) => sub.category === "LAINNYA")
-                      .map((sub: any) => (
-                        <div
-                          key={sub.id}
-                          className="bg-slate-50 rounded-xl border border-slate-200 p-3 flex items-center justify-between text-xs"
-                        >
-                          <div>
-                            <span className="font-bold text-slate-800">{sub.name}</span>
-                            <div className="text-[10px] text-slate-500">
-                              {sub.totalPengerjaan} butir dikerjakan ({sub.totalBenar} benar)
-                            </div>
-                          </div>
-                          <div className="text-right">
-                            <span className="font-extrabold text-slate-900">{sub.score}%</span>
-                            <div className="text-[10px] text-slate-500">{sub.statusLabel}</div>
-                          </div>
-                        </div>
-                      ))}
-                  </div>
-                </div>
-              )}
             </div>
 
             {/* Modal Footer */}

@@ -2,7 +2,7 @@ import { NextResponse } from "next/server";
 import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/auth";
 import prisma from "@/lib/prisma";
-import { getSubjectDisplayName, SUBJECT_ALIASES } from "@/lib/constants/subjects";
+import { getSubjectDisplayName, SUBJECT_ALIASES, isSubjectAllowedForStudent } from "@/lib/constants/subjects";
 
 export const dynamic = "force-dynamic";
 
@@ -162,6 +162,12 @@ export async function GET(request: Request) {
       let mCode = (r.soal?.mapel || "LAINNYA").toUpperCase().trim();
       if (SUBJECT_ALIASES[mCode]) mCode = SUBJECT_ALIASES[mCode];
 
+      // Zero-Trust: only accumulate exercises for authorized subjects (3 Wajib + chosen electives)
+      const auth = isSubjectAllowedForStudent(mCode, s);
+      if (!auth.allowed) {
+        return;
+      }
+
       if (!studentMap[s.id].mapelProgress[mCode]) {
         studentMap[s.id].mapelProgress[mCode] = {
           totalPengerjaan: 0,
@@ -198,7 +204,6 @@ export async function GET(request: Request) {
 
       // Build subject breakdown (3 Wajib TKA + Mapel Pilihan 1 & 2)
       const subjectBreakdown: any[] = [];
-      const coveredMapels = new Set<string>();
 
       // 1. Three Wajib TKA
       const WAJIB_SUBJECTS = [
@@ -208,7 +213,6 @@ export async function GET(request: Request) {
       ];
 
       WAJIB_SUBJECTS.forEach((w) => {
-        coveredMapels.add(w.id);
         const p = st.mapelProgress[w.id] || {
           totalPengerjaan: 0,
           totalBenar: 0,
@@ -237,7 +241,6 @@ export async function GET(request: Request) {
       if (st.mapelPilihan1) {
         let p1Code = st.mapelPilihan1.toUpperCase().trim();
         if (SUBJECT_ALIASES[p1Code]) p1Code = SUBJECT_ALIASES[p1Code];
-        coveredMapels.add(p1Code);
         const p =
           st.mapelProgress[p1Code] ||
           st.mapelProgress[st.mapelPilihan1] || {
@@ -268,7 +271,6 @@ export async function GET(request: Request) {
       if (st.mapelPilihan2) {
         let p2Code = st.mapelPilihan2.toUpperCase().trim();
         if (SUBJECT_ALIASES[p2Code]) p2Code = SUBJECT_ALIASES[p2Code];
-        coveredMapels.add(p2Code);
         const p =
           st.mapelProgress[p2Code] ||
           st.mapelProgress[st.mapelPilihan2] || {
@@ -294,28 +296,6 @@ export async function GET(request: Request) {
           lastSync: p.lastSync,
         });
       }
-
-      // 4. Any other mapels student practiced
-      Object.entries(st.mapelProgress).forEach(([extraMapel, p]: [string, any]) => {
-        if (!coveredMapels.has(extraMapel) && p.totalPengerjaan > 0) {
-          const score = Math.round((p.totalBenar / p.totalPengerjaan) * 100);
-          const subStatus = getProgressStatus(score, true);
-          subjectBreakdown.push({
-            id: extraMapel,
-            name: getSubjectDisplayName(extraMapel),
-            category: "LAINNYA",
-            categoryLabel: "Latihan Tambahan / Mapel Lain",
-            totalPengerjaan: p.totalPengerjaan,
-            totalBenar: p.totalBenar,
-            totalSalah: p.totalPengerjaan - p.totalBenar,
-            score,
-            status: subStatus.status,
-            statusLabel: subStatus.label,
-            color: subStatus.color,
-            lastSync: p.lastSync,
-          });
-        }
-      });
 
       return {
         ...st,
