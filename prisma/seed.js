@@ -7,8 +7,7 @@ async function main() {
     // 1. Bersihkan database
     await prisma.progresLatihan.deleteMany();
     await prisma.soal.deleteMany();
-    await prisma.kisiKisi.deleteMany();
-    await prisma.siswa.deleteMany();
+        await prisma.siswa.deleteMany();
     await prisma.userAdmin.deleteMany();
     // 2. Akun Guru & Admin
     await prisma.userAdmin.createMany({
@@ -119,66 +118,11 @@ async function main() {
         });
     }
     await prisma.siswa.createMany({ data: siswaData });
-    // 4. 5 PILAR RESMI KISI-KISI TKA: PPLG (Sesuai Keputusan Kepala BSKAP No. 046/H/KR/2025)
-    const kisiKisiPplgResmi = await prisma.kisiKisi.create({
-        data: {
-            mapel: "PPLG",
-            topik: "Pengembangan Perangkat Lunak dan Gim (PPLG Fase E & F)",
-            definisi: `Tes Kemampuan Akademik (TKA) pada Program Keahlian Pengembangan Perangkat Lunak dan Gim (PPLG) bertujuan mengukur penguasaan konsep, penalaran, dan penerapan pengetahuan dasar kejuruan dalam bidang pengembangan perangkat lunak dan gim. Ruang lingkup asesmen mencakup proses bisnis pengembangan perangkat lunak dan gim, perkembangan teknologi dan dunia kerja, profesi serta Kewirausahaan bidang PPLG, K3LH dan budaya kerja industri, penggunaan perangkat dan tools pengembangan, dasar basis data, pengelolaan aset dan antarmuka pengguna, algoritma, pemrograman terstruktur, serta pemrograman berorientasi objek pada konteks proyek perangkat lunak dan gim.`,
-            muatan: `Muatan TKA PPLG disusun dengan merujuk pada elemen dan materi esensial dalam Capaian Pembelajaran Program Keahlian Pengembangan Perangkat Lunak dan Gim Fase E sebagaimana tercantum dalam Salinan Keputusan Kepala BSKAP Nomor 046/H/KR/2025:
-1. Wawasan dunia kerja bidang pengembangan perangkat lunak dan gim: pemahaman terhadap proses bisnis pengembangan perangkat lunak dan gim, perkembangan teknologi, peluang usaha, manajemen proyek, HAKI, serta budaya industri.
-2. Kecakapan kerja dasar (basic job skills), K3, dan budaya kerja: penerapan terhadap keselamatan kerja, penggunaan perangkat kerja, pengelolaan aset fisik dan digital, etika kerja, budaya kerja profesional, serta prosedur kerja di lingkungan pengembangan perangkat lunak dan gim.
-3. Teknologi Jaringan Komputer: pemahaman konsep dasar jaringan komputer dalam konteks pengembangan perangkat lunak dan gim, meliputi konfigurasi dasar lingkungan pengembangan berbasis jaringan, alamat IP dan konektivitas antar perangkat, komunikasi client-server, penggunaan protokol aplikasi seperti HTTP/HTTPS, akses basis data atau layanan API melalui jaringan, serta analisis terhadap kendala koneksi yang mempengaruhi proses pengembangan, pengujian, dan distribusi aplikasi atau gim.
-4. Pemrograman Terstruktur: pemahaman dan analisis penggunaan tipe data, struktur data, struktur kontrol percabangan dan perulangan, fungsi, prosedur, serta desain modular program untuk merancang solusi berbasis algoritma pada permasalahan kontekstual dalam pengembangan perangkat lunak atau gim.
-5. Pemrograman Berorientasi Objek: pemahaman dan penerapan konsep class dan object, prinsip dasar OOP, access modifier, enkapsulasi, inheritance, dan polymorphism untuk merancang struktur program yang modular, terorganisasi, dan sesuai kebutuhan pada pengembangan perangkat lunak atau gim.`,
-            kompetensi: `Kemampuan PPLG yang diukur meliputi:
-- Pemahaman konseptual: memahami konsep dasar proses bisnis pengembangan perangkat lunak dan gim, lingkungan kerja PPLG, K3LH, teknologi penunjang, pemrograman terstruktur, dan pemrograman berorientasi objek.
-- Penerapan konsep: menggunakan konsep dasar PPLG untuk menyelesaikan masalah kontekstual pada lingkungan pengembangan perangkat lunak atau gim.
-- Analisis dan evaluasi: menganalisis efektivitas solusi, struktur program, desain modular, penerapan OOP, serta penggunaan teknologi jaringan penunjang dalam proses pengembangan, pengujian, atau distribusi aplikasi/gim.
-- Keterampilan berpikir komputasional: memahami dan menggunakan logika program, struktur data, dekomposisi masalah, pola algoritmik, serta penyelesaian masalah berbasis algoritma.
-
-Level Kognitif yang Diukur:
-1. Pengetahuan dan Pemahaman (Knowing & Understanding): Mengidentifikasi profesi & tahapan manajemen proyek, Menjelaskan K3LH & kewirausahaan, Melaksanakan pengelolaan file/direktori, Menerapkan konfigurasi dasar & OOP.
-2. Penerapan dan Implementasi (Applying & Implementation): Mengimplementasikan konfigurasi jaringan dasar, komunikasi data aplikasi, enkapsulasi, dan polymorphism.
-3. Penalaran (Reasoning): Menganalisis kendala konektivitas & struktur data, Mengevaluasi efektivitas struktur kontrol & desain modular, Mengklasifikasi ketepatan access modifier & inheritance.`,
-            matriksAsesmen: `Matriks Asesmen PPLG:
-1. Wawasan dunia kerja PPLG: Profesi, tugas utama (UI/UX, Backend, QA, Devops), Technopreneurship, Manajemen proyek Agile/Scrum, Budaya mutu.
-2. Kecakapan kerja dasar & K3: Prinsip K3LH teknologi informasi, Etika kerja profesional, Pengelolaan aset fisik & digital (source code, database, dokumentasi).
-3. Teknologi jaringan komputer: Konfigurasi sistem operasi web server, izin akses (permission denied / chmod), protokol TCP/IP, HTTP/HTTPS, REST API.
-4. Pemrograman Terstruktur: Tipe data primitif & komposit, Percabangan (if-else, switch), Perulangan (for, while), Fungsi & Prosedur, Modularitas.
-5. Pemrograman Berorientasi Objek: Class & Object, Access Modifier (public, private, protected), Enkapsulasi getter-setter, Pewarisan (extends), Polymorphism (overriding).`,
-            contohSoal: `Contoh Soal Resmi TKA Kemendikbud:
-- Soal 1 (PG): Tugas utama UI/UX Designer -> Merancang tampilan antarmuka dan pengalaman pengguna aplikasi.
-- Soal 2 (PG): Error Linux Server 'Permission denied: /var/www/html/index.php' -> Mengubah hak akses pada file atau direktori proyek.
-- Soal 5 (PGK Kategori): Potongan kode Python perulangan 'if n >= 75: jumlah_lulus += 1' -> Menentukan status Benar/Salah untuk 3 pernyataan logika.`,
-        },
-    });
-    // 5. 5 PILAR RESMI KISI-KISI TKA: MATEMATIKA (Mapel Wajib)
-    const kisiKisiMatematikaResmi = await prisma.kisiKisi.create({
-        data: {
-            mapel: "MATEMATIKA",
-            topik: "Aljabar, Fungsi Kuadrat & Kalkulus TKA",
-            definisi: `Mengukur kemampuan berpikir logis, penalaran matematis, analisis aljabar, dan kalkulus terapan dalam pemodelan masalah kontekstual kejuruan dan sains.`,
-            muatan: `1. Aljabar & Fungsi Kuadrat: Persamaan kuadrat, diskriminan, titik puncak ekstrem fungsi, pemodelan parabola.
-2. Matriks & Transformasi: Operasi matriks, determinan, invers matriks 2x2 dan 3x3, transpos matriks.
-3. Kalkulus Dasar: Turunan fungsi aljabar, titik stasioner, garis singgung kurva, integral tentu, dan luas daerah di bawah kurva.
-4. Statistika & Peluang: Ukuran pemusatan data (Mean, Median, Modus), simpangan baku, kaidah pencacahan, peluang kejadian majemuk.`,
-            kompetensi: `Level Kognitif:
-- L1 (Pemahaman): Menentukan nilai variabel pada persamaan aljabar dan rumus dasar integral/turunan.
-- L2 (Aplikasi): Menghitung luas daerah kurva dan menerapkan sifat matriks pada sistem persamaan linear.
-- L3 (Penalaran): Menganalisis titik ekstrem optimum dan memecahkan studi kasus optimasi matematis.`,
-            matriksAsesmen: `1. Fungsi Kuadrat: Koordinat titik puncak x_p = -b/(2a), y_p = f(x_p).
-2. Determinan Matriks: Det(A) = ad - bc, Invers A^-1 = (1/det) * Adj(A).
-3. Integral Tentu: Integral f(x) dx dari a ke b = F(b) - F(a).`,
-            contohSoal: `Diketahui fungsi kuadrat f(x) = -2x^2 + 8x - 3. Titik puncak grafik adalah (2, 5). Integral tentu dari 1 ke 3 (3x^2 - 4x + 2) dx bernilai 14.`,
-        },
-    });
-    // 6. BANK SOAL AKTIF RESMI TKA (Termasuk 3 Butir Soal Resmi dari Web TKA)
+    // 4. BANK SOAL AKTIF RESMI TKA (Termasuk 3 Butir Soal Resmi dari Web TKA)
     const bankSoalData = [
         // Soal 1: PPLG Resmi Kemendikbud (Profesi UI/UX Designer)
         {
             mapel: "PPLG",
-            kisiKisiId: kisiKisiPplgResmi.id,
             tipeSoal: "PILIHAN_GANDA",
             pertanyaan: "Dalam sebuah tim pengembangan perangkat lunak terdapat beberapa profesi dengan tugas yang berbeda. Tugas utama dari **UI/UX Designer** dalam proses pengembangan aplikasi adalah…",
             opsiJawaban: JSON.stringify([
@@ -196,7 +140,6 @@ Level Kognitif yang Diukur:
         // Soal 2: PPLG Resmi Kemendikbud (Linux Server Permission Denied)
         {
             mapel: "PPLG",
-            kisiKisiId: kisiKisiPplgResmi.id,
             tipeSoal: "PILIHAN_GANDA",
             pertanyaan: `Seorang pengembang aplikasi web sedang menyiapkan proyek pada server lokal untuk keperluan pengujian. Saat aplikasi diakses melalui browser, muncul pesan kesalahan berikut:
 
@@ -220,7 +163,6 @@ Agar aplikasi web dapat diakses dengan normal, tindakan yang paling tepat adalah
         // Soal 3: PPLG Resmi Kemendikbud (PGK Kategori Python Loop & Logic)
         {
             mapel: "PPLG",
-            kisiKisiId: kisiKisiPplgResmi.id,
             tipeSoal: "PGK_KATEGORI",
             pertanyaan: `Perhatikan potongan program Python berikut:
 
@@ -256,7 +198,6 @@ Tentukan kategori (**Benar** atau **Salah**) untuk setiap pernyataan berikut ber
         // Soal 4: PPLG - MCMA (OOP Principles)
         {
             mapel: "PPLG",
-            kisiKisiId: kisiKisiPplgResmi.id,
             tipeSoal: "MCMA",
             pertanyaan: "Dalam konsep Pemrograman Berorientasi Objek (OOP) pada pengembangan aplikasi perangkat lunak dan gim, manakah pernyataan-pernyataan berikut yang bernilai **BENAR**? *(Pilih lebih dari satu)*",
             opsiJawaban: JSON.stringify([
@@ -274,7 +215,6 @@ Tentukan kategori (**Benar** atau **Salah**) untuk setiap pernyataan berikut ber
         // Soal 5: Matematika - Pilihan Ganda (Fungsi Kuadrat)
         {
             mapel: "MATEMATIKA",
-            kisiKisiId: kisiKisiMatematikaResmi.id,
             tipeSoal: "PILIHAN_GANDA",
             pertanyaan: "Diketahui fungsi kuadrat $f(x) = -2x^2 + 8x - 3$. Koordinat titik puncak (ekstrem) dari grafik fungsi tersebut adalah...",
             opsiJawaban: JSON.stringify([
@@ -292,7 +232,6 @@ Tentukan kategori (**Benar** atau **Salah**) untuk setiap pernyataan berikut ber
         // Soal 6: Matematika - Pilihan Ganda (Integral Tentu)
         {
             mapel: "MATEMATIKA",
-            kisiKisiId: kisiKisiMatematikaResmi.id,
             tipeSoal: "PILIHAN_GANDA",
             pertanyaan: "Nilai dari integral tentu $\\int_{1}^{3} (3x^2 - 4x + 2) \\, dx$ adalah...",
             opsiJawaban: JSON.stringify([
@@ -310,7 +249,6 @@ Tentukan kategori (**Benar** atau **Salah**) untuk setiap pernyataan berikut ber
         // Soal 7: Matematika - MCMA (Matriks & Determinan)
         {
             mapel: "MATEMATIKA",
-            kisiKisiId: kisiKisiMatematikaResmi.id,
             tipeSoal: "MCMA",
             pertanyaan: "Diberikan matriks $A = \\begin{pmatrix} 2 & 1 \\\\ 4 & 3 \\end{pmatrix}$. Manakah pernyataan-pernyataan berikut yang bernilai **BENAR**? *(Pilih lebih dari satu)*",
             opsiJawaban: JSON.stringify([

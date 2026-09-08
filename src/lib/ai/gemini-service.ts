@@ -17,14 +17,6 @@ export interface GenerateParams {
   subElemen?: string;
   kompetensi?: string;
   batasan?: string;
-  kisiKisi?: {
-    topik?: string;
-    definisi?: string;
-    muatan?: string;
-    kompetensi?: string;
-    matriksAsesmen?: string;
-    contohSoal?: string;
-  };
 }
 
 export interface GeneratedSoalResult {

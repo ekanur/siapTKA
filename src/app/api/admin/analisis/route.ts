@@ -33,11 +33,6 @@ export async function GET(request: Request) {
     const questions = await prisma.soal.findMany({
       where: whereSoal,
       include: {
-        kisiKisi: {
-          select: {
-            topik: true,
-          },
-        },
         progres: {
           select: {
             isBenar: true,
@@ -85,7 +80,7 @@ export async function GET(request: Request) {
       return {
         id: q.id,
         mapel: q.mapel,
-        topik: q.kisiKisi?.topik || "Latihan Mandiri TKA",
+        topik: "Latihan Mandiri TKA",
         tipeSoal: q.tipeSoal,
         pertanyaan: q.pertanyaan,
         kunciJawaban: q.kunciJawaban,

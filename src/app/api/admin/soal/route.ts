@@ -48,13 +48,6 @@ export async function GET(request: Request) {
 
     const list = await prisma.soal.findMany({
       where,
-      include: {
-        kisiKisi: {
-          select: {
-            topik: true,
-          },
-        },
-      },
       orderBy: {
         createdAt: "desc",
       },
@@ -83,7 +76,7 @@ export async function POST(request: Request) {
     }
 
     const body = await request.json();
-    let { mapel, tipeSoal, pertanyaan, opsiJawaban, kunciJawaban, pembahasan, kisiKisiId } = body;
+    let { mapel, tipeSoal, pertanyaan, opsiJawaban, kunciJawaban, pembahasan } = body;
 
     // Guard: Teacher can only create questions for their subject
     if (userRole === "GURU" && userMapel) {
@@ -100,7 +93,6 @@ export async function POST(request: Request) {
     const created = await prisma.soal.create({
       data: {
         mapel: mapel.toUpperCase(),
-        kisiKisiId: kisiKisiId || null,
         tipeSoal: tipeSoal || "PILIHAN_GANDA",
         pertanyaan: pertanyaan.trim(),
         opsiJawaban: rawOpsi,

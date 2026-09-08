@@ -24,13 +24,6 @@ export async function GET(request: Request) {
 
     const questions = await prisma.soal.findMany({
       where: whereClause,
-      include: {
-        kisiKisi: {
-          select: {
-            topik: true,
-          },
-        },
-      },
       orderBy: {
         createdAt: "desc",
       },
@@ -39,8 +32,7 @@ export async function GET(request: Request) {
     const formatted = questions.map((q) => ({
       id: q.id,
       mapel: q.mapel,
-      kisiKisiId: q.kisiKisiId,
-      topik: q.kisiKisi?.topik || "Latihan Mandiri TKA",
+      topik: "Latihan Mandiri TKA",
       tipeSoal: q.tipeSoal,
       pertanyaan: q.pertanyaan,
       opsiJawaban: JSON.stringify(normalizeOpsiJawaban(q.opsiJawaban)),

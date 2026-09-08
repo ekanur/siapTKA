@@ -41,7 +41,7 @@ export async function POST(request: Request) {
     }
 
     const body = await request.json();
-    const { mapel, elemen, subElemen, kompetensi, batasan, tipeSoal, jumlahSoal, kisiKisiId } = body;
+    const { mapel, elemen, subElemen, kompetensi, batasan, tipeSoal, jumlahSoal } = body;
 
     if (!mapel || !tipeSoal) {
       return NextResponse.json({ success: false, error: "Mata pelajaran dan bentuk soal wajib dipilih." }, { status: 400 });
@@ -69,7 +69,6 @@ export async function POST(request: Request) {
       const record = await prisma.soal.create({
         data: {
           mapel,
-          kisiKisiId: kisiKisiId || null,
           tipeSoal: item.tipeSoal,
           pertanyaan: item.pertanyaan,
           opsiJawaban: typeof item.opsiJawaban === "string" ? item.opsiJawaban : JSON.stringify(item.opsiJawaban),

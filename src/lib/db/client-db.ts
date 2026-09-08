@@ -3,7 +3,6 @@ import Dexie, { Table } from "dexie";
 export interface CachedSoal {
   id: string;
   mapel: string;
-  kisiKisiId?: string | null;
   topik?: string;
   tipeSoal: "PILIHAN_GANDA" | "MCMA" | "PGK_KATEGORI" | string;
   pertanyaan: string;

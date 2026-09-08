@@ -62,7 +62,6 @@ export async function GET(request: Request) {
             id: true,
             mapel: true,
             tipeSoal: true,
-            kisiKisi: { select: { topik: true } },
           },
         },
       },
@@ -146,7 +145,7 @@ export async function GET(request: Request) {
 
     const topicMap: { [topic: string]: { totalScore: number; count: number } } = {};
     records.forEach((r) => {
-      const t = r.soal?.kisiKisi?.topik || r.soal?.mapel || "Latihan Mandiri";
+      const t = r.soal?.mapel || "Latihan Mandiri";
       if (!topicMap[t]) topicMap[t] = { totalScore: 0, count: 0 };
       topicMap[t].totalScore += r.skor;
       topicMap[t].count++;

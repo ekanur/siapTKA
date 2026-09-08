@@ -6,14 +6,6 @@ export interface GeneratePromptParams {
   subElemen?: string;
   kompetensi?: string;
   batasan?: string;
-  kisiKisi?: {
-    topik?: string;
-    definisi?: string;
-    muatan?: string;
-    kompetensi?: string;
-    matriksAsesmen?: string;
-    contohSoal?: string;
-  };
 }
 
 /**
@@ -171,10 +163,10 @@ export function normalizeKunciJawaban(rawKunci: any, tipeSoal: string): any {
  */
 export function buildGeminiPrompt(params: GeneratePromptParams): string {
   const count = params.jumlahSoal || 3;
-  const elemen = params.elemen || params.kisiKisi?.topik || "Materi Asesmen Standar";
-  const subElemen = params.subElemen || params.kisiKisi?.muatan || "Sub-Materi Asesmen";
-  const kompetensi = params.kompetensi || params.kisiKisi?.kompetensi || "Kompetensi penalaran akademik tingkat tinggi (HOTS)";
-  const batasan = params.batasan || params.kisiKisi?.matriksAsesmen || "Standar kerangka asesmen nasional Pusmendik";
+  const elemen = params.elemen || "Materi Asesmen Standar";
+  const subElemen = params.subElemen || "Sub-Materi Asesmen";
+  const kompetensi = params.kompetensi || "Kompetensi penalaran akademik tingkat tinggi (HOTS)";
+  const batasan = params.batasan || "Standar kerangka asesmen nasional Pusmendik";
   const mapel = params.mapel || "MATEMATIKA";
   const tipeSoal = params.tipeSoal || "PILIHAN_GANDA";
 
