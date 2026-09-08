@@ -26,6 +26,7 @@ import {
   Search,
   Zap,
   CheckCheck,
+  RotateCcw,
 } from "lucide-react";
 import MathRenderer from "@/components/math/MathRenderer";
 import RichQuestionEditor from "@/components/editor/RichQuestionEditor";
@@ -106,6 +107,18 @@ export default function ValidasiSoalPage() {
 
   // General LaTeX guide modal state
   const [isGeneralLatexGuideOpen, setIsGeneralLatexGuideOpen] = useState(false);
+
+  // Subject Description state
+  const [subjectDesc, setSubjectDesc] = useState<string>("");
+  const [defaultSubjectDesc, setDefaultSubjectDesc] = useState<string>("");
+  const [isCustomDesc, setIsCustomDesc] = useState<boolean>(false);
+  const [descUpdatedBy, setDescUpdatedBy] = useState<string | null>(null);
+  const [descUpdatedAt, setDescUpdatedAt] = useState<string | null>(null);
+  const [isLoadingDesc, setIsLoadingDesc] = useState<boolean>(false);
+  const [isEditingDesc, setIsEditingDesc] = useState<boolean>(false);
+  const [descInput, setDescInput] = useState<string>("");
+  const [isSavingDesc, setIsSavingDesc] = useState<boolean>(false);
+  const [descMsg, setDescMsg] = useState<{ type: "success" | "error"; text: string } | null>(null);
 
   // Build flattened list of all 72 subjects for overview
   const allSubjectCards = useMemo(() => {
@@ -311,6 +324,107 @@ export default function ValidasiSoalPage() {
       loadSoal(currentMapel);
     }
   }, [currentMapel, activeTab]);
+
+  // Fetch subject description
+  const fetchSubjectDesc = async (mapelCode: string) => {
+    setIsLoadingDesc(true);
+    setDescMsg(null);
+    try {
+      const res = await fetch(`/api/admin/mapel-info?mapel=${encodeURIComponent(mapelCode)}`);
+      const data = await res.json();
+      if (data.success) {
+        setSubjectDesc(data.deskripsi || "");
+        setDefaultSubjectDesc(data.defaultDeskripsi || "");
+        setIsCustomDesc(Boolean(data.isCustom));
+        setDescUpdatedBy(data.updatedBy || null);
+        setDescUpdatedAt(data.updatedAt || null);
+        setDescInput(data.deskripsi || "");
+      }
+    } catch (err) {
+      console.error("Gagal memuat deskripsi mapel:", err);
+    } finally {
+      setIsLoadingDesc(false);
+    }
+  };
+
+  useEffect(() => {
+    if (currentMapel) {
+      setIsEditingDesc(false);
+      setDescMsg(null);
+      fetchSubjectDesc(currentMapel);
+    }
+  }, [currentMapel]);
+
+  // Save subject description
+  const handleSaveSubjectDesc = async () => {
+    if (!currentMapel) return;
+    if (!descInput.trim()) {
+      setDescMsg({ type: "error", text: "Deskripsi mata pelajaran tidak boleh kosong" });
+      return;
+    }
+    setIsSavingDesc(true);
+    setDescMsg(null);
+    try {
+      const res = await fetch("/api/admin/mapel-info", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          mapel: currentMapel,
+          deskripsi: descInput.trim(),
+        }),
+      });
+      const data = await res.json();
+      if (data.success) {
+        setSubjectDesc(descInput.trim());
+        setIsCustomDesc(true);
+        setDescUpdatedBy(data.data?.updatedBy || "Anda");
+        setDescUpdatedAt(new Date().toISOString());
+        setIsEditingDesc(false);
+        setDescMsg({ type: "success", text: "Deskripsi mata pelajaran berhasil disimpan!" });
+        setTimeout(() => setDescMsg(null), 4000);
+      } else {
+        setDescMsg({ type: "error", text: data.error || "Gagal menyimpan deskripsi" });
+      }
+    } catch (err: any) {
+      setDescMsg({ type: "error", text: err.message || "Terjadi kesalahan sistem" });
+    } finally {
+      setIsSavingDesc(false);
+    }
+  };
+
+  // Reset subject description to official TKA Kemendikdasmen standard
+  const handleResetSubjectDesc = async () => {
+    if (!currentMapel) return;
+    if (!confirm("Kembalikan deskripsi ke standar resmi TKA Kemendikdasmen?")) return;
+    setIsSavingDesc(true);
+    setDescMsg(null);
+    try {
+      const res = await fetch(`/api/admin/mapel-info?mapel=${encodeURIComponent(currentMapel)}`, {
+        method: "DELETE",
+      });
+      const data = await res.json();
+      if (data.success) {
+        const resetText = data.defaultDeskripsi || defaultSubjectDesc;
+        setSubjectDesc(resetText);
+        setDescInput(resetText);
+        setIsCustomDesc(false);
+        setDescUpdatedBy(null);
+        setDescUpdatedAt(null);
+        setIsEditingDesc(false);
+        setDescMsg({
+          type: "success",
+          text: "Deskripsi berhasil dikembalikan ke standar TKA Kemendikdasmen!",
+        });
+        setTimeout(() => setDescMsg(null), 4000);
+      } else {
+        setDescMsg({ type: "error", text: data.error || "Gagal mereset deskripsi" });
+      }
+    } catch (err: any) {
+      setDescMsg({ type: "error", text: err.message || "Terjadi kesalahan sistem" });
+    } finally {
+      setIsSavingDesc(false);
+    }
+  };
 
   // Single question status update
   const handleUpdateStatus = async (id: string, newStatus: "AKTIF" | "DITOLAK") => {
@@ -992,6 +1106,155 @@ export default function ValidasiSoalPage() {
                 <Zap className="w-4 h-4 fill-amber-950" />
                 <span>Full Verifikasi ({currentMapelStats?.menunggu || soalList.length} Butir)</span>
               </button>
+            )}
+          </div>
+
+          {/* Deskripsi Mata Pelajaran TKA */}
+          <div className="bg-white rounded-3xl p-5 sm:p-6 border border-slate-200/80 shadow-2xs space-y-4">
+            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 pb-3 border-b border-slate-100">
+              <div className="flex items-center gap-2.5 flex-wrap">
+                <div className="p-2 bg-blue-50 text-blue-600 rounded-xl">
+                  <BookOpen className="w-4 h-4" />
+                </div>
+                <div>
+                  <div className="flex items-center gap-2">
+                    <h3 className="text-sm font-bold text-slate-800">
+                      Deskripsi Mata Pelajaran TKA
+                    </h3>
+                    {isCustomDesc ? (
+                      <span className="px-2 py-0.5 rounded-full text-[10px] font-bold bg-amber-50 text-amber-700 border border-amber-200">
+                        Kustom Tersimpan
+                      </span>
+                    ) : (
+                      <span className="px-2 py-0.5 rounded-full text-[10px] font-bold bg-blue-50 text-blue-700 border border-blue-200">
+                        Standar Resmi TKA
+                      </span>
+                    )}
+                  </div>
+                  <p className="text-[11px] text-slate-500">
+                    Deskripsi ini tampil pada beranda latihan siswa untuk mapel {getSubjectDisplayName(currentMapel || "")}
+                  </p>
+                </div>
+              </div>
+
+              {!isEditingDesc ? (
+                <button
+                  type="button"
+                  onClick={() => {
+                    setDescInput(subjectDesc);
+                    setIsEditingDesc(true);
+                  }}
+                  className="px-3.5 py-1.5 rounded-xl border border-slate-200 hover:border-blue-300 hover:bg-blue-50 text-blue-700 text-xs font-bold flex items-center gap-1.5 transition-colors cursor-pointer self-start sm:self-auto"
+                >
+                  <Edit3 className="w-3.5 h-3.5" />
+                  <span>Edit Deskripsi</span>
+                </button>
+              ) : (
+                <div className="flex items-center gap-2 self-start sm:self-auto">
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setDescInput(subjectDesc);
+                      setIsEditingDesc(false);
+                      setDescMsg(null);
+                    }}
+                    disabled={isSavingDesc}
+                    className="px-3 py-1.5 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-700 text-xs font-bold transition-colors cursor-pointer disabled:opacity-50"
+                  >
+                    Batal
+                  </button>
+                  {isCustomDesc && (
+                    <button
+                      type="button"
+                      onClick={handleResetSubjectDesc}
+                      disabled={isSavingDesc}
+                      className="px-3 py-1.5 rounded-xl border border-rose-200 bg-rose-50 hover:bg-rose-100 text-rose-700 text-xs font-bold flex items-center gap-1.5 transition-colors cursor-pointer disabled:opacity-50"
+                    >
+                      <RotateCcw className="w-3 h-3" />
+                      <span>Reset Bawaan</span>
+                    </button>
+                  )}
+                  <button
+                    type="button"
+                    onClick={handleSaveSubjectDesc}
+                    disabled={isSavingDesc}
+                    className="px-3.5 py-1.5 rounded-xl bg-blue-600 hover:bg-blue-700 text-white text-xs font-bold flex items-center gap-1.5 transition-colors cursor-pointer shadow-xs disabled:opacity-50"
+                  >
+                    {isSavingDesc ? (
+                      <span className="animate-spin rounded-full h-3 w-3 border-2 border-white border-t-transparent" />
+                    ) : (
+                      <Check className="w-3.5 h-3.5" />
+                    )}
+                    <span>{isSavingDesc ? "Menyimpan..." : "Simpan Deskripsi"}</span>
+                  </button>
+                </div>
+              )}
+            </div>
+
+            {/* Notification message */}
+            {descMsg && (
+              <div
+                className={`p-3 rounded-xl text-xs font-medium flex items-center gap-2 ${
+                  descMsg.type === "success"
+                    ? "bg-emerald-50 text-emerald-800 border border-emerald-200"
+                    : "bg-rose-50 text-rose-800 border border-rose-200"
+                }`}
+              >
+                {descMsg.type === "success" ? (
+                  <CheckCircle2 className="w-4 h-4 text-emerald-600 shrink-0" />
+                ) : (
+                  <AlertCircle className="w-4 h-4 text-rose-600 shrink-0" />
+                )}
+                <span>{descMsg.text}</span>
+              </div>
+            )}
+
+            {/* Display Mode */}
+            {!isEditingDesc ? (
+              <div className="space-y-2">
+                {isLoadingDesc ? (
+                  <div className="p-4 bg-slate-50 rounded-2xl animate-pulse text-xs text-slate-400">
+                    Memuat deskripsi mata pelajaran...
+                  </div>
+                ) : (
+                  <div className="p-4 bg-slate-50/70 rounded-2xl border border-slate-100 text-slate-700 text-xs sm:text-sm leading-relaxed font-normal">
+                    {subjectDesc || "Belum ada deskripsi untuk mata pelajaran ini."}
+                  </div>
+                )}
+                {descUpdatedBy && (
+                  <p className="text-[11px] text-slate-400 italic">
+                    Terakhir diperbarui oleh: <span className="font-semibold text-slate-600">{descUpdatedBy}</span>
+                    {descUpdatedAt && ` pada ${new Date(descUpdatedAt).toLocaleString("id-ID")}`}
+                  </p>
+                )}
+              </div>
+            ) : (
+              /* Edit Mode */
+              <div className="space-y-3">
+                <div className="relative">
+                  <textarea
+                    rows={4}
+                    value={descInput}
+                    onChange={(e) => setDescInput(e.target.value)}
+                    placeholder="Tuliskan deskripsi kompetensi, ruang lingkup, kisi-kisi atau sasaran asesmen mata pelajaran TKA ini..."
+                    className="w-full p-3.5 text-xs sm:text-sm text-slate-800 bg-white border border-slate-300 rounded-2xl focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all resize-y leading-relaxed"
+                  />
+                  <div className="flex items-center justify-between text-[11px] text-slate-400 mt-1 px-1">
+                    <span>
+                      {defaultSubjectDesc && descInput !== defaultSubjectDesc && (
+                        <button
+                          type="button"
+                          onClick={() => setDescInput(defaultSubjectDesc)}
+                          className="text-blue-600 hover:underline font-medium cursor-pointer"
+                        >
+                          Salin teks standar resmi TKA
+                        </button>
+                      )}
+                    </span>
+                    <span>{descInput.length} karakter</span>
+                  </div>
+                </div>
+              </div>
             )}
           </div>
 

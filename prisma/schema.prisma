@@ -118,3 +118,11 @@ model PengaturanTka {
 
   updatedAt            DateTime  @updatedAt
 }
+
+model MapelInfo {
+  kode        String   @id
+  deskripsi   String
+  updatedBy   String?
+  updatedAt   DateTime @updatedAt
+  createdAt   DateTime @default(now())
+}

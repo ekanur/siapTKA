@@ -78,6 +78,35 @@ export default function SubjectDetailPage() {
   const [currentPage, setCurrentPage] = useState(1);
   const pageSize = 10;
 
+  const [customDeskripsi, setCustomDeskripsi] = useState<string>("");
+
+  useEffect(() => {
+    // 1. Initial cached description if available
+    if (typeof window !== "undefined") {
+      const cached = localStorage.getItem(`mapel_desc_${mapelUpper}`);
+      if (cached) {
+        setCustomDeskripsi(cached);
+      }
+    }
+
+    // 2. Fetch fresh description from API
+    const fetchDesc = async () => {
+      try {
+        const res = await fetch(`/api/admin/mapel-info?mapel=${encodeURIComponent(mapelUpper)}`);
+        const data = await res.json();
+        if (data.success && data.deskripsi) {
+          setCustomDeskripsi(data.deskripsi);
+          if (typeof window !== "undefined") {
+            localStorage.setItem(`mapel_desc_${mapelUpper}`, data.deskripsi);
+          }
+        }
+      } catch {
+        // Offline: preserve cached value
+      }
+    };
+    fetchDesc();
+  }, [mapelUpper]);
+
   // Review Modal State
   const [reviewSoal, setReviewSoal] = useState<CachedSoal | null>(null);
 
@@ -446,7 +475,7 @@ export default function SubjectDetailPage() {
               </h1>
 
               <p className="text-sm sm:text-base text-slate-600 leading-relaxed font-normal">
-                {subjectDetail.deskripsiTka}
+                {customDeskripsi || subjectDetail.deskripsiTka}
               </p>
             </div>
 
