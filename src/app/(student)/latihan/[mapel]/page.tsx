@@ -26,6 +26,7 @@ import {
   BookOpen,
   ShieldAlert,
   ArrowRight,
+  AlertCircle,
 } from "lucide-react";
 import { clientDb, CachedSoal, OfflineSubmission } from "@/lib/db/client-db";
 import { downloadActiveBankSoal } from "@/lib/sync/sync-manager";
@@ -425,13 +426,22 @@ export default function SubjectDetailPage() {
 
             {/* Primary Action Button */}
             <div className="flex flex-col justify-center w-full lg:w-auto shrink-0 pt-2 lg:pt-0">
-              <Link
-                href={`/latihan/${mapelParam}/kerjakan`}
-                className="bg-[#2563eb] hover:bg-[#1d4ed8] text-white font-bold text-sm px-8 py-4 rounded-xl shadow-md shadow-blue-500/20 transition-all flex items-center justify-center gap-2 w-full lg:w-64"
-              >
-                <Play className="w-5 h-5 fill-white text-white" />
-                <span>Kerjakan Soal</span>
-              </Link>
+              {questions.length === 0 && !loading ? (
+                <div className="p-3.5 sm:p-4 bg-amber-50 border border-amber-200 text-amber-900 rounded-xl text-xs font-semibold flex items-center gap-2.5 max-w-sm shadow-xs">
+                  <AlertCircle className="w-5 h-5 text-amber-600 shrink-0" />
+                  <span className="leading-snug">
+                    Belum ada soal, silakan hubungi tim Persiapan TKA Sekolah.
+                  </span>
+                </div>
+              ) : (
+                <Link
+                  href={`/latihan/${mapelParam}/kerjakan`}
+                  className="bg-[#2563eb] hover:bg-[#1d4ed8] text-white font-bold text-sm px-8 py-4 rounded-xl shadow-md shadow-blue-500/20 transition-all flex items-center justify-center gap-2 w-full lg:w-64"
+                >
+                  <Play className="w-5 h-5 fill-white text-white" />
+                  <span>Kerjakan Soal</span>
+                </Link>
+              )}
             </div>
           </div>
 
@@ -542,6 +552,22 @@ export default function SubjectDetailPage() {
                     <tr>
                       <td colSpan={4} className="p-8 text-center text-slate-500">
                         Memuat daftar bank soal...
+                      </td>
+                    </tr>
+                  ) : questions.length === 0 ? (
+                    <tr>
+                      <td colSpan={4} className="p-12 text-center">
+                        <div className="max-w-md mx-auto space-y-3">
+                          <div className="w-12 h-12 rounded-2xl bg-amber-100 text-amber-600 flex items-center justify-center mx-auto">
+                            <AlertCircle className="w-6 h-6" />
+                          </div>
+                          <div className="space-y-1">
+                            <h3 className="font-bold text-slate-900 text-base">Belum Ada Soal Latihan</h3>
+                            <p className="text-xs text-slate-600 leading-relaxed">
+                              Belum ada soal, silakan hubungi tim Persiapan TKA Sekolah.
+                            </p>
+                          </div>
+                        </div>
                       </td>
                     </tr>
                   ) : paginatedQuestions.length === 0 ? (

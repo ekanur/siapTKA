@@ -28,6 +28,7 @@ import {
   Play,
   CloudDownload,
   ShieldAlert,
+  AlertCircle,
 } from "lucide-react";
 import { clientDb } from "@/lib/db/client-db";
 import { downloadActiveBankSoal, syncPendingSubmissions, getOfflineSyncStatus } from "@/lib/sync/sync-manager";
@@ -61,10 +62,11 @@ export default function LatihanHubPage() {
   const [syncMessage, setSyncMessage] = useState("");
 
   const [studentProfile, setStudentProfile] = useState<any>(null);
+  const [mapelQuestionCounts, setMapelQuestionCounts] = useState<Record<string, number>>({});
   const [downloadingMapel, setDownloadingMapel] = useState<string | null>(null);
   const [resetMapels, setResetMapels] = useState<string[]>([]);
   const [mapelStats, setMapelStats] = useState<{
-    [code: string]: { cached: number; worked: number; percent: number; isOfflineReady: boolean };
+    [code: string]: { cached: number; worked: number; percent: number; isOfflineReady: boolean; hasQuestions: boolean };
   }>({});
 
   const mapel1 = studentProfile?.mapelPilihan1 || null;
@@ -72,13 +74,21 @@ export default function LatihanHubPage() {
   const statusTka = studentProfile?.statusTka || (session?.user as any)?.statusTka || "IKUT";
 
   const subjectRows = useMemo(() => {
+    const getBankCount = (code: string, fallbackDefault = 0) => {
+      const norm = code.replace(/-/g, "_").toUpperCase();
+      if (mapelQuestionCounts[norm] !== undefined) {
+        return mapelQuestionCounts[norm];
+      }
+      return fallbackDefault;
+    };
+
     const rows = [
       {
         code: "MATEMATIKA",
         name: "Matematika",
         type: "WAJIB",
         slug: "matematika",
-        totalBank: 120,
+        totalBank: getBankCount("MATEMATIKA", 2),
         defaultPercent: 37.5,
         defaultReady: true,
       },
@@ -87,7 +97,7 @@ export default function LatihanHubPage() {
         name: "Bahasa Indonesia",
         type: "WAJIB",
         slug: "bahasa_indonesia",
-        totalBank: 100,
+        totalBank: getBankCount("BAHASA_INDONESIA", 1),
         defaultPercent: 20,
         defaultReady: true,
       },
@@ -96,38 +106,40 @@ export default function LatihanHubPage() {
         name: "Bahasa Inggris",
         type: "WAJIB",
         slug: "bahasa_inggris",
-        totalBank: 150,
+        totalBank: getBankCount("BAHASA_INGGRIS", 1),
         defaultPercent: 6.6,
         defaultReady: false,
       },
     ];
 
     if (mapel1) {
+      const count1 = getBankCount(mapel1, 0);
       rows.push({
         code: mapel1,
         name: getSubjectDisplayName(mapel1, true),
         type: "PILIHAN",
         slug: mapel1.toLowerCase(),
-        totalBank: 200,
-        defaultPercent: 42.5,
-        defaultReady: true,
+        totalBank: count1,
+        defaultPercent: count1 > 0 ? 42.5 : 0,
+        defaultReady: count1 > 0,
       });
     }
 
     if (mapel2 && mapel2 !== mapel1) {
+      const count2 = getBankCount(mapel2, 0);
       rows.push({
         code: mapel2,
         name: getSubjectDisplayName(mapel2, true),
         type: "PILIHAN",
         slug: mapel2.toLowerCase(),
-        totalBank: 180,
+        totalBank: count2,
         defaultPercent: 0,
-        defaultReady: false,
+        defaultReady: count2 > 0,
       });
     }
 
     return rows;
-  }, [mapel1, mapel2]);
+  }, [mapel1, mapel2, mapelQuestionCounts]);
 
   const getProgressColor = (percent: number) => {
     if (percent <= 25) {
@@ -165,20 +177,24 @@ export default function LatihanHubPage() {
           .count();
 
         const isReset = resetMapels.includes(subj.code);
+        const effectiveTotal = Math.max(subj.totalBank, cached);
+        const hasQuestions = effectiveTotal > 0;
+
         let percent = subj.defaultPercent;
-        if (isReset) {
+        if (isReset || !hasQuestions) {
           percent = 0;
         } else if (worked > 0) {
-          percent = Math.min(100, Math.round((worked / subj.totalBank) * 1000) / 10);
+          percent = Math.min(100, Math.round((worked / effectiveTotal) * 1000) / 10);
         }
 
-        const isOfflineReady = cached > 0 || subj.defaultReady;
+        const isOfflineReady = cached > 0;
 
         statsObj[subj.code] = {
           cached,
           worked,
           percent,
           isOfflineReady,
+          hasQuestions,
         };
       }
       setMapelStats(statsObj);
@@ -190,11 +206,13 @@ export default function LatihanHubPage() {
   const getSubjectState = (subj: any) => {
     const s = mapelStats[subj.code];
     if (s) return s;
+    const hasQuestions = subj.totalBank > 0;
     return {
       cached: 0,
       worked: 0,
-      percent: resetMapels.includes(subj.code) ? 0 : subj.defaultPercent,
+      percent: resetMapels.includes(subj.code) || !hasQuestions ? 0 : subj.defaultPercent,
       isOfflineReady: subj.defaultReady,
+      hasQuestions,
     };
   };
 
@@ -275,6 +293,9 @@ export default function LatihanHubPage() {
       const data = await res.json();
       if (data.success && data.student) {
         setStudentProfile(data.student);
+        if (data.mapelQuestionCounts) {
+          setMapelQuestionCounts(data.mapelQuestionCounts);
+        }
       }
     } catch (e) {
       console.error("Failed to load student profile:", e);
@@ -566,6 +587,33 @@ export default function LatihanHubPage() {
           </div>
         </div>
 
+        {/* Banner Peringatan jika Mapel Pilihan Belum Ada Soal */}
+        {subjectRows.some((s) => s.type === "PILIHAN" && !getSubjectState(s).hasQuestions) && (
+          <div className="p-4 sm:p-5 bg-amber-50 border border-amber-200 rounded-2xl flex items-start gap-3.5 shadow-xs">
+            <div className="p-2 bg-amber-100 text-amber-700 rounded-xl shrink-0 mt-0.5">
+              <AlertCircle className="w-5 h-5" />
+            </div>
+            <div className="space-y-1">
+              <h4 className="font-bold text-slate-900 text-sm">
+                Pemberitahuan Bank Soal Mata Pelajaran Pilihan
+              </h4>
+              <p className="text-xs text-slate-600 leading-relaxed">
+                Mata pelajaran pilihan Anda (
+                <strong>
+                  {subjectRows
+                    .filter((s) => s.type === "PILIHAN" && !getSubjectState(s).hasQuestions)
+                    .map((s) => s.name)
+                    .join(", ")}
+                </strong>
+                ) belum memiliki butir soal latihan aktif di sistem.{" "}
+                <span className="font-semibold text-amber-800">
+                  Belum ada soal, silakan hubungi tim Persiapan TKA Sekolah.
+                </span>
+              </p>
+            </div>
+          </div>
+        )}
+
         {/* Status Latihan Mata Pelajaran (Responsive Dual-Mode: Table di Desktop & Cards di Smartphone) */}
         <div className="bg-white rounded-2xl border border-slate-200 shadow-sm overflow-hidden">
           {/* Card Title */}
@@ -617,30 +665,47 @@ export default function LatihanHubPage() {
 
                       {/* 2. Jumlah Bank Soal */}
                       <td className="py-4 px-4">
-                        <span className="text-sm font-medium text-slate-700">
-                          {subj.totalBank} Soal
-                        </span>
+                        {!state.hasQuestions ? (
+                          <span className="text-xs font-bold text-amber-700 bg-amber-50 px-2.5 py-1 rounded border border-amber-200">
+                            0 Soal
+                          </span>
+                        ) : (
+                          <span className="text-sm font-medium text-slate-700">
+                            {subj.totalBank} Soal
+                          </span>
+                        )}
                       </td>
 
-                      {/* 3. Soal Dikerjakan (Pill Progress Bar) */}
+                      {/* 3. Soal Dikerjakan (Pill Progress Bar / Pesan Belum Ada Soal) */}
                       <td className="py-4 px-4">
-                        <div className="w-36 h-6 rounded-full bg-slate-200/90 relative overflow-hidden flex items-center justify-center">
-                          {percent > 0 && (
-                            <div
-                              className={`absolute left-0 top-0 bottom-0 transition-all duration-500 rounded-full ${getProgressColor(percent)}`}
-                              style={{ width: `${percent}%` }}
-                            />
-                          )}
-                          <span className="relative z-10 text-xs font-bold text-slate-700 select-none">
-                            {percent}%
+                        {!state.hasQuestions ? (
+                          <span className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full text-[11px] font-semibold bg-amber-50 text-amber-800 border border-amber-200">
+                            <AlertCircle className="w-3.5 h-3.5 text-amber-600 shrink-0" />
+                            <span>Belum ada soal, silakan hubungi tim Persiapan TKA Sekolah</span>
                           </span>
-                        </div>
+                        ) : (
+                          <div className="w-36 h-6 rounded-full bg-slate-200/90 relative overflow-hidden flex items-center justify-center">
+                            {percent > 0 && (
+                              <div
+                                className={`absolute left-0 top-0 bottom-0 transition-all duration-500 rounded-full ${getProgressColor(percent)}`}
+                                style={{ width: `${percent}%` }}
+                              />
+                            )}
+                            <span className="relative z-10 text-xs font-bold text-slate-700 select-none">
+                              {percent}%
+                            </span>
+                          </div>
+                        )}
                       </td>
 
                       {/* 4. Status Offline */}
                       <td className="py-4 px-4 text-center">
                         <div className="flex items-center justify-center">
-                          {isReady ? (
+                          {!state.hasQuestions ? (
+                            <span className="text-[11px] text-slate-400 font-medium italic">
+                              Belum Tersedia
+                            </span>
+                          ) : isReady ? (
                             <div title="Tersimpan di perangkat & siap offline">
                               <CloudCheckIcon className="w-7 h-7 text-blue-600" />
                             </div>
@@ -654,37 +719,49 @@ export default function LatihanHubPage() {
 
                       {/* 5. Aksi */}
                       <td className="py-4 px-6 text-center">
-                        <div className="flex items-center justify-center gap-2">
-                          {/* Button 1: Download */}
-                          <button
-                            type="button"
-                            onClick={() => handleDownloadSubject(subj)}
-                            disabled={isSyncing}
-                            className="w-9 h-9 rounded-lg bg-[#dce7f9] hover:bg-blue-200 text-blue-600 flex items-center justify-center transition-colors disabled:opacity-50"
-                            title={`Unduh Bank Soal ${subj.name} ke IndexedDB`}
-                          >
-                            <Download className={`w-4 h-4 ${isSyncing ? "animate-bounce" : ""}`} />
-                          </button>
+                        {!state.hasQuestions ? (
+                          <div className="flex items-center justify-center">
+                            <Link
+                              href={`/latihan/${subj.slug}`}
+                              className="px-3 py-1.5 bg-amber-50 hover:bg-amber-100 text-amber-800 rounded-lg text-xs font-semibold border border-amber-200 transition-colors"
+                              title="Belum ada soal, silakan hubungi tim Persiapan TKA Sekolah"
+                            >
+                              Belum Ada Soal
+                            </Link>
+                          </div>
+                        ) : (
+                          <div className="flex items-center justify-center gap-2">
+                            {/* Button 1: Download */}
+                            <button
+                              type="button"
+                              onClick={() => handleDownloadSubject(subj)}
+                              disabled={isSyncing}
+                              className="w-9 h-9 rounded-lg bg-[#dce7f9] hover:bg-blue-200 text-blue-600 flex items-center justify-center transition-colors disabled:opacity-50"
+                              title={`Unduh Bank Soal ${subj.name} ke IndexedDB`}
+                            >
+                              <Download className={`w-4 h-4 ${isSyncing ? "animate-bounce" : ""}`} />
+                            </button>
 
-                          {/* Button 2: Reset */}
-                          <button
-                            type="button"
-                            onClick={() => handleResetSubject(subj)}
-                            className="w-9 h-9 rounded-lg bg-[#dce7f9] hover:bg-blue-200 text-slate-600 flex items-center justify-center transition-colors"
-                            title={`Reset Progres Latihan ${subj.name}`}
-                          >
-                            <RotateCcw className="w-4 h-4" />
-                          </button>
+                            {/* Button 2: Reset */}
+                            <button
+                              type="button"
+                              onClick={() => handleResetSubject(subj)}
+                              className="w-9 h-9 rounded-lg bg-[#dce7f9] hover:bg-blue-200 text-slate-600 flex items-center justify-center transition-colors"
+                              title={`Reset Progres Latihan ${subj.name}`}
+                            >
+                              <RotateCcw className="w-4 h-4" />
+                            </button>
 
-                          {/* Button 3: Play / Start */}
-                          <Link
-                            href={`/latihan/${subj.slug}`}
-                            className="w-9 h-9 rounded-lg bg-[#0052cc] hover:bg-blue-700 text-white flex items-center justify-center shadow-sm transition-colors group"
-                            title={`Mulai Latihan ${subj.name}`}
-                          >
-                            <Play className="w-4 h-4 fill-white text-white translate-x-0.5 group-hover:scale-110 transition-transform" />
-                          </Link>
-                        </div>
+                            {/* Button 3: Play / Start */}
+                            <Link
+                              href={`/latihan/${subj.slug}`}
+                              className="w-9 h-9 rounded-lg bg-[#0052cc] hover:bg-blue-700 text-white flex items-center justify-center shadow-sm transition-colors group"
+                              title={`Mulai Latihan ${subj.name}`}
+                            >
+                              <Play className="w-4 h-4 fill-white text-white translate-x-0.5 group-hover:scale-110 transition-transform" />
+                            </Link>
+                          </div>
+                        )}
                       </td>
                     </tr>
                   );
@@ -718,12 +795,19 @@ export default function LatihanHubPage() {
                         </span>
                       </div>
                       <p className="text-xs text-slate-500 mt-0.5">
-                        Bank Soal: <strong className="text-slate-800">{subj.totalBank} Soal</strong>
+                        Bank Soal:{" "}
+                        <strong className={state.hasQuestions ? "text-slate-800" : "text-amber-600"}>
+                          {subj.totalBank} Soal
+                        </strong>
                       </p>
                     </div>
 
                     <div className="shrink-0">
-                      {isReady ? (
+                      {!state.hasQuestions ? (
+                        <div className="text-[10px] font-semibold text-amber-700 bg-amber-50 px-2 py-1 rounded-lg border border-amber-200">
+                          Belum Ada Soal
+                        </div>
+                      ) : isReady ? (
                         <div className="flex items-center gap-1 text-[11px] font-bold text-blue-600 bg-blue-50 px-2 py-1 rounded-lg">
                           <CloudCheckIcon className="w-4 h-4" />
                           <span>Offline OK</span>
@@ -737,53 +821,76 @@ export default function LatihanHubPage() {
                     </div>
                   </div>
 
-                  {/* Middle Bar: Progress Bar */}
-                  <div className="space-y-1">
-                    <div className="flex items-center justify-between text-xs font-semibold text-slate-600">
-                      <span>Progres Latihan</span>
-                      <span className="font-bold text-slate-800">{percent}% Dikerjakan</span>
+                  {/* Middle Bar: Progress Bar or Empty State */}
+                  {!state.hasQuestions ? (
+                    <div className="p-3 bg-amber-50 border border-amber-200 rounded-xl text-xs text-amber-800 flex items-start gap-2">
+                      <AlertCircle className="w-4 h-4 text-amber-600 shrink-0 mt-0.5" />
+                      <div>
+                        <p className="font-bold text-amber-900">Belum Ada Soal Latihan</p>
+                        <p className="text-[11px] text-amber-700 mt-0.5 leading-relaxed">
+                          Belum ada soal, silakan hubungi tim Persiapan TKA Sekolah.
+                        </p>
+                      </div>
                     </div>
-                    <div className="w-full h-5 rounded-full bg-slate-200/90 relative overflow-hidden flex items-center justify-center">
-                      {percent > 0 && (
-                        <div
-                          className={`absolute left-0 top-0 bottom-0 transition-all duration-500 rounded-full ${getProgressColor(percent)}`}
-                          style={{ width: `${percent}%` }}
-                        />
-                      )}
-                      <span className="relative z-10 text-[11px] font-bold text-slate-700 select-none">
-                        {percent}%
-                      </span>
+                  ) : (
+                    <div className="space-y-1">
+                      <div className="flex items-center justify-between text-xs font-semibold text-slate-600">
+                        <span>Progres Latihan</span>
+                        <span className="font-bold text-slate-800">{percent}% Dikerjakan</span>
+                      </div>
+                      <div className="w-full h-5 rounded-full bg-slate-200/90 relative overflow-hidden flex items-center justify-center">
+                        {percent > 0 && (
+                          <div
+                            className={`absolute left-0 top-0 bottom-0 transition-all duration-500 rounded-full ${getProgressColor(percent)}`}
+                            style={{ width: `${percent}%` }}
+                          />
+                        )}
+                        <span className="relative z-10 text-[11px] font-bold text-slate-700 select-none">
+                          {percent}%
+                        </span>
+                      </div>
                     </div>
-                  </div>
+                  )}
 
                   {/* Bottom Bar: Action Buttons */}
                   <div className="pt-2 border-t border-slate-100 flex items-center gap-2">
-                    <button
-                      type="button"
-                      onClick={() => handleDownloadSubject(subj)}
-                      disabled={isSyncing}
-                      className="flex-1 py-2 px-3 bg-[#dce7f9] hover:bg-blue-200 text-blue-700 font-bold text-xs rounded-xl flex items-center justify-center gap-1.5 transition-colors disabled:opacity-50"
-                    >
-                      <Download className={`w-3.5 h-3.5 ${isSyncing ? "animate-bounce" : ""}`} />
-                      <span>{isSyncing ? "Mengunduh..." : "Unduh Bank"}</span>
-                    </button>
+                    {!state.hasQuestions ? (
+                      <Link
+                        href={`/latihan/${subj.slug}`}
+                        className="w-full py-2.5 px-3 bg-amber-50 hover:bg-amber-100 text-amber-800 font-semibold text-xs rounded-xl border border-amber-200 text-center transition-colors"
+                      >
+                        Belum Ada Soal — Hubungi Tim TKA
+                      </Link>
+                    ) : (
+                      <>
+                        <button
+                          type="button"
+                          onClick={() => handleDownloadSubject(subj)}
+                          disabled={isSyncing}
+                          className="flex-1 py-2 px-3 bg-[#dce7f9] hover:bg-blue-200 text-blue-700 font-bold text-xs rounded-xl flex items-center justify-center gap-1.5 transition-colors disabled:opacity-50"
+                        >
+                          <Download className={`w-3.5 h-3.5 ${isSyncing ? "animate-bounce" : ""}`} />
+                          <span>{isSyncing ? "Mengunduh..." : "Unduh Bank"}</span>
+                        </button>
 
-                    <button
-                      type="button"
-                      onClick={() => handleResetSubject(subj)}
-                      className="p-2 bg-[#dce7f9] hover:bg-blue-200 text-slate-700 font-bold text-xs rounded-xl flex items-center justify-center transition-colors"
-                      title="Reset progres latihan"
-                    >
-                      <RotateCcw className="w-4 h-4" />
-                    </button>
+                        <button
+                          type="button"
+                          onClick={() => handleResetSubject(subj)}
+                          className="p-2 bg-[#dce7f9] hover:bg-blue-200 text-slate-700 font-bold text-xs rounded-xl flex items-center justify-center transition-colors"
+                          title="Reset progres latihan"
+                        >
+                          <RotateCcw className="w-4 h-4" />
+                        </button>
 
-                    <Link
-                      href={`/latihan/${subj.slug}`}
-                      className="flex-1 py-2 px-3 bg-[#0052cc] hover:bg-blue-700 text-white font-bold text-xs rounded-xl flex items-center justify-center gap-1.5 shadow-sm transition-colors"
-                    >
-                      <Play className="w-3.5 h-3.5 fill-white text-white" />
-                      <span>Mulai Latihan</span>
-                    </Link>
+                        <Link
+                          href={`/latihan/${subj.slug}`}
+                          className="flex-1 py-2 px-3 bg-[#0052cc] hover:bg-blue-700 text-white font-bold text-xs rounded-xl flex items-center justify-center gap-1.5 shadow-sm transition-colors"
+                        >
+                          <Play className="w-3.5 h-3.5 fill-white text-white" />
+                          <span>Mulai Latihan</span>
+                        </Link>
+                      </>
+                    )}
                   </div>
                 </div>
               );

@@ -20,6 +20,7 @@ import {
   Send,
   Layers,
   ShieldAlert,
+  AlertCircle,
 } from "lucide-react";
 import { clientDb, CachedSoal, OfflineSubmission } from "@/lib/db/client-db";
 import { downloadActiveBankSoal, syncPendingSubmissions } from "@/lib/sync/sync-manager";
@@ -447,23 +448,29 @@ export default function QuizRunnerPage() {
       ) : questions.length === 0 ? (
         <div className="flex-1 flex items-center justify-center p-4">
           <div className="max-w-md w-full bg-white rounded-3xl p-8 border border-slate-200 text-center space-y-4 shadow-sm">
-            <div className="w-14 h-14 rounded-2xl bg-amber-100 text-amber-700 flex items-center justify-center mx-auto">
-              <WifiOff className="w-7 h-7" />
+            <div className="w-14 h-14 rounded-2xl bg-amber-50 text-amber-600 border border-amber-200 flex items-center justify-center mx-auto">
+              <AlertCircle className="w-7 h-7" />
             </div>
-            <h2 className="text-xl font-bold text-slate-900">Belum Ada Soal di Perangkat</h2>
-            <p className="text-xs text-slate-600 leading-relaxed">
-              Bank soal mapel <strong className="text-slate-900">{mapelUpper}</strong> belum diunduh ke penyimpanan lokal perangkat ini. Hubungkan internet lalu klik tombol unduh.
-            </p>
+            <div className="space-y-1.5">
+              <span className="px-3 py-1 bg-amber-100 text-amber-800 text-[10px] font-bold rounded-full uppercase tracking-wider">
+                Bank Soal Belum Tersedia
+              </span>
+              <h2 className="text-xl font-bold text-slate-900">Belum Ada Soal Latihan</h2>
+              <p className="text-xs text-slate-600 leading-relaxed">
+                Mata pelajaran <strong>{getSubjectDisplayName(mapelUpper, true)}</strong> belum memiliki butir soal latihan aktif di sistem.{" "}
+                <strong className="text-slate-800">Belum ada soal, silakan hubungi tim Persiapan TKA Sekolah.</strong>
+              </p>
+            </div>
             <div className="flex flex-col gap-2 pt-2">
-              <button
-                onClick={loadLocalQuestions}
-                className="py-3 px-4 bg-blue-600 hover:bg-blue-700 text-white font-bold text-xs rounded-xl shadow-md transition-all"
+              <Link
+                href="/latihan"
+                className="py-3 px-4 bg-blue-600 hover:bg-blue-700 text-white font-bold text-xs rounded-xl shadow-md transition-all text-center"
               >
-                Coba Unduh Sekarang
-              </button>
+                Kembali ke Beranda Latihan
+              </Link>
               <Link
                 href={`/latihan/${mapelParam}`}
-                className="py-2.5 px-4 bg-slate-100 hover:bg-slate-200 text-slate-700 font-bold text-xs rounded-xl transition-all"
+                className="py-2.5 px-4 bg-slate-100 hover:bg-slate-200 text-slate-700 font-bold text-xs rounded-xl transition-all text-center"
               >
                 Kembali ke Detail Mata Pelajaran
               </Link>

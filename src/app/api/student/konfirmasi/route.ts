@@ -3,6 +3,8 @@ import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/auth";
 import prisma from "@/lib/prisma";
 
+import { SUBJECT_ALIASES } from "@/lib/constants/subjects";
+
 export const dynamic = "force-dynamic";
 
 export async function GET() {
@@ -35,7 +37,35 @@ export async function GET() {
       return NextResponse.json({ success: false, error: "Data siswa tidak ditemukan" }, { status: 404 });
     }
 
-    return NextResponse.json({ success: true, student });
+    // Aggregate active questions count per mapel
+    const groupedCounts = await prisma.soal.groupBy({
+      by: ["mapel"],
+      where: { status: "AKTIF" },
+      _count: { id: true },
+    });
+
+    const mapelQuestionCounts: Record<string, number> = {};
+    for (const item of groupedCounts) {
+      const norm = item.mapel.replace(/-/g, "_").toUpperCase();
+      mapelQuestionCounts[norm] = (mapelQuestionCounts[norm] || 0) + item._count.id;
+    }
+
+    // Expand aliases
+    Object.entries(SUBJECT_ALIASES).forEach(([alias, canonical]) => {
+      const canonicalCount = mapelQuestionCounts[canonical] || 0;
+      const aliasCount = mapelQuestionCounts[alias] || 0;
+      const maxCount = Math.max(canonicalCount, aliasCount);
+      if (maxCount > 0) {
+        mapelQuestionCounts[alias] = maxCount;
+        mapelQuestionCounts[canonical] = maxCount;
+      }
+    });
+
+    return NextResponse.json({
+      success: true,
+      student,
+      mapelQuestionCounts,
+    });
   } catch (error: any) {
     console.error("GET Student Konfirmasi error:", error);
     return NextResponse.json({ success: false, error: "Gagal memuat status konfirmasi" }, { status: 500 });
