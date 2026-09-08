@@ -237,3 +237,57 @@ export function getSubjectTkaDetail(codeOrId: string): SubjectTkaDetail {
     deskripsiTka: `Tes Kemampuan Akademik (TKA) untuk mata pelajaran ${displayName} mengukur penguasaan konsep esensial, keterampilan berpikir kritis, dan kemampuan penalaran aplikatif sesuai Capaian Pembelajaran Kurikulum Nasional Kemendikbudristek untuk persiapan seleksi perguruan tinggi dan standarisasi kompetensi vokasi.`,
   };
 }
+
+export interface StudentTkaProfile {
+  statusTka?: string | null;
+  mapelPilihan1?: string | null;
+  mapelPilihan2?: string | null;
+}
+
+export function getAllowedSubjectsForStudent(student: StudentTkaProfile | null | undefined): string[] {
+  if (!student || student.statusTka === "TIDAK_IKUT") return [];
+  const allowed = ["MATEMATIKA", "BAHASA_INDONESIA", "BAHASA_INGGRIS"];
+  if (student.mapelPilihan1) allowed.push(student.mapelPilihan1);
+  if (student.mapelPilihan2) allowed.push(student.mapelPilihan2);
+  return allowed;
+}
+
+export function isSubjectAllowedForStudent(
+  subjectCode: string,
+  student: StudentTkaProfile | null | undefined
+): { allowed: boolean; reason?: "TIDAK_IKUT" | "BUKAN_PILIHAN" } {
+  if (!student) {
+    return { allowed: true };
+  }
+
+  if (student.statusTka === "TIDAK_IKUT") {
+    return { allowed: false, reason: "TIDAK_IKUT" };
+  }
+
+  const norm = (subjectCode || "").replace(/-/g, "_").toUpperCase().trim();
+  const canonicalNorm = SUBJECT_ALIASES[norm] || norm;
+
+  // 1. Mandatory subjects are always allowed
+  const WAJIB = ["MATEMATIKA", "BAHASA_INDONESIA", "BAHASA_INGGRIS"];
+  if (WAJIB.includes(norm) || WAJIB.includes(canonicalNorm)) {
+    return { allowed: true };
+  }
+
+  // 2. Check student's chosen electives
+  const studentElectives = [student.mapelPilihan1, student.mapelPilihan2].filter(Boolean) as string[];
+  for (const choice of studentElectives) {
+    const choiceNorm = choice.replace(/-/g, "_").toUpperCase().trim();
+    const choiceCanonical = SUBJECT_ALIASES[choiceNorm] || choiceNorm;
+
+    if (
+      norm === choiceNorm ||
+      canonicalNorm === choiceCanonical ||
+      canonicalNorm === choiceNorm ||
+      norm === choiceCanonical
+    ) {
+      return { allowed: true };
+    }
+  }
+
+  return { allowed: false, reason: "BUKAN_PILIHAN" };
+}

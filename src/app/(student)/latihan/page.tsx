@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useMemo } from "react";
 import { useSession, signOut } from "next-auth/react";
 import Link from "next/link";
 import {
@@ -67,57 +67,67 @@ export default function LatihanHubPage() {
     [code: string]: { cached: number; worked: number; percent: number; isOfflineReady: boolean };
   }>({});
 
-  const mapel1 = studentProfile?.mapelPilihan1 || "PPLG";
-  const mapel2 = studentProfile?.mapelPilihan2 || "AIJ";
-  const statusTka = studentProfile?.statusTka || "IKUT";
+  const mapel1 = studentProfile?.mapelPilihan1 || null;
+  const mapel2 = studentProfile?.mapelPilihan2 || null;
+  const statusTka = studentProfile?.statusTka || (session?.user as any)?.statusTka || "IKUT";
 
-  const subjectRows = [
-    {
-      code: "MATEMATIKA",
-      name: "Matematika",
-      type: "WAJIB",
-      slug: "matematika",
-      totalBank: 120,
-      defaultPercent: 37.5,
-      defaultReady: true,
-    },
-    {
-      code: "BAHASA_INDONESIA",
-      name: "Bahasa Indonesia",
-      type: "WAJIB",
-      slug: "bahasa_indonesia",
-      totalBank: 100,
-      defaultPercent: 20,
-      defaultReady: true,
-    },
-    {
-      code: "BAHASA_INGGRIS",
-      name: "Bahasa Inggris",
-      type: "WAJIB",
-      slug: "bahasa_inggris",
-      totalBank: 150,
-      defaultPercent: 6.6,
-      defaultReady: false,
-    },
-    {
-      code: mapel1,
-      name: getSubjectDisplayName(mapel1, true),
-      type: "PILIHAN",
-      slug: mapel1.toLowerCase(),
-      totalBank: 200,
-      defaultPercent: 42.5,
-      defaultReady: true,
-    },
-    {
-      code: mapel2,
-      name: getSubjectDisplayName(mapel2, true),
-      type: "PILIHAN",
-      slug: mapel2.toLowerCase(),
-      totalBank: 180,
-      defaultPercent: 0,
-      defaultReady: false,
-    },
-  ];
+  const subjectRows = useMemo(() => {
+    const rows = [
+      {
+        code: "MATEMATIKA",
+        name: "Matematika",
+        type: "WAJIB",
+        slug: "matematika",
+        totalBank: 120,
+        defaultPercent: 37.5,
+        defaultReady: true,
+      },
+      {
+        code: "BAHASA_INDONESIA",
+        name: "Bahasa Indonesia",
+        type: "WAJIB",
+        slug: "bahasa_indonesia",
+        totalBank: 100,
+        defaultPercent: 20,
+        defaultReady: true,
+      },
+      {
+        code: "BAHASA_INGGRIS",
+        name: "Bahasa Inggris",
+        type: "WAJIB",
+        slug: "bahasa_inggris",
+        totalBank: 150,
+        defaultPercent: 6.6,
+        defaultReady: false,
+      },
+    ];
+
+    if (mapel1) {
+      rows.push({
+        code: mapel1,
+        name: getSubjectDisplayName(mapel1, true),
+        type: "PILIHAN",
+        slug: mapel1.toLowerCase(),
+        totalBank: 200,
+        defaultPercent: 42.5,
+        defaultReady: true,
+      });
+    }
+
+    if (mapel2 && mapel2 !== mapel1) {
+      rows.push({
+        code: mapel2,
+        name: getSubjectDisplayName(mapel2, true),
+        type: "PILIHAN",
+        slug: mapel2.toLowerCase(),
+        totalBank: 180,
+        defaultPercent: 0,
+        defaultReady: false,
+      });
+    }
+
+    return rows;
+  }, [mapel1, mapel2]);
 
   const getProgressColor = (percent: number) => {
     if (percent <= 25) {
@@ -261,15 +271,14 @@ export default function LatihanHubPage() {
 
   const loadStudentProfile = async () => {
     try {
-      const studentId = (session?.user as any)?.id;
-      if (!studentId) return;
-      const res = await fetch(`/api/admin/siswa`);
+      const res = await fetch(`/api/student/konfirmasi`);
       const data = await res.json();
-      if (data.success) {
-        const found = data.students.find((s: any) => s.id === studentId || s.nis === (session?.user as any)?.nis);
-        if (found) setStudentProfile(found);
+      if (data.success && data.student) {
+        setStudentProfile(data.student);
       }
-    } catch {}
+    } catch (e) {
+      console.error("Failed to load student profile:", e);
+    }
   };
 
   useEffect(() => {
@@ -293,7 +302,7 @@ export default function LatihanHubPage() {
 
   useEffect(() => {
     refreshSubjectStats();
-  }, [studentProfile, resetMapels]);
+  }, [subjectRows, resetMapels]);
 
   const handleDownloadBank = async () => {
     setIsSyncingBank(true);
@@ -781,6 +790,33 @@ export default function LatihanHubPage() {
             })}
           </div>
         </div>
+
+        {(!mapel1 || !mapel2) && (
+          <div className="p-5 sm:p-6 bg-gradient-to-r from-amber-50/80 via-orange-50/60 to-amber-50/80 rounded-2xl border border-amber-200 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 shadow-xs">
+            <div className="flex items-start gap-3">
+              <div className="p-2.5 bg-amber-100 text-amber-700 rounded-xl shrink-0 mt-0.5 sm:mt-0">
+                <BookMarked className="w-5 h-5" />
+              </div>
+              <div className="space-y-1">
+                <h4 className="font-bold text-slate-900 text-sm">
+                  {!mapel1 && !mapel2
+                    ? "Mata Pelajaran Pilihan TKA Belum Ditentukan"
+                    : "Mata Pelajaran Pilihan Belum Lengkap (1 dari 2)"}
+                </h4>
+                <p className="text-xs text-slate-600 max-w-xl leading-relaxed">
+                  Siswa berhak memilih hingga 2 mata pelajaran pilihan sesuai peminatan atau kejuruan. Silakan tentukan pilihan Anda melalui formulir konfirmasi TKA agar modul dan bank soal latihan pilihan aktif.
+                </p>
+              </div>
+            </div>
+            <Link
+              href="/onboarding-tka"
+              className="shrink-0 px-4 py-2.5 bg-amber-600 hover:bg-amber-700 text-white font-bold text-xs rounded-xl shadow-xs transition-all flex items-center gap-1.5"
+            >
+              <span>Pilih Mata Pelajaran</span>
+              <ArrowRight className="w-3.5 h-3.5" />
+            </Link>
+          </div>
+        )}
       </>
     )}
   </main>

@@ -29,7 +29,7 @@ import {
 } from "lucide-react";
 import { clientDb, CachedSoal, OfflineSubmission } from "@/lib/db/client-db";
 import { downloadActiveBankSoal } from "@/lib/sync/sync-manager";
-import { getSubjectTkaDetail } from "@/lib/constants/subjects";
+import { getSubjectTkaDetail, isSubjectAllowedForStudent } from "@/lib/constants/subjects";
 import { decryptExplanation } from "@/lib/security/crypto";
 import MathRenderer from "@/components/math/MathRenderer";
 
@@ -122,6 +122,33 @@ export default function SubjectDetailPage() {
     setLoading(false);
   };
 
+  const [isAuthorized, setIsAuthorized] = useState<boolean | null>(null);
+  const [unauthorizedReason, setUnauthorizedReason] = useState<string>("");
+
+  useEffect(() => {
+    async function verifyAccess() {
+      try {
+        const res = await fetch("/api/student/konfirmasi");
+        const data = await res.json();
+        if (data.success && data.student) {
+          const auth = isSubjectAllowedForStudent(mapelUpper, data.student);
+          if (!auth.allowed) {
+            setIsAuthorized(false);
+            setUnauthorizedReason(auth.reason || "BUKAN_PILIHAN");
+          } else {
+            setIsAuthorized(true);
+            setUnauthorizedReason("");
+          }
+        } else {
+          setIsAuthorized(true);
+        }
+      } catch {
+        setIsAuthorized(true);
+      }
+    }
+    verifyAccess();
+  }, [mapelUpper]);
+
   useEffect(() => {
     setIsOnline(typeof window !== "undefined" ? navigator.onLine : true);
 
@@ -131,13 +158,15 @@ export default function SubjectDetailPage() {
     window.addEventListener("online", handleOnline);
     window.addEventListener("offline", handleOffline);
 
-    loadData();
+    if (isAuthorized !== false) {
+      loadData();
+    }
 
     return () => {
       window.removeEventListener("online", handleOnline);
       window.removeEventListener("offline", handleOffline);
     };
-  }, [mapelParam]);
+  }, [mapelParam, isAuthorized]);
 
   // Submission map for fast lookup: { [soalId]: OfflineSubmission }
   const submissionMap = useMemo(() => {
@@ -283,7 +312,41 @@ export default function SubjectDetailPage() {
 
       {/* Main Container */}
       <main className="flex-grow pt-6 pb-12 px-4 sm:px-6 max-w-7xl mx-auto w-full flex flex-col gap-6">
-        {statusTka === "TIDAK_IKUT" ? (
+        {isAuthorized === false && unauthorizedReason === "BUKAN_PILIHAN" ? (
+          <div className="bg-white rounded-3xl border border-slate-200 p-8 sm:p-12 text-center space-y-6 shadow-sm max-w-2xl mx-auto my-8">
+            <div className="w-16 h-16 rounded-3xl bg-amber-50 text-amber-600 border border-amber-200 flex items-center justify-center mx-auto shadow-sm">
+              <ShieldAlert className="w-8 h-8" />
+            </div>
+
+            <div className="space-y-2">
+              <span className="px-3 py-1 bg-amber-50 text-amber-700 text-xs font-bold rounded-full border border-amber-200 uppercase tracking-wider">
+                Mata Pelajaran Tidak Aktif
+              </span>
+              <h2 className="text-2xl font-extrabold text-slate-900 tracking-tight">
+                Bukan Pilihan Mata Pelajaran TKA Anda
+              </h2>
+              <p className="text-sm text-slate-600 leading-relaxed max-w-lg mx-auto">
+                Mata pelajaran <strong>{subjectDetail.name}</strong> tidak aktif untuk akun Anda karena bukan merupakan mata pelajaran wajib atau mata pelajaran pilihan yang Anda ambil saat konfirmasi TKA 2026. Anda hanya dapat mengerjakan latihan pada mata pelajaran yang terdaftar.
+              </p>
+            </div>
+
+            <div className="pt-2 flex flex-col sm:flex-row gap-3 justify-center items-center">
+              <Link
+                href="/latihan"
+                className="w-full sm:w-auto px-6 py-3 bg-blue-600 hover:bg-blue-700 text-white font-bold text-xs sm:text-sm rounded-xl shadow-md transition-all flex items-center justify-center gap-2"
+              >
+                <span>Buka Mata Pelajaran Saya</span>
+                <ArrowRight className="w-4 h-4" />
+              </Link>
+              <Link
+                href="/onboarding-tka"
+                className="w-full sm:w-auto px-6 py-3 bg-slate-100 hover:bg-slate-200 text-slate-700 font-bold text-xs sm:text-sm rounded-xl transition-all text-center"
+              >
+                Ubah Pilihan TKA
+              </Link>
+            </div>
+          </div>
+        ) : statusTka === "TIDAK_IKUT" || unauthorizedReason === "TIDAK_IKUT" ? (
           <div className="bg-white rounded-3xl border border-slate-200 p-8 sm:p-12 text-center space-y-6 shadow-sm max-w-2xl mx-auto my-8">
             <div className="w-16 h-16 rounded-3xl bg-amber-50 text-amber-600 border border-amber-200 flex items-center justify-center mx-auto shadow-sm">
               <ShieldAlert className="w-8 h-8" />

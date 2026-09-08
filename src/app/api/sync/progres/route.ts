@@ -1,5 +1,6 @@
 import { NextResponse } from "next/server";
 import prisma from "@/lib/prisma";
+import { isSubjectAllowedForStudent } from "@/lib/constants/subjects";
 
 export const dynamic = "force-dynamic";
 
@@ -13,6 +14,7 @@ export async function POST(request: Request) {
     }
 
     const syncedIds: string[] = [];
+    const studentCache = new Map<string, any>();
 
     for (const sub of submissions) {
       const { id, siswaId, soalId, jawabanSiswa, waktuPengerjaan } = sub;
@@ -24,6 +26,28 @@ export async function POST(request: Request) {
       });
 
       if (!masterSoal) continue;
+
+      // Check student authorization for this subject
+      let student = studentCache.get(siswaId);
+      if (student === undefined) {
+        student = await prisma.siswa.findUnique({
+          where: { id: siswaId },
+          select: {
+            statusTka: true,
+            mapelPilihan1: true,
+            mapelPilihan2: true,
+          },
+        });
+        studentCache.set(siswaId, student || null);
+      }
+
+      if (student) {
+        const authCheck = isSubjectAllowedForStudent(masterSoal.mapel, student);
+        if (!authCheck.allowed) {
+          // Skip submissions for subjects not chosen by student
+          continue;
+        }
+      }
 
       // 2. Calculate true isBenar on the server
       let isBenar = false;

@@ -29,6 +29,7 @@ import PilihanGandaView from "@/components/quiz/PilihanGandaView";
 import McmaView from "@/components/quiz/McmaView";
 import PgkKategoriView from "@/components/quiz/PgkKategoriView";
 import { normalizeOpsiJawaban } from "@/lib/quiz/normalize";
+import { isSubjectAllowedForStudent, getSubjectDisplayName } from "@/lib/constants/subjects";
 
 export default function QuizRunnerPage() {
   const params = useParams();
@@ -47,6 +48,30 @@ export default function QuizRunnerPage() {
   const [questions, setQuestions] = useState<CachedSoal[]>([]);
   const [currentIndex, setCurrentIndex] = useState(0);
   const [loading, setLoading] = useState(true);
+  const [isAuthorized, setIsAuthorized] = useState<boolean | null>(null);
+  const [unauthorizedReason, setUnauthorizedReason] = useState<string>("");
+
+  useEffect(() => {
+    async function verifyAccess() {
+      try {
+        const res = await fetch("/api/student/konfirmasi");
+        const data = await res.json();
+        if (data.success && data.student) {
+          const auth = isSubjectAllowedForStudent(mapelUpper, data.student);
+          if (!auth.allowed) {
+            setIsAuthorized(false);
+            setUnauthorizedReason(auth.reason || "BUKAN_PILIHAN");
+            setLoading(false);
+            return;
+          }
+        }
+        setIsAuthorized(true);
+      } catch {
+        setIsAuthorized(true);
+      }
+    }
+    verifyAccess();
+  }, [mapelUpper]);
 
   // Student answers mapping: { [soalId]: answerValue }
   const [answers, setAnswers] = useState<{ [key: string]: any }>({});
@@ -111,16 +136,24 @@ export default function QuizRunnerPage() {
   };
 
   useEffect(() => {
-    loadLocalQuestions();
-
-    timerRef.current = setInterval(() => {
-      setSecondsSpent((prev) => prev + 1);
-    }, 1000);
-
-    return () => {
+    if (isAuthorized === false) {
       if (timerRef.current) clearInterval(timerRef.current);
-    };
-  }, [mapelParam]);
+      setLoading(false);
+      return;
+    }
+
+    if (isAuthorized === true) {
+      loadLocalQuestions();
+
+      timerRef.current = setInterval(() => {
+        setSecondsSpent((prev) => prev + 1);
+      }, 1000);
+
+      return () => {
+        if (timerRef.current) clearInterval(timerRef.current);
+      };
+    }
+  }, [mapelParam, isAuthorized]);
 
   const currentQ = questions[currentIndex];
 
@@ -334,7 +367,42 @@ export default function QuizRunnerPage() {
         </div>
       </header>
 
-      {statusTka === "TIDAK_IKUT" ? (
+      {isAuthorized === false && unauthorizedReason === "BUKAN_PILIHAN" ? (
+        <div className="flex-1 flex items-center justify-center p-4">
+          <div className="bg-white rounded-3xl border border-slate-200 p-8 sm:p-12 text-center space-y-6 shadow-sm max-w-md w-full my-8">
+            <div className="w-16 h-16 rounded-3xl bg-amber-50 text-amber-600 border border-amber-200 flex items-center justify-center mx-auto shadow-sm">
+              <ShieldAlert className="w-8 h-8" />
+            </div>
+
+            <div className="space-y-2">
+              <span className="px-3 py-1 bg-amber-50 text-amber-700 text-xs font-bold rounded-full border border-amber-200 uppercase tracking-wider">
+                Mata Pelajaran Tidak Aktif
+              </span>
+              <h2 className="text-xl font-extrabold text-slate-900 tracking-tight">
+                Bukan Pilihan TKA Anda
+              </h2>
+              <p className="text-xs text-slate-600 leading-relaxed">
+                Mata pelajaran <strong>{getSubjectDisplayName(mapelUpper, true)}</strong> tidak termasuk dalam mata pelajaran wajib maupun pilihan yang Anda ambil saat konfirmasi TKA. Anda tidak dapat mengerjakan latihan untuk mata pelajaran ini.
+              </p>
+            </div>
+
+            <div className="pt-2 flex flex-col gap-2">
+              <Link
+                href="/latihan"
+                className="w-full py-3 px-4 bg-blue-600 hover:bg-blue-700 text-white font-bold text-xs rounded-xl shadow-md transition-all text-center"
+              >
+                Kembali ke Beranda Latihan
+              </Link>
+              <Link
+                href="/onboarding-tka"
+                className="w-full py-2.5 px-4 bg-slate-100 hover:bg-slate-200 text-slate-700 font-bold text-xs rounded-xl transition-all text-center"
+              >
+                Ubah Pilihan TKA
+              </Link>
+            </div>
+          </div>
+        </div>
+      ) : statusTka === "TIDAK_IKUT" || unauthorizedReason === "TIDAK_IKUT" ? (
         <div className="flex-1 flex items-center justify-center p-4">
           <div className="bg-white rounded-3xl border border-slate-200 p-8 sm:p-12 text-center space-y-6 shadow-sm max-w-md w-full my-8">
             <div className="w-16 h-16 rounded-3xl bg-amber-50 text-amber-600 border border-amber-200 flex items-center justify-center mx-auto shadow-sm">
