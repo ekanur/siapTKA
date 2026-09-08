@@ -1,10 +1,9 @@
 "use client";
 
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useMemo } from "react";
 import { useSession } from "next-auth/react";
 import {
   ShieldCheck,
-  UserCheck,
   UserPlus,
   Edit2,
   Trash2,
@@ -13,9 +12,18 @@ import {
   AlertCircle,
   X,
   GraduationCap,
-  Lock,
+  BookOpen,
+  Sparkles,
+  Info,
+  Check,
 } from "lucide-react";
-import { MAPEL_WAJIB, MAPEL_PILIHAN_GROUPS } from "@/lib/constants/subjects";
+import {
+  MAPEL_WAJIB,
+  MAPEL_PILIHAN_GROUPS,
+  getSubjectDisplayName,
+  getSubjectCategoryInfo,
+  SUBJECT_ALIASES,
+} from "@/lib/constants/subjects";
 
 export default function MasterPenggunaPage() {
   const { data: session } = useSession();
@@ -24,6 +32,7 @@ export default function MasterPenggunaPage() {
   const [users, setUsers] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState("");
+  const [roleFilter, setRoleFilter] = useState<"ALL" | "GURU" | "ADMIN">("ALL");
   const [statusMsg, setStatusMsg] = useState<{ type: "success" | "error"; text: string } | null>(null);
 
   const [isModalOpen, setIsModalOpen] = useState(false);
@@ -60,14 +69,14 @@ export default function MasterPenggunaPage() {
     fetchUsers();
   }, []);
 
-  const handleOpenAdd = () => {
+  const handleOpenAdd = (initialRole: "GURU" | "ADMIN" = "GURU") => {
     setModalMode("ADD");
     setFormData({
       id: "",
       nama: "",
       email: "",
       username: "",
-      role: "GURU",
+      role: initialRole,
       mapel: "MATEMATIKA",
       password: "",
     });
@@ -76,13 +85,17 @@ export default function MasterPenggunaPage() {
 
   const handleOpenEdit = (u: any) => {
     setModalMode("EDIT");
+    let currentMapel = (u.mapel || "MATEMATIKA").toUpperCase().trim();
+    if (SUBJECT_ALIASES[currentMapel]) {
+      currentMapel = SUBJECT_ALIASES[currentMapel];
+    }
     setFormData({
       id: u.id,
       nama: u.nama,
       email: u.email,
       username: u.username,
       role: u.role,
-      mapel: u.mapel || "MATEMATIKA",
+      mapel: currentMapel,
       password: "",
     });
     setIsModalOpen(true);
@@ -138,40 +151,60 @@ export default function MasterPenggunaPage() {
     }
   };
 
-  const filteredUsers = users.filter((u) => {
-    if (!searchTerm) return true;
-    const term = searchTerm.toLowerCase();
-    return (
-      u.nama.toLowerCase().includes(term) ||
-      u.email.toLowerCase().includes(term) ||
-      u.username.toLowerCase().includes(term) ||
-      (u.mapel && u.mapel.toLowerCase().includes(term))
-    );
-  });
+  const filteredUsers = useMemo(() => {
+    return users.filter((u) => {
+      if (roleFilter !== "ALL" && u.role !== roleFilter) return false;
+      if (!searchTerm) return true;
+      const term = searchTerm.toLowerCase();
+      const namaMatch = u.nama?.toLowerCase().includes(term);
+      const emailMatch = u.email?.toLowerCase().includes(term);
+      const usernameMatch = u.username?.toLowerCase().includes(term);
+      const mapelCodeMatch = u.mapel && u.mapel.toLowerCase().includes(term);
+      const mapelNameMatch =
+        u.mapel && getSubjectDisplayName(u.mapel).toLowerCase().includes(term);
+      return namaMatch || emailMatch || usernameMatch || mapelCodeMatch || mapelNameMatch;
+    });
+  }, [users, roleFilter, searchTerm]);
+
+  const selectedSubjectInfo = useMemo(() => {
+    return getSubjectCategoryInfo(formData.mapel);
+  }, [formData.mapel]);
+
 
   return (
     <div className="space-y-6 max-w-6xl">
+      {/* Header */}
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
         <div>
           <div className="inline-flex items-center gap-2 px-3 py-1 bg-blue-50 border border-blue-200 text-blue-700 rounded-full text-xs font-bold mb-1">
             <ShieldCheck className="w-3.5 h-3.5" />
-            <span>Master Pengguna Sekolah</span>
+            <span>Master Staf & Guru</span>
           </div>
           <h1 className="text-2xl font-black text-slate-900 tracking-tight">
             Manajemen Akun Administrator & Guru Mapel
           </h1>
           <p className="text-xs text-slate-500 mt-1">
-            Daftarkan email Google Workspace staf pengajar. Hak akses modul dan kurasi bank soal akan dibatasi secara otomatis sesuai mata pelajaran yang diampu masing-masing guru.
+            Daftarkan email Google Workspace staf pengajar. Hak akses modul, validasi, dan analisis butir soal dibatasi secara otomatis sesuai mata pelajaran yang diampu masing-masing guru (3 Mapel Wajib + 69 Mapel Pilihan TKA).
           </p>
         </div>
 
-        <button
-          onClick={handleOpenAdd}
-          className="px-4 py-2.5 bg-blue-600 hover:bg-blue-700 text-white rounded-xl text-xs font-bold shadow-md shadow-blue-500/20 transition-all flex items-center gap-1.5 cursor-pointer w-fit"
-        >
-          <UserPlus className="w-4 h-4" />
-          <span>Tambah Pengguna</span>
-        </button>
+        {/* Primary and Secondary Action Buttons */}
+        <div className="flex items-center gap-2.5 flex-wrap">
+          <button
+            onClick={() => handleOpenAdd("GURU")}
+            className="px-4 py-2.5 bg-blue-600 hover:bg-blue-700 text-white rounded-xl text-xs font-bold shadow-md shadow-blue-500/20 transition-all flex items-center gap-2 cursor-pointer"
+          >
+            <GraduationCap className="w-4 h-4" />
+            <span>Tambah Guru Mata Pelajaran</span>
+          </button>
+          <button
+            onClick={() => handleOpenAdd("ADMIN")}
+            className="px-3.5 py-2.5 bg-white hover:bg-slate-50 text-slate-700 border border-slate-200 rounded-xl text-xs font-bold shadow-xs transition-all flex items-center gap-1.5 cursor-pointer"
+          >
+            <ShieldCheck className="w-4 h-4 text-purple-600" />
+            <span>Tambah Admin</span>
+          </button>
+        </div>
       </div>
 
       {statusMsg && (
@@ -189,20 +222,56 @@ export default function MasterPenggunaPage() {
         </div>
       )}
 
-      <div className="bg-white rounded-2xl p-4 border border-slate-200 shadow-sm flex items-center justify-between">
+      {/* Filter Tabs & Search Bar */}
+      <div className="bg-white rounded-2xl p-4 border border-slate-200 shadow-sm flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+        <div className="flex items-center gap-1.5 bg-slate-100 p-1 rounded-xl w-fit flex-wrap">
+          <button
+            onClick={() => setRoleFilter("ALL")}
+            className={`px-3 py-1.5 rounded-lg text-xs font-bold transition-all cursor-pointer ${
+              roleFilter === "ALL"
+                ? "bg-white text-slate-900 shadow-xs"
+                : "text-slate-600 hover:text-slate-900"
+            }`}
+          >
+            Semua ({users.length})
+          </button>
+          <button
+            onClick={() => setRoleFilter("GURU")}
+            className={`px-3 py-1.5 rounded-lg text-xs font-bold transition-all cursor-pointer flex items-center gap-1.5 ${
+              roleFilter === "GURU"
+                ? "bg-white text-blue-700 shadow-xs"
+                : "text-slate-600 hover:text-slate-900"
+            }`}
+          >
+            <GraduationCap className="w-3.5 h-3.5" />
+            <span>Guru Mapel ({users.filter((u) => u.role === "GURU").length})</span>
+          </button>
+          <button
+            onClick={() => setRoleFilter("ADMIN")}
+            className={`px-3 py-1.5 rounded-lg text-xs font-bold transition-all cursor-pointer flex items-center gap-1.5 ${
+              roleFilter === "ADMIN"
+                ? "bg-white text-purple-700 shadow-xs"
+                : "text-slate-600 hover:text-slate-900"
+            }`}
+          >
+            <ShieldCheck className="w-3.5 h-3.5" />
+            <span>Admin ({users.filter((u) => u.role === "ADMIN").length})</span>
+          </button>
+        </div>
+
         <div className="relative w-full sm:w-80">
           <Search className="w-4 h-4 text-slate-400 absolute left-3 top-1/2 -translate-y-1/2" />
           <input
             type="text"
-            placeholder="Cari nama, email, username, atau mapel..."
+            placeholder="Cari nama, email, username, mapel..."
             value={searchTerm}
             onChange={(e) => setSearchTerm(e.target.value)}
             className="w-full pl-9 pr-3.5 py-2 rounded-xl border border-slate-200 text-xs font-medium text-slate-800 focus:outline-hidden focus:ring-2 focus:ring-blue-500"
           />
         </div>
-        <span className="text-xs text-slate-500 font-semibold">{filteredUsers.length} Pengguna</span>
       </div>
 
+      {/* Users Table */}
       <div className="bg-white rounded-3xl border border-slate-200 shadow-sm overflow-hidden">
         <div className="overflow-x-auto">
           <table className="w-full text-left text-xs">
@@ -230,77 +299,138 @@ export default function MasterPenggunaPage() {
                   </td>
                 </tr>
               ) : (
-                filteredUsers.map((u) => (
-                  <tr key={u.id} className="hover:bg-slate-50/60 transition-colors">
-                    <td className="p-4 font-bold text-slate-900 flex items-center gap-2">
-                      <div className="w-7 h-7 rounded-lg bg-slate-100 flex items-center justify-center text-slate-700 font-extrabold text-[11px]">
-                        {u.nama.charAt(0)}
-                      </div>
-                      <span>{u.nama}</span>
-                    </td>
+                filteredUsers.map((u) => {
+                  const subInfo = u.mapel ? getSubjectCategoryInfo(u.mapel) : null;
+                  return (
+                    <tr key={u.id} className="hover:bg-slate-50/60 transition-colors">
+                      <td className="p-4 font-bold text-slate-900 flex items-center gap-2">
+                        <div className={`w-8 h-8 rounded-xl flex items-center justify-center font-extrabold text-xs shrink-0 ${
+                          u.role === "ADMIN"
+                            ? "bg-purple-100 text-purple-700"
+                            : "bg-blue-100 text-blue-700"
+                        }`}>
+                          {u.nama.charAt(0)}
+                        </div>
+                        <div>
+                          <div className="font-bold text-slate-900">{u.nama}</div>
+                          <div className="text-[10px] text-slate-400">ID: {u.id.slice(-6)}</div>
+                        </div>
+                      </td>
 
-                    <td className="p-4 font-mono text-[11px] text-slate-600">{u.email}</td>
+                      <td className="p-4 font-mono text-[11px] text-slate-600">{u.email}</td>
 
-                    <td className="p-4 font-mono text-[11px] text-slate-500">@{u.username}</td>
+                      <td className="p-4 font-mono text-[11px] text-slate-500">@{u.username}</td>
 
-                    <td className="p-4">
-                      {u.role === "ADMIN" ? (
-                        <span className="px-2.5 py-1 bg-purple-50 text-purple-700 border border-purple-200 rounded-lg font-bold text-[11px] flex items-center gap-1 w-fit">
-                          <ShieldCheck className="w-3 h-3" />
-                          <span>ADMINISTRATOR</span>
-                        </span>
-                      ) : (
-                        <span className="px-2.5 py-1 bg-blue-50 text-blue-700 border border-blue-200 rounded-lg font-bold text-[11px] flex items-center gap-1 w-fit">
-                          <GraduationCap className="w-3 h-3" />
-                          <span>GURU MAPEL</span>
-                        </span>
-                      )}
-                    </td>
+                      <td className="p-4">
+                        {u.role === "ADMIN" ? (
+                          <span className="px-2.5 py-1 bg-purple-50 text-purple-700 border border-purple-200 rounded-lg font-bold text-[11px] flex items-center gap-1 w-fit">
+                            <ShieldCheck className="w-3 h-3" />
+                            <span>ADMINISTRATOR</span>
+                          </span>
+                        ) : (
+                          <span className="px-2.5 py-1 bg-blue-50 text-blue-700 border border-blue-200 rounded-lg font-bold text-[11px] flex items-center gap-1 w-fit">
+                            <GraduationCap className="w-3 h-3" />
+                            <span>GURU MAPEL</span>
+                          </span>
+                        )}
+                      </td>
 
-                    <td className="p-4 font-bold text-slate-700">
-                      {u.role === "GURU" ? (
-                        <span className="px-2 py-0.5 bg-slate-100 rounded text-[11px]">
-                          {u.mapel || "Belum Ditentukan"}
-                        </span>
-                      ) : (
-                        <span className="text-slate-400 italic font-normal">Akses Seluruh Mapel</span>
-                      )}
-                    </td>
+                      <td className="p-4">
+                        {u.role === "GURU" ? (
+                          <div className="space-y-1">
+                            <div className="font-bold text-slate-900 text-xs flex items-center gap-1.5">
+                              <BookOpen className="w-3.5 h-3.5 text-blue-600 shrink-0" />
+                              <span>{getSubjectDisplayName(u.mapel)}</span>
+                            </div>
+                            <div className="flex items-center gap-1.5 flex-wrap">
+                              <span className="px-1.5 py-0.5 bg-slate-100 text-slate-600 rounded font-mono text-[10px] font-bold">
+                                {u.mapel}
+                              </span>
+                              {subInfo && (
+                                <span
+                                  className={`px-2 py-0.5 rounded-md text-[10px] font-extrabold ${
+                                    subInfo.group === "WAJIB"
+                                      ? "bg-blue-50 text-blue-700 border border-blue-200"
+                                      : subInfo.group === "SMK"
+                                      ? "bg-amber-50 text-amber-700 border border-amber-200"
+                                      : "bg-emerald-50 text-emerald-700 border border-emerald-200"
+                                  }`}
+                                >
+                                  {subInfo.groupLabel} • {subInfo.category}
+                                </span>
+                              )}
+                            </div>
+                          </div>
+                        ) : (
+                          <span className="inline-flex items-center gap-1.5 px-2.5 py-1 bg-purple-50 text-purple-700 border border-purple-200 rounded-lg text-[11px] font-bold">
+                            <ShieldCheck className="w-3.5 h-3.5" />
+                            <span>Akses Penuh Seluruh Mapel</span>
+                          </span>
+                        )}
+                      </td>
 
-                    <td className="p-4 text-right">
-                      <div className="flex items-center justify-end gap-1">
-                        <button
-                          onClick={() => handleOpenEdit(u)}
-                          className="p-1.5 text-slate-500 hover:text-blue-600 hover:bg-blue-50 rounded-lg transition-all cursor-pointer"
-                          title="Edit Pengguna"
-                        >
-                          <Edit2 className="w-3.5 h-3.5" />
-                        </button>
-                        <button
-                          onClick={() => handleDelete(u)}
-                          disabled={u.id === currentUserId}
-                          className="p-1.5 text-slate-400 hover:text-rose-600 hover:bg-rose-50 rounded-lg transition-all cursor-pointer disabled:opacity-30 disabled:cursor-not-allowed"
-                          title={u.id === currentUserId ? "Akun Anda sendiri" : "Hapus Pengguna"}
-                        >
-                          <Trash2 className="w-3.5 h-3.5" />
-                        </button>
-                      </div>
-                    </td>
-                  </tr>
-                ))
+                      <td className="p-4 text-right">
+                        <div className="flex items-center justify-end gap-1">
+                          <button
+                            onClick={() => handleOpenEdit(u)}
+                            className="p-1.5 text-slate-500 hover:text-blue-600 hover:bg-blue-50 rounded-lg transition-all cursor-pointer"
+                            title="Edit Pengguna"
+                          >
+                            <Edit2 className="w-3.5 h-3.5" />
+                          </button>
+                          <button
+                            onClick={() => handleDelete(u)}
+                            disabled={u.id === currentUserId}
+                            className="p-1.5 text-slate-400 hover:text-rose-600 hover:bg-rose-50 rounded-lg transition-all cursor-pointer disabled:opacity-30 disabled:cursor-not-allowed"
+                            title={u.id === currentUserId ? "Akun Anda sendiri" : "Hapus Pengguna"}
+                          >
+                            <Trash2 className="w-3.5 h-3.5" />
+                          </button>
+                        </div>
+                      </td>
+                    </tr>
+                  );
+                })
               )}
             </tbody>
           </table>
         </div>
       </div>
 
+      {/* Modal Tambah / Edit Pengguna */}
       {isModalOpen && (
-        <div className="fixed inset-0 z-50 bg-slate-900/60 backdrop-blur-xs flex items-center justify-center p-4">
-          <div className="bg-white rounded-3xl max-w-md w-full p-6 space-y-4 shadow-2xl border border-slate-100">
+        <div className="fixed inset-0 z-50 bg-slate-900/60 backdrop-blur-xs flex items-center justify-center p-4 overflow-y-auto">
+          <div className="bg-white rounded-3xl max-w-lg w-full p-6 space-y-4 shadow-2xl border border-slate-100 my-8">
             <div className="flex items-center justify-between border-b border-slate-100 pb-3">
-              <h3 className="font-extrabold text-slate-900 text-base">
-                {modalMode === "ADD" ? "Tambah Akun Pengguna" : "Edit Akun Pengguna"}
-              </h3>
+              <div className="flex items-center gap-2.5">
+                <div className={`w-9 h-9 rounded-xl flex items-center justify-center ${
+                  formData.role === "GURU"
+                    ? "bg-blue-100 text-blue-700"
+                    : "bg-purple-100 text-purple-700"
+                }`}>
+                  {formData.role === "GURU" ? (
+                    <GraduationCap className="w-5 h-5" />
+                  ) : (
+                    <ShieldCheck className="w-5 h-5" />
+                  )}
+                </div>
+                <div>
+                  <h3 className="font-extrabold text-slate-900 text-base">
+                    {modalMode === "ADD"
+                      ? formData.role === "GURU"
+                        ? "Tambah Guru Mata Pelajaran"
+                        : "Tambah Administrator Sekolah"
+                      : formData.role === "GURU"
+                      ? "Edit Guru Mata Pelajaran"
+                      : "Edit Administrator Sekolah"}
+                  </h3>
+                  <p className="text-[11px] text-slate-500">
+                    {formData.role === "GURU"
+                      ? "Pilih mata pelajaran yang diampu untuk pembatasan modul soal TKA."
+                      : "Administrator memiliki akses penuh ke seluruh modul sistem."}
+                  </p>
+                </div>
+              </div>
               <button
                 onClick={() => setIsModalOpen(false)}
                 className="p-1 rounded-full hover:bg-slate-100 text-slate-400 hover:text-slate-700 cursor-pointer"
@@ -309,7 +439,7 @@ export default function MasterPenggunaPage() {
               </button>
             </div>
 
-            <form onSubmit={handleSave} className="space-y-3.5 text-xs">
+            <form onSubmit={handleSave} className="space-y-4 text-xs">
               <div className="space-y-1">
                 <label className="font-bold text-slate-700 block">Nama Lengkap & Gelar</label>
                 <input
@@ -317,7 +447,7 @@ export default function MasterPenggunaPage() {
                   value={formData.nama}
                   onChange={(e) => setFormData({ ...formData, nama: e.target.value })}
                   placeholder="Dra. Siti Rahmawati, M.Pd"
-                  className="w-full px-3.5 py-2 rounded-xl border border-slate-300 font-medium text-slate-900"
+                  className="w-full px-3.5 py-2.5 rounded-xl border border-slate-300 font-medium text-slate-900 focus:outline-hidden focus:ring-2 focus:ring-blue-500"
                   required
                 />
               </div>
@@ -329,10 +459,12 @@ export default function MasterPenggunaPage() {
                   value={formData.email}
                   onChange={(e) => setFormData({ ...formData, email: e.target.value })}
                   placeholder="guru.mapel@smkn2depok.sch.id"
-                  className="w-full px-3.5 py-2 rounded-xl border border-slate-300 font-mono text-slate-900"
+                  className="w-full px-3.5 py-2.5 rounded-xl border border-slate-300 font-mono text-slate-900 focus:outline-hidden focus:ring-2 focus:ring-blue-500"
                   required
                 />
-                <span className="text-[10px] text-slate-400">Digunakan untuk login otomatis lewat tombol Masuk dengan Google.</span>
+                <span className="text-[10px] text-slate-400">
+                  Digunakan untuk login cepat lewat tombol Masuk dengan Google.
+                </span>
               </div>
 
               <div className="space-y-1">
@@ -342,52 +474,84 @@ export default function MasterPenggunaPage() {
                   value={formData.username}
                   onChange={(e) => setFormData({ ...formData, username: e.target.value })}
                   placeholder="guru_mapel"
-                  className="w-full px-3.5 py-2 rounded-xl border border-slate-300 font-mono text-slate-900"
+                  className="w-full px-3.5 py-2.5 rounded-xl border border-slate-300 font-mono text-slate-900 focus:outline-hidden focus:ring-2 focus:ring-blue-500"
                   required
                 />
               </div>
 
-              <div className="grid grid-cols-2 gap-3">
-                <div className="space-y-1">
-                  <label className="font-bold text-slate-700 block">Peran (Role)</label>
-                  <select
-                    value={formData.role}
-                    onChange={(e) => setFormData({ ...formData, role: e.target.value })}
-                    className="w-full px-3.5 py-2 rounded-xl border border-slate-300 font-bold text-slate-900 bg-white"
-                  >
-                    <option value="GURU">GURU MAPEL</option>
-                    <option value="ADMIN">ADMINISTRATOR</option>
-                  </select>
-                </div>
+              <div className="space-y-1">
+                <label className="font-bold text-slate-700 block">Peran Pengguna (Role)</label>
+                <select
+                  value={formData.role}
+                  onChange={(e) => setFormData({ ...formData, role: e.target.value })}
+                  className="w-full px-3.5 py-2.5 rounded-xl border border-slate-300 font-bold text-slate-900 bg-white focus:outline-hidden focus:ring-2 focus:ring-blue-500"
+                >
+                  <option value="GURU">GURU MATA PELAJARAN (Akses Terbatas Sesuai Mapel)</option>
+                  <option value="ADMIN">ADMINISTRATOR (Akses Penuh Seluruh Sistem)</option>
+                </select>
+              </div>
 
-                {formData.role === "GURU" && (
-                  <div className="space-y-1">
-                    <label className="font-bold text-slate-700 block">Mata Pelajaran</label>
-                    <select
-                      value={formData.mapel}
-                      onChange={(e) => setFormData({ ...formData, mapel: e.target.value })}
-                      className="w-full px-3.5 py-2 rounded-xl border border-slate-300 font-bold text-slate-900 bg-white"
-                    >
-                      <optgroup label="Mata Pelajaran Wajib (TKA)">
-                        {MAPEL_WAJIB.map((item) => (
-                          <option key={item.id} value={item.id}>
-                            {item.name}
+              {/* Subject Selection for GURU */}
+              {formData.role === "GURU" && (
+                <div className="space-y-2 pt-1">
+                  <div className="flex items-center justify-between">
+                    <label className="font-bold text-slate-800 block">
+                      Mata Pelajaran yang Diampu
+                    </label>
+                    <span className="text-[10px] font-bold text-blue-700 bg-blue-50 border border-blue-200 px-2 py-0.5 rounded-full">
+                      3 Wajib & 69 Pilihan TKA
+                    </span>
+                  </div>
+
+                  <select
+                    value={formData.mapel}
+                    onChange={(e) => setFormData({ ...formData, mapel: e.target.value })}
+                    className="w-full px-3.5 py-2.5 rounded-xl border border-slate-300 font-bold text-slate-900 bg-white focus:outline-hidden focus:ring-2 focus:ring-blue-500"
+                  >
+                    <optgroup label="🌟 Mata Pelajaran Wajib TKA (3 Mapel)">
+                      {MAPEL_WAJIB.map((item) => (
+                        <option key={item.id} value={item.id}>
+                          {item.name}
+                        </option>
+                      ))}
+                    </optgroup>
+                    {MAPEL_PILIHAN_GROUPS.map((group) => (
+                      <optgroup key={group.groupName} label={group.groupName}>
+                        {group.subjects.map((sub) => (
+                          <option key={sub.id} value={sub.id}>
+                            {sub.name} ({sub.category})
                           </option>
                         ))}
                       </optgroup>
-                      {MAPEL_PILIHAN_GROUPS.map((group) => (
-                        <optgroup key={group.groupName} label={group.groupName}>
-                          {group.subjects.map((sub) => (
-                            <option key={sub.id} value={sub.id}>
-                              {sub.name}
-                            </option>
-                          ))}
-                        </optgroup>
-                      ))}
-                    </select>
+                    ))}
+                  </select>
+
+                  {/* Selected Subject Preview Card */}
+                  <div className="p-3 bg-slate-50 border border-slate-200 rounded-2xl space-y-1.5">
+                    <div className="flex items-center justify-between">
+                      <span className="text-[11px] font-bold text-slate-600">Rumpun Mapel:</span>
+                      <span
+                        className={`px-2 py-0.5 rounded-md text-[10px] font-extrabold ${
+                          selectedSubjectInfo.group === "WAJIB"
+                            ? "bg-blue-100 text-blue-800"
+                            : selectedSubjectInfo.group === "SMK"
+                            ? "bg-amber-100 text-amber-800"
+                            : "bg-emerald-100 text-emerald-800"
+                        }`}
+                      >
+                        {selectedSubjectInfo.groupLabel} • {selectedSubjectInfo.category}
+                      </span>
+                    </div>
+                    <div className="text-xs font-black text-slate-900 flex items-center gap-1.5">
+                      <BookOpen className="w-4 h-4 text-blue-600 shrink-0" />
+                      <span>{getSubjectDisplayName(formData.mapel)}</span>
+                    </div>
+                    <p className="text-[10px] text-slate-500 leading-relaxed">
+                      Akun guru ini akan secara otomatis dibatasi untuk memvalidasi butir soal, membuat/menginput soal mandiri, serta melihat statistik analisis butir soal pada mata pelajaran ini.
+                    </p>
                   </div>
-                )}
-              </div>
+                </div>
+              )}
 
               <div className="space-y-1">
                 <label className="font-bold text-slate-700 block">
@@ -398,7 +562,7 @@ export default function MasterPenggunaPage() {
                   value={formData.password}
                   onChange={(e) => setFormData({ ...formData, password: e.target.value })}
                   placeholder="Minimal 6 karakter"
-                  className="w-full px-3.5 py-2 rounded-xl border border-slate-300 font-mono text-slate-900"
+                  className="w-full px-3.5 py-2.5 rounded-xl border border-slate-300 font-mono text-slate-900 focus:outline-hidden focus:ring-2 focus:ring-blue-500"
                   required={modalMode === "ADD"}
                 />
               </div>
@@ -407,16 +571,22 @@ export default function MasterPenggunaPage() {
                 <button
                   type="button"
                   onClick={() => setIsModalOpen(false)}
-                  className="px-4 py-2 rounded-xl bg-slate-100 text-slate-600 font-bold hover:bg-slate-200 cursor-pointer"
+                  className="px-4 py-2.5 rounded-xl bg-slate-100 text-slate-600 font-bold hover:bg-slate-200 cursor-pointer"
                 >
                   Batal
                 </button>
                 <button
                   type="submit"
                   disabled={saving}
-                  className="px-5 py-2 rounded-xl bg-blue-600 text-white font-bold hover:bg-blue-700 shadow-md shadow-blue-500/20 cursor-pointer disabled:opacity-50"
+                  className="px-5 py-2.5 rounded-xl bg-blue-600 text-white font-bold hover:bg-blue-700 shadow-md shadow-blue-500/20 cursor-pointer disabled:opacity-50"
                 >
-                  {saving ? "Menyimpan..." : "Simpan Pengguna"}
+                  {saving
+                    ? "Menyimpan..."
+                    : modalMode === "ADD"
+                    ? formData.role === "GURU"
+                      ? "Simpan Guru Mapel"
+                      : "Simpan Administrator"
+                    : "Perbarui Data"}
                 </button>
               </div>
             </form>
@@ -426,3 +596,4 @@ export default function MasterPenggunaPage() {
     </div>
   );
 }
+

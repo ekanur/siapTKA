@@ -291,3 +291,61 @@ export function isSubjectAllowedForStudent(
 
   return { allowed: false, reason: "BUKAN_PILIHAN" };
 }
+
+export interface SubjectCategoryInfo {
+  group: "WAJIB" | "AKADEMIK" | "SMK" | "LAINNYA";
+  groupLabel: string;
+  category: string;
+  isWajib: boolean;
+  isVocational: boolean;
+}
+
+export function getSubjectCategoryInfo(codeOrId: string): SubjectCategoryInfo {
+  if (!codeOrId) {
+    return {
+      group: "LAINNYA",
+      groupLabel: "Lainnya",
+      category: "Belum Ditentukan",
+      isWajib: false,
+      isVocational: false,
+    };
+  }
+  let norm = codeOrId.toUpperCase().trim();
+  if (SUBJECT_ALIASES[norm]) {
+    norm = SUBJECT_ALIASES[norm];
+  }
+
+  if (["MATEMATIKA", "BAHASA_INDONESIA", "BAHASA_INGGRIS"].includes(norm)) {
+    return {
+      group: "WAJIB",
+      groupLabel: "TKA Wajib",
+      category: "Wajib Nasional",
+      isWajib: true,
+      isVocational: false,
+    };
+  }
+
+  const all = getAllSubjectsList();
+  const found = all.find(
+    (s) => s.id.toUpperCase() === norm || s.name.toUpperCase() === norm
+  );
+
+  if (found) {
+    return {
+      group: found.isVocational ? "SMK" : "AKADEMIK",
+      groupLabel: found.isVocational ? "Kejuruan SMK" : "Pilihan Akademik",
+      category: found.category,
+      isWajib: false,
+      isVocational: !!found.isVocational,
+    };
+  }
+
+  return {
+    group: "LAINNYA",
+    groupLabel: "Lainnya",
+    category: "Umum",
+    isWajib: false,
+    isVocational: false,
+  };
+}
+

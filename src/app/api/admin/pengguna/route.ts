@@ -3,6 +3,8 @@ import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/auth";
 import prisma from "@/lib/prisma";
 
+import { getSubjectDisplayName, SUBJECT_ALIASES } from "@/lib/constants/subjects";
+
 export const dynamic = "force-dynamic";
 
 export async function GET() {
@@ -61,13 +63,19 @@ export async function POST(request: Request) {
       return NextResponse.json({ success: false, error: "Email atau Username sudah terdaftar." }, { status: 400 });
     }
 
+    let finalMapel: string | null = null;
+    if (role === "GURU") {
+      const raw = (mapel || "MATEMATIKA").toUpperCase().trim();
+      finalMapel = SUBJECT_ALIASES[raw] || raw;
+    }
+
     const newUser = await prisma.userAdmin.create({
       data: {
         username: username.trim().toLowerCase(),
         email: email.trim().toLowerCase(),
         nama: nama.trim(),
         role: role === "ADMIN" ? "ADMIN" : "GURU",
-        mapel: role === "GURU" ? (mapel || "MATEMATIKA") : null,
+        mapel: finalMapel,
         password: password ? password.trim() : "password2026",
       },
     });
@@ -75,7 +83,7 @@ export async function POST(request: Request) {
     return NextResponse.json({
       success: true,
       user: newUser,
-      message: `Berhasil menambahkan akun ${role} atas nama ${nama}.`,
+      message: `Berhasil menambahkan akun ${role === "GURU" ? "Guru Mapel" : "Administrator"} atas nama ${nama}.`,
     });
   } catch (error: any) {
     console.error("POST User Error:", error);
@@ -105,9 +113,15 @@ export async function PUT(request: Request) {
     if (username) dataToUpdate.username = username.trim().toLowerCase();
     if (role) {
       dataToUpdate.role = role === "ADMIN" ? "ADMIN" : "GURU";
-      dataToUpdate.mapel = role === "GURU" ? (mapel || "MATEMATIKA") : null;
+      if (role === "GURU") {
+        const raw = (mapel || "MATEMATIKA").toUpperCase().trim();
+        dataToUpdate.mapel = SUBJECT_ALIASES[raw] || raw;
+      } else {
+        dataToUpdate.mapel = null;
+      }
     } else if (mapel !== undefined) {
-      dataToUpdate.mapel = mapel;
+      const raw = (mapel || "MATEMATIKA").toUpperCase().trim();
+      dataToUpdate.mapel = SUBJECT_ALIASES[raw] || raw;
     }
     if (password) dataToUpdate.password = password.trim();
 

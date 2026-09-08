@@ -66,7 +66,10 @@ export const authOptions: NextAuthOptions = {
         // B. Admin / Guru Login
         const adminUser = await prisma.userAdmin.findFirst({
           where: {
-            username: credentials.emailOrUsername,
+            OR: [
+              { username: credentials.emailOrUsername },
+              { email: credentials.emailOrUsername.toLowerCase().trim() },
+            ],
           },
         });
 
@@ -74,8 +77,9 @@ export const authOptions: NextAuthOptions = {
           return {
             id: adminUser.id,
             name: adminUser.nama,
-            email: `${adminUser.username}@sekolah.sch.id`,
+            email: adminUser.email || `${adminUser.username}@sekolah.sch.id`,
             role: adminUser.role, // "ADMIN" or "GURU"
+            mapel: adminUser.mapel,
             statusAkun: "AKTIF",
           };
         }
@@ -88,10 +92,23 @@ export const authOptions: NextAuthOptions = {
     async signIn({ user, account }) {
       if (account?.provider === "google") {
         if (!user.email) return false;
+        const normalizedEmail = user.email.toLowerCase().trim();
 
-        // Whitelist checking against Siswa table
+        // 1. Check if user is an Admin or Guru from userAdmin table
+        const adminTeacher = await prisma.userAdmin.findUnique({
+          where: { email: normalizedEmail },
+        });
+
+        if (adminTeacher) {
+          (user as any).id = adminTeacher.id;
+          (user as any).role = adminTeacher.role;
+          (user as any).mapel = adminTeacher.mapel;
+          return true;
+        }
+
+        // 2. Whitelist checking against Siswa table
         const student = await prisma.siswa.findUnique({
-          where: { email: user.email },
+          where: { email: normalizedEmail },
         });
 
         if (!student) {
@@ -118,6 +135,7 @@ export const authOptions: NextAuthOptions = {
       if (user) {
         token.id = user.id;
         token.role = (user as any).role || "SISWA";
+        token.mapel = (user as any).mapel;
         token.nis = (user as any).nis;
         token.statusTka = (user as any).statusTka;
         token.namaIndustriPkl = (user as any).namaIndustriPkl;
@@ -128,6 +146,7 @@ export const authOptions: NextAuthOptions = {
       if (token && session.user) {
         (session.user as any).id = token.id;
         (session.user as any).role = token.role;
+        (session.user as any).mapel = token.mapel;
         (session.user as any).nis = token.nis;
         (session.user as any).statusTka = token.statusTka;
         (session.user as any).namaIndustriPkl = token.namaIndustriPkl;
