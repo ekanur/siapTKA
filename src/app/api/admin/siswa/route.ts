@@ -1,10 +1,18 @@
 import { NextResponse } from "next/server";
+import { getServerSession } from "next-auth";
+import { authOptions } from "@/lib/auth";
 import prisma from "@/lib/prisma";
 
 export const dynamic = "force-dynamic";
 
 export async function GET(request: Request) {
   try {
+    const session = await getServerSession(authOptions);
+    const userRole = (session?.user as any)?.role;
+
+    if (userRole !== "ADMIN") {
+      return NextResponse.json({ success: false, error: "Halaman tidak ditemukan." }, { status: 404 });
+    }
     const { searchParams } = new URL(request.url);
     const statusTka = searchParams.get("statusTka");
     const industri = searchParams.get("industri");
@@ -59,6 +67,13 @@ export async function GET(request: Request) {
 
 export async function POST(request: Request) {
   try {
+    const session = await getServerSession(authOptions);
+    const userRole = (session?.user as any)?.role;
+
+    if (userRole !== "ADMIN") {
+      return NextResponse.json({ success: false, error: "Halaman tidak ditemukan." }, { status: 404 });
+    }
+
     const body = await request.json();
 
     // 1. Single Student Add Manual
@@ -198,6 +213,13 @@ export async function POST(request: Request) {
 
 export async function PUT(request: Request) {
   try {
+    const session = await getServerSession(authOptions);
+    const userRole = (session?.user as any)?.role;
+
+    if (userRole !== "ADMIN") {
+      return NextResponse.json({ success: false, error: "Halaman tidak ditemukan." }, { status: 404 });
+    }
+
     const body = await request.json();
     const {
       id,
@@ -255,6 +277,13 @@ export async function PUT(request: Request) {
 
 export async function DELETE(request: Request) {
   try {
+    const session = await getServerSession(authOptions);
+    const userRole = (session?.user as any)?.role;
+
+    if (userRole !== "ADMIN") {
+      return NextResponse.json({ success: false, error: "Halaman tidak ditemukan." }, { status: 404 });
+    }
+
     const { searchParams } = new URL(request.url);
     const id = searchParams.get("id");
 

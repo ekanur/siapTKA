@@ -1,6 +1,8 @@
 "use client";
 
 import React, { useState, useEffect } from "react";
+import { useSession } from "next-auth/react";
+import { notFound } from "next/navigation";
 import Papa from "papaparse";
 import {
   Users,
@@ -29,6 +31,16 @@ import { getSubjectDisplayName } from "@/lib/constants/subjects";
 import { DAFTAR_JURUSAN, getJurusanName } from "@/lib/constants/jurusan";
 
 export default function AdminSiswaPage() {
+  const { data: session, status: authStatus } = useSession();
+  const userRole = (session?.user as any)?.role;
+
+  if (authStatus === "loading") {
+    return <div className="p-8 text-center text-xs text-slate-400">Memverifikasi hak akses...</div>;
+  }
+
+  if (userRole === "GURU") {
+    notFound();
+  }
   const [classes, setClasses] = useState<any[]>([]);
   const [classesLoading, setClassesLoading] = useState(true);
 

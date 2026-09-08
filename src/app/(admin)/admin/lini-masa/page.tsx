@@ -1,6 +1,8 @@
 "use client";
 
 import React, { useState, useEffect } from "react";
+import { useSession } from "next-auth/react";
+import { notFound } from "next/navigation";
 import {
   Clock,
   Calendar,
@@ -23,6 +25,16 @@ import {
 } from "@/lib/utils/timeline-helpers";
 
 export default function LiniMasaPage() {
+  const { data: session, status: authStatus } = useSession();
+  const userRole = (session?.user as any)?.role;
+
+  if (authStatus === "loading") {
+    return <div className="p-8 text-center text-xs text-slate-400">Memverifikasi hak akses...</div>;
+  }
+
+  if (userRole === "GURU") {
+    notFound();
+  }
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [isKonfirmasiOpen, setIsKonfirmasiOpen] = useState(true);

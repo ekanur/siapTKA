@@ -2,6 +2,7 @@
 
 import React, { useState, useEffect, useMemo } from "react";
 import { useSession } from "next-auth/react";
+import { notFound } from "next/navigation";
 import {
   ShieldCheck,
   UserPlus,
@@ -26,8 +27,17 @@ import {
 } from "@/lib/constants/subjects";
 
 export default function MasterPenggunaPage() {
-  const { data: session } = useSession();
+  const { data: session, status: authStatus } = useSession();
+  const userRole = (session?.user as any)?.role;
   const currentUserId = (session?.user as any)?.id;
+
+  if (authStatus === "loading") {
+    return <div className="p-8 text-center text-xs text-slate-400">Memverifikasi hak akses...</div>;
+  }
+
+  if (userRole === "GURU") {
+    notFound();
+  }
 
   const [users, setUsers] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);

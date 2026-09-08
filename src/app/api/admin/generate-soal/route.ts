@@ -14,8 +14,8 @@ export async function GET() {
     const session = await getServerSession(authOptions);
     const userRole = (session?.user as any)?.role;
 
-    if (!session || !["ADMIN", "GURU"].includes(userRole)) {
-      return NextResponse.json({ success: false, error: "Akses tidak sah." }, { status: 401 });
+    if (!session || userRole !== "ADMIN") {
+      return NextResponse.json({ success: false, error: "Halaman tidak ditemukan." }, { status: 404 });
     }
 
     const apiStatus = getGeminiApiStatus();
@@ -36,8 +36,8 @@ export async function POST(request: Request) {
     const session = await getServerSession(authOptions);
     const userRole = (session?.user as any)?.role;
 
-    if (!session || !["ADMIN", "GURU"].includes(userRole)) {
-      return NextResponse.json({ success: false, error: "Akses ditolak. Generator Soal AI dikhususkan untuk Administrator dan Guru Mapel." }, { status: 403 });
+    if (!session || userRole !== "ADMIN") {
+      return NextResponse.json({ success: false, error: "Halaman tidak ditemukan." }, { status: 404 });
     }
 
     const body = await request.json();

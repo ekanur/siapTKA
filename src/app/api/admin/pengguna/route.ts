@@ -13,7 +13,7 @@ export async function GET() {
     const userRole = (session?.user as any)?.role;
 
     if (userRole !== "ADMIN") {
-      return NextResponse.json({ success: false, error: "Akses ditolak. Khusus Administrator." }, { status: 403 });
+      return NextResponse.json({ success: false, error: "Halaman tidak ditemukan." }, { status: 404 });
     }
 
     const users = await prisma.userAdmin.findMany({
@@ -43,7 +43,7 @@ export async function POST(request: Request) {
     const userRole = (session?.user as any)?.role;
 
     if (userRole !== "ADMIN") {
-      return NextResponse.json({ success: false, error: "Akses ditolak. Khusus Administrator." }, { status: 403 });
+      return NextResponse.json({ success: false, error: "Halaman tidak ditemukan." }, { status: 404 });
     }
 
     const body = await request.json();
@@ -97,7 +97,7 @@ export async function PUT(request: Request) {
     const userRole = (session?.user as any)?.role;
 
     if (userRole !== "ADMIN") {
-      return NextResponse.json({ success: false, error: "Akses ditolak. Khusus Administrator." }, { status: 403 });
+      return NextResponse.json({ success: false, error: "Halaman tidak ditemukan." }, { status: 404 });
     }
 
     const body = await request.json();
@@ -147,7 +147,7 @@ export async function DELETE(request: Request) {
     const currentUser = session?.user as any;
 
     if (currentUser?.role !== "ADMIN") {
-      return NextResponse.json({ success: false, error: "Akses ditolak. Khusus Administrator." }, { status: 403 });
+      return NextResponse.json({ success: false, error: "Halaman tidak ditemukan." }, { status: 404 });
     }
 
     const { searchParams } = new URL(request.url);

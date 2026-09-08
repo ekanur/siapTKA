@@ -47,7 +47,7 @@ export async function POST(request: Request) {
     const userRole = (session?.user as any)?.role;
 
     if (userRole !== "ADMIN") {
-      return NextResponse.json({ success: false, error: "Akses ditolak. Khusus Administrator." }, { status: 403 });
+      return NextResponse.json({ success: false, error: "Halaman tidak ditemukan." }, { status: 404 });
     }
 
     const body = await request.json();

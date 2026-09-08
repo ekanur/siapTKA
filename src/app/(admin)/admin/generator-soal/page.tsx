@@ -2,6 +2,8 @@
 
 import React, { useState, useEffect, useMemo } from "react";
 import Link from "next/link";
+import { useSession } from "next-auth/react";
+import { notFound } from "next/navigation";
 import {
   Sparkles,
   BookOpen,
@@ -110,6 +112,17 @@ const PUSMENDIK_PRESETS = [
 ];
 
 export default function GeneratorSoalPage() {
+  const { data: session, status: authStatus } = useSession();
+  const userRole = (session?.user as any)?.role;
+
+  if (authStatus === "loading") {
+    return <div className="p-8 text-center text-xs text-slate-400">Memverifikasi hak akses...</div>;
+  }
+
+  if (userRole === "GURU") {
+    notFound();
+  }
+
   const [mapel, setMapel] = useState("MATEMATIKA");
   const [elemen, setElemen] = useState(PUSMENDIK_PRESETS[0].elemen);
   const [subElemen, setSubElemen] = useState(PUSMENDIK_PRESETS[0].subElemen);

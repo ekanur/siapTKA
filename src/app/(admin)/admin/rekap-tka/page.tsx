@@ -1,6 +1,8 @@
 "use client";
 
 import React, { useState, useEffect } from "react";
+import { useSession } from "next-auth/react";
+import { notFound } from "next/navigation";
 import Papa from "papaparse";
 import {
   FileSpreadsheet,
@@ -37,6 +39,16 @@ import {
 import { getSubjectDisplayName, MAPEL_PILIHAN_GROUPS } from "@/lib/constants/subjects";
 
 export default function RekapTkaPage() {
+  const { data: session, status: authStatus } = useSession();
+  const userRole = (session?.user as any)?.role;
+
+  if (authStatus === "loading") {
+    return <div className="p-8 text-center text-xs text-slate-400">Memverifikasi hak akses...</div>;
+  }
+
+  if (userRole === "GURU") {
+    notFound();
+  }
   const [students, setStudents] = useState<any[]>([]);
   const [classes, setClasses] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);

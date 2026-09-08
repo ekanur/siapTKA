@@ -2,7 +2,7 @@
 
 import React, { useState } from "react";
 import Link from "next/link";
-import { usePathname } from "next/navigation";
+import { usePathname, notFound } from "next/navigation";
 import { useSession, signOut } from "next-auth/react";
 import {
   LayoutDashboard,
@@ -21,13 +21,46 @@ import {
 } from "lucide-react";
 import { getSubjectDisplayName } from "@/lib/constants/subjects";
 
+const ADMIN_ONLY_ROUTES = [
+  "/admin/pengguna",
+  "/admin/siswa",
+  "/admin/lini-masa",
+  "/admin/rekap-tka",
+  "/admin/generator-soal",
+];
+
 export default function AdminLayout({ children }: { children: React.ReactNode }) {
   const pathname = usePathname();
-  const { data: session } = useSession();
+  const { data: session, status: authStatus } = useSession();
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
 
-  const userRole = (session?.user as any)?.role || "ADMIN";
+  const userRole = (session?.user as any)?.role;
   const userMapel = (session?.user as any)?.mapel || null;
+
+  const isAdminOnlyRoute = ADMIN_ONLY_ROUTES.some(
+    (route) => pathname === route || pathname.startsWith(route + "/")
+  );
+
+  if (authStatus === "loading") {
+    return (
+      <div className="min-h-screen bg-slate-900 flex items-center justify-center p-4">
+        <div className="flex flex-col items-center gap-3">
+          <div className="w-8 h-8 border-3 border-blue-500 border-t-transparent rounded-full animate-spin"></div>
+          <p className="text-xs font-semibold text-slate-400">Memverifikasi hak akses...</p>
+        </div>
+      </div>
+    );
+  }
+
+  // If user is a GURU attempting to access an Admin-Only route, display 404 Not Found
+  if (userRole === "GURU" && isAdminOnlyRoute) {
+    notFound();
+  }
+
+  // If user is unauthenticated or has SISWA role, display 404 Not Found
+  if (authStatus === "unauthenticated" || userRole === "SISWA") {
+    notFound();
+  }
 
   const adminNavItems = [
     {
