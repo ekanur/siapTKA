@@ -289,23 +289,57 @@ export default function LatihanHubPage() {
   };
 
   const loadStudentProfile = async () => {
+    // 1. Load instantly from local offline cache
+    if (typeof window !== "undefined") {
+      const cached = localStorage.getItem("siaptka_student_profile");
+      if (cached) {
+        try {
+          const parsed = JSON.parse(cached);
+          setStudentProfile(parsed);
+        } catch {}
+      }
+      const cachedCounts = localStorage.getItem("siaptka_mapel_counts");
+      if (cachedCounts) {
+        try {
+          setMapelQuestionCounts(JSON.parse(cachedCounts));
+        } catch {}
+      }
+    }
+
+    // 2. Refresh from server if online
     try {
       const res = await fetch(`/api/student/konfirmasi`);
       const data = await res.json();
       if (data.success && data.student) {
         setStudentProfile(data.student);
+        if (typeof window !== "undefined") {
+          localStorage.setItem("siaptka_student_profile", JSON.stringify(data.student));
+          if (data.mapelQuestionCounts) {
+            localStorage.setItem("siaptka_mapel_counts", JSON.stringify(data.mapelQuestionCounts));
+          }
+        }
         if (data.mapelQuestionCounts) {
           setMapelQuestionCounts(data.mapelQuestionCounts);
         }
       }
     } catch (e) {
-      console.error("Failed to load student profile:", e);
+      console.warn("Using offline cached student profile");
     }
   };
 
   useEffect(() => {
     refreshStats();
     loadStudentProfile();
+
+    // Auto-cache active bank soal in background if local IndexedDB is empty and device is online
+    clientDb.soal.count().then((count) => {
+      if (count === 0 && (typeof navigator !== "undefined" ? navigator.onLine : true)) {
+        downloadActiveBankSoal().then(() => {
+          refreshStats();
+          refreshSubjectStats();
+        });
+      }
+    });
 
     const handleOnline = () => {
       setIsOnline(true);

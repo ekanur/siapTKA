@@ -129,10 +129,33 @@ export default function SubjectDetailPage() {
 
   useEffect(() => {
     async function verifyAccess() {
+      // 1. Check local cache first for instant offline readiness
+      if (typeof window !== "undefined") {
+        const cached = localStorage.getItem("siaptka_student_profile");
+        if (cached) {
+          try {
+            const student = JSON.parse(cached);
+            const auth = isSubjectAllowedForStudent(mapelUpper, student);
+            if (!auth.allowed) {
+              setIsAuthorized(false);
+              setUnauthorizedReason(auth.reason || "BUKAN_PILIHAN");
+              return;
+            } else {
+              setIsAuthorized(true);
+              setUnauthorizedReason("");
+            }
+          } catch {}
+        }
+      }
+
+      // 2. Fetch fresh verification if online
       try {
         const res = await fetch("/api/student/konfirmasi");
         const data = await res.json();
         if (data.success && data.student) {
+          if (typeof window !== "undefined") {
+            localStorage.setItem("siaptka_student_profile", JSON.stringify(data.student));
+          }
           const auth = isSubjectAllowedForStudent(mapelUpper, data.student);
           if (!auth.allowed) {
             setIsAuthorized(false);

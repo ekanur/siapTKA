@@ -55,10 +55,34 @@ export default function QuizRunnerPage() {
 
   useEffect(() => {
     async function verifyAccess() {
+      // 1. Check local cache first for instant offline readiness
+      if (typeof window !== "undefined") {
+        const cached = localStorage.getItem("siaptka_student_profile");
+        if (cached) {
+          try {
+            const student = JSON.parse(cached);
+            const auth = isSubjectAllowedForStudent(mapelUpper, student);
+            if (!auth.allowed) {
+              setIsAuthorized(false);
+              setUnauthorizedReason(auth.reason || "BUKAN_PILIHAN");
+              setLoading(false);
+              return;
+            } else {
+              setIsAuthorized(true);
+              setUnauthorizedReason("");
+            }
+          } catch {}
+        }
+      }
+
+      // 2. Refresh from server if online
       try {
         const res = await fetch("/api/student/konfirmasi");
         const data = await res.json();
         if (data.success && data.student) {
+          if (typeof window !== "undefined") {
+            localStorage.setItem("siaptka_student_profile", JSON.stringify(data.student));
+          }
           const auth = isSubjectAllowedForStudent(mapelUpper, data.student);
           if (!auth.allowed) {
             setIsAuthorized(false);
@@ -224,7 +248,16 @@ export default function QuizRunnerPage() {
     // Evaluate any un-evaluated answers
     const finalEvals = { ...evaluations };
     const submissionRecords: OfflineSubmission[] = [];
-    const studentId = (session?.user as any)?.id || "siswa-demo-id";
+    let studentId = (session?.user as any)?.id;
+    if (!studentId && typeof window !== "undefined") {
+      const cached = localStorage.getItem("siaptka_student_profile");
+      if (cached) {
+        try {
+          studentId = JSON.parse(cached).id;
+        } catch {}
+      }
+    }
+    if (!studentId) studentId = "siswa-demo-id";
 
     for (const q of questions) {
       const userAns = answers[q.id];
