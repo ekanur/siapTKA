@@ -21,6 +21,14 @@ import {
   ChevronRight,
   ArrowRight,
   ArrowLeft,
+  Eye,
+  X,
+  BookOpen,
+  Check,
+  Flame,
+  Minus,
+  FileText,
+  Calendar,
 } from "lucide-react";
 import {
   PieChart,
@@ -35,6 +43,7 @@ import {
   CartesianGrid,
   Legend,
 } from "recharts";
+import { getSubjectDisplayName } from "@/lib/constants/subjects";
 
 export default function MonitoringProgresPage() {
   const { data: session } = useSession();
@@ -50,6 +59,9 @@ export default function MonitoringProgresPage() {
   const [classStudents, setClassStudents] = useState<any[]>([]);
   const [classStudentsLoading, setClassStudentsLoading] = useState(false);
   const [searchTerm, setSearchTerm] = useState("");
+
+  // Level 3 Modal: Selected Student for individual subject progress breakdown
+  const [selectedStudent, setSelectedStudent] = useState<any | null>(null);
 
   // Pagination (10 items per page)
   const [currentPage, setCurrentPage] = useState(1);
@@ -156,8 +168,8 @@ export default function MonitoringProgresPage() {
           </h1>
           <p className="text-xs text-slate-500 mt-1">
             {userRole === "GURU"
-              ? `Mata Pelajaran: ${userMapel}. Pantau capaian latihan, skor rata-rata, dan deteksi rombel dengan progres lambat untuk percepatan bimbingan.`
-              : "Pantau intensitas latihan mandiri per rombel kelas terlebih dahulu, lalu buka detail siswa per rombel."}
+              ? `Mata Pelajaran: ${getSubjectDisplayName(userMapel)}. Pantau capaian latihan, skor rata-rata, dan deteksi rombel dengan progres lambat untuk percepatan bimbingan.`
+              : "Pantau intensitas latihan mandiri per rombel kelas terlebih dahulu, lalu buka detail capaian siswa per rombel."}
           </p>
         </div>
 
@@ -172,7 +184,9 @@ export default function MonitoringProgresPage() {
             }}
             className="p-2.5 bg-white border border-slate-200 hover:bg-slate-50 text-slate-700 rounded-xl text-xs font-bold transition-all flex items-center gap-1.5 shadow-xs cursor-pointer"
           >
-            <RefreshCw className={`w-4 h-4 ${loading || classStudentsLoading ? "animate-spin" : ""}`} />
+            <RefreshCw
+              className={`w-4 h-4 ${loading || classStudentsLoading ? "animate-spin" : ""}`}
+            />
             <span>Segarkan</span>
           </button>
         </div>
@@ -186,7 +200,9 @@ export default function MonitoringProgresPage() {
           {/* KPI Counters */}
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
             <div className="bg-white p-5 rounded-3xl border border-slate-200 shadow-xs space-y-1">
-              <span className="text-[11px] font-bold text-slate-400 uppercase">Siswa Aktif Berlatih</span>
+              <span className="text-[11px] font-bold text-slate-400 uppercase">
+                Siswa Aktif Berlatih
+              </span>
               <div className="text-2xl font-black text-slate-900">
                 {data?.summary?.uniqueStudents || 0} Siswa
               </div>
@@ -194,7 +210,9 @@ export default function MonitoringProgresPage() {
             </div>
 
             <div className="bg-white p-5 rounded-3xl border border-slate-200 shadow-xs space-y-1">
-              <span className="text-[11px] font-bold text-slate-400 uppercase">Total Soal Dikerjakan</span>
+              <span className="text-[11px] font-bold text-slate-400 uppercase">
+                Total Soal Dikerjakan
+              </span>
               <div className="text-2xl font-black text-blue-900">
                 {data?.summary?.totalSubmissions || 0} Kali
               </div>
@@ -202,19 +220,23 @@ export default function MonitoringProgresPage() {
             </div>
 
             <div className="bg-white p-5 rounded-3xl border border-slate-200 shadow-xs space-y-1">
-              <span className="text-[11px] font-bold text-slate-400 uppercase">Rata-Rata Akurasi Benar</span>
+              <span className="text-[11px] font-bold text-slate-400 uppercase">
+                Rata-Rata Akurasi Benar
+              </span>
               <div className="text-2xl font-black text-emerald-900">
                 {data?.summary?.overallAccuracy || 0}%
               </div>
               <p className="text-[11px] text-slate-500">Persentase jawaban tepat</p>
             </div>
 
-            <div className="bg-white p-5 rounded-3xl border border-slate-200 shadow-xs space-y-1">
-              <span className="text-[11px] font-bold text-slate-400 uppercase">Siswa Tuntas (≥ 75)</span>
-              <div className="text-2xl font-black text-purple-900">
-                {data?.summary?.scoreHigh || 0} Siswa
+            <div className="bg-emerald-50/70 p-5 rounded-3xl border border-emerald-200 shadow-xs space-y-1">
+              <span className="text-[11px] font-bold text-emerald-800 uppercase">
+                Progres Bagus (76-100%)
+              </span>
+              <div className="text-2xl font-black text-emerald-900">
+                {data?.summary?.scoreBagus ?? data?.summary?.scoreHigh ?? 0} Siswa
               </div>
-              <p className="text-[11px] text-slate-500">Mencapai ambang kelulusan standar</p>
+              <p className="text-[11px] text-emerald-700">Mencapai ambang capaian optimal</p>
             </div>
           </div>
 
@@ -227,7 +249,10 @@ export default function MonitoringProgresPage() {
                   <span>Komparasi Capaian & Deteksi Progres Latihan per Rombel</span>
                 </h3>
                 <p className="text-[11px] text-slate-500 mt-0.5">
-                  Klik pada baris kelas atau tombol <strong>Buka Capaian Siswa</strong> untuk melihat progres pengerjaan siswa di kelas tersebut.
+                  Status Progres: <strong>0-50% Progres Lambat</strong> •{" "}
+                  <strong>51-75% Progres Cukup</strong> •{" "}
+                  <strong>76-100% Progres Bagus</strong>. Klik baris kelas untuk membuka capaian
+                  siswa.
                 </p>
               </div>
               <span className="text-[11px] font-bold text-slate-500 bg-slate-100 px-3 py-1 rounded-full self-start sm:self-auto">
@@ -248,60 +273,71 @@ export default function MonitoringProgresPage() {
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-slate-100 font-medium text-slate-700">
-                  {(!data?.classProgressSummary || data.classProgressSummary.length === 0) ? (
+                  {!data?.classProgressSummary || data.classProgressSummary.length === 0 ? (
                     <tr>
                       <td colSpan={6} className="py-8 text-center text-slate-400">
                         Belum ada rekaman latihan untuk komparasi kelas.
                       </td>
                     </tr>
                   ) : (
-                    data.classProgressSummary.map((cls: any) => (
-                      <tr
-                        key={cls.namaKelas}
-                        onClick={() => handleSelectClass(cls)}
-                        className="hover:bg-blue-50/50 transition-colors cursor-pointer group"
-                      >
-                        <td className="py-3 px-4 font-bold text-slate-900 group-hover:text-blue-600 transition-colors">
-                          {cls.namaKelas}
-                        </td>
-                        <td className="py-3 px-4 text-center font-semibold text-slate-800">
-                          {cls.totalSiswaAktif} Siswa
-                        </td>
-                        <td className="py-3 px-4 text-center font-bold text-blue-600">
-                          {cls.totalPengerjaan} Butir
-                        </td>
-                        <td className="py-3 px-4 text-center">
-                          <span className="font-extrabold text-sm text-slate-900">{cls.avgScore}</span>
-                          <span className="text-[10px] text-slate-400">/100</span>
-                        </td>
-                        <td className="py-3 px-4 text-center">
-                          {cls.status === "BAIK" ? (
-                            <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-[10px] font-bold bg-emerald-100 text-emerald-800">
-                              <CheckCircle2 className="w-3 h-3" />
-                              <span>Progres Baik</span>
-                            </span>
-                          ) : cls.status === "CUKUP" ? (
-                            <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-[10px] font-bold bg-blue-100 text-blue-800">
-                              <span>Cukup</span>
-                            </span>
-                          ) : (
-                            <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-[10px] font-extrabold bg-rose-100 text-rose-800 animate-pulse">
-                              <AlertTriangle className="w-3 h-3" />
-                              <span>Progres Lambat (Bimbingan)</span>
-                            </span>
-                          )}
-                        </td>
-                        <td className="py-3 px-4 text-center" onClick={(e) => e.stopPropagation()}>
-                          <button
-                            onClick={() => handleSelectClass(cls)}
-                            className="px-3 py-1.5 rounded-xl bg-blue-600 hover:bg-blue-700 text-white font-bold text-[11px] flex items-center gap-1 mx-auto transition-all shadow-xs cursor-pointer"
+                    data.classProgressSummary.map((cls: any) => {
+                      const score = Number(cls.avgScore) || 0;
+                      const isBagus = score > 75;
+                      const isCukup = score > 50 && score <= 75;
+                      const isLambat = score <= 50;
+
+                      return (
+                        <tr
+                          key={cls.namaKelas}
+                          onClick={() => handleSelectClass(cls)}
+                          className="hover:bg-blue-50/50 transition-colors cursor-pointer group"
+                        >
+                          <td className="py-3 px-4 font-bold text-slate-900 group-hover:text-blue-600 transition-colors">
+                            {cls.namaKelas}
+                          </td>
+                          <td className="py-3 px-4 text-center font-semibold text-slate-800">
+                            {cls.totalSiswaAktif} Siswa
+                          </td>
+                          <td className="py-3 px-4 text-center font-bold text-blue-600">
+                            {cls.totalPengerjaan} Butir
+                          </td>
+                          <td className="py-3 px-4 text-center">
+                            <span className="font-extrabold text-sm text-slate-900">{score}</span>
+                            <span className="text-[10px] text-slate-400">/100</span>
+                          </td>
+                          <td className="py-3 px-4 text-center">
+                            {isBagus ? (
+                              <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-[10px] font-bold bg-emerald-100 text-emerald-800 border border-emerald-200">
+                                <CheckCircle2 className="w-3 h-3" />
+                                <span>Progres Bagus</span>
+                              </span>
+                            ) : isCukup ? (
+                              <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-[10px] font-bold bg-amber-100 text-amber-800 border border-amber-200">
+                                <Minus className="w-3 h-3" />
+                                <span>Progres Cukup</span>
+                              </span>
+                            ) : (
+                              <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-[10px] font-extrabold bg-rose-100 text-rose-800 border border-rose-200 animate-pulse">
+                                <AlertTriangle className="w-3 h-3" />
+                                <span>Progres Lambat</span>
+                              </span>
+                            )}
+                          </td>
+                          <td
+                            className="py-3 px-4 text-center"
+                            onClick={(e) => e.stopPropagation()}
                           >
-                            <span>Buka Capaian Siswa</span>
-                            <ArrowRight className="w-3 h-3" />
-                          </button>
-                        </td>
-                      </tr>
-                    ))
+                            <button
+                              onClick={() => handleSelectClass(cls)}
+                              className="px-3 py-1.5 rounded-xl bg-blue-600 hover:bg-blue-700 text-white font-bold text-[11px] flex items-center gap-1 mx-auto transition-all shadow-xs cursor-pointer"
+                            >
+                              <span>Buka Capaian Siswa</span>
+                              <ArrowRight className="w-3 h-3" />
+                            </button>
+                          </td>
+                        </tr>
+                      );
+                    })
                   )}
                 </tbody>
               </table>
@@ -316,7 +352,7 @@ export default function MonitoringProgresPage() {
                   <PieChartIcon className="w-4 h-4 text-blue-600" />
                   <span>Distribusi Capaian Skor Siswa</span>
                 </h3>
-                <span className="text-[11px] text-slate-400 font-semibold">Berdasarkan Rata-Rata</span>
+                <span className="text-[11px] text-slate-400 font-semibold">Skala Penilaian</span>
               </div>
 
               <div className="h-64 w-full">
@@ -337,9 +373,16 @@ export default function MonitoringProgresPage() {
                         ))}
                       </Pie>
                       <Tooltip
-                        contentStyle={{ borderRadius: "12px", border: "1px solid #e2e8f0", fontSize: "12px" }}
+                        contentStyle={{
+                          borderRadius: "12px",
+                          border: "1px solid #e2e8f0",
+                          fontSize: "12px",
+                        }}
                       />
-                      <Legend iconType="circle" wrapperStyle={{ fontSize: "11px", paddingTop: "8px" }} />
+                      <Legend
+                        iconType="circle"
+                        wrapperStyle={{ fontSize: "11px", paddingTop: "8px" }}
+                      />
                     </PieChart>
                   </ResponsiveContainer>
                 )}
@@ -350,23 +393,44 @@ export default function MonitoringProgresPage() {
               <div className="flex items-center justify-between">
                 <h3 className="font-extrabold text-slate-900 text-sm flex items-center gap-2">
                   <BarChart3 className="w-4 h-4 text-blue-600" />
-                  <span>Rata-Rata Skor per Materi Pokok</span>
+                  <span>Rata-Rata Skor per Mata Pelajaran</span>
                 </h3>
-                <span className="text-[11px] text-slate-400 font-semibold">Skala 0 - 100</span>
+                <span className="text-[11px] text-slate-400 font-semibold">Akurasi %</span>
               </div>
 
               <div className="h-64 w-full">
                 {data?.topicChartData?.length > 0 ? (
                   <ResponsiveContainer width="100%" height="100%">
-                    <BarChart data={data.topicChartData} margin={{ top: 10, right: 20, left: -20, bottom: 25 }}>
+                    <BarChart
+                      data={data.topicChartData}
+                      margin={{ top: 10, right: 20, left: -20, bottom: 25 }}
+                    >
                       <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#f1f5f9" />
-                      <XAxis dataKey="topik" tick={{ fontSize: 10 }} interval={0} angle={-15} textAnchor="end" />
+                      <XAxis
+                        dataKey="topik"
+                        tick={{ fontSize: 10 }}
+                        interval={0}
+                        angle={-15}
+                        textAnchor="end"
+                      />
                       <YAxis domain={[0, 100]} tick={{ fontSize: 10 }} />
                       <Tooltip
-                        formatter={(val, name, item: any) => [`${val} Poin`, item.payload.fullTopik]}
-                        contentStyle={{ borderRadius: "12px", border: "1px solid #e2e8f0", fontSize: "12px" }}
+                        formatter={(val, name, item: any) => [
+                          `${val}%`,
+                          item.payload.fullTopik || "Mapel",
+                        ]}
+                        contentStyle={{
+                          borderRadius: "12px",
+                          border: "1px solid #e2e8f0",
+                          fontSize: "12px",
+                        }}
                       />
-                      <Bar dataKey="avgScore" name="Rata-rata Skor" fill="#004ac6" radius={[6, 6, 0, 0]} />
+                      <Bar
+                        dataKey="avgScore"
+                        name="Rata-rata Akurasi"
+                        fill="#004ac6"
+                        radius={[6, 6, 0, 0]}
+                      />
                     </BarChart>
                   </ResponsiveContainer>
                 ) : (
@@ -400,12 +464,28 @@ export default function MonitoringProgresPage() {
                 <span className="px-2.5 py-0.5 rounded-full bg-blue-100 text-blue-800 text-xs font-bold">
                   Rata-Rata Skor: {selectedClassDetail.avgScore}/100
                 </span>
+                <span
+                  className={`px-2.5 py-0.5 rounded-full text-xs font-bold ${
+                    selectedClassDetail.avgScore > 75
+                      ? "bg-emerald-100 text-emerald-800"
+                      : selectedClassDetail.avgScore > 50
+                      ? "bg-amber-100 text-amber-800"
+                      : "bg-rose-100 text-rose-800"
+                  }`}
+                >
+                  {selectedClassDetail.avgScore > 75
+                    ? "Progres Bagus"
+                    : selectedClassDetail.avgScore > 50
+                    ? "Progres Cukup"
+                    : "Progres Lambat"}
+                </span>
               </div>
             </div>
 
             <div className="flex items-center gap-2">
               <span className="text-xs font-bold text-slate-500 bg-slate-100 px-3 py-2 rounded-xl">
-                {selectedClassDetail.totalSiswaAktif} Siswa Aktif • {selectedClassDetail.totalPengerjaan} Butir Selesai
+                {selectedClassDetail.totalSiswaAktif} Siswa Aktif •{" "}
+                {selectedClassDetail.totalPengerjaan} Butir Selesai
               </span>
             </div>
           </div>
@@ -423,7 +503,8 @@ export default function MonitoringProgresPage() {
               />
             </div>
             <div className="text-xs text-slate-500">
-              Menampilkan <strong>{totalFiltered}</strong> siswa aktif di kelas {selectedClassDetail.namaKelas}
+              Menampilkan <strong>{totalFiltered}</strong> siswa di kelas{" "}
+              {selectedClassDetail.namaKelas}
             </div>
           </div>
 
@@ -436,91 +517,121 @@ export default function MonitoringProgresPage() {
                     <th className="py-3.5 px-4 w-12 text-center">No</th>
                     <th className="py-3.5 px-4">Nama Siswa</th>
                     <th className="py-3.5 px-4">Industri PKL</th>
+                    <th className="py-3.5 px-4 text-center">Mapel Pilihan TKA</th>
                     <th className="py-3.5 px-4 text-center">Soal Dikerjakan</th>
                     <th className="py-3.5 px-4">Rata-Rata Skor</th>
                     <th className="py-3.5 px-4 text-center">Status Kesiapan</th>
-                    <th className="py-3.5 px-4 text-right">Terakhir Aktif</th>
+                    <th className="py-3.5 px-4 text-center">Aksi</th>
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-slate-100 font-medium text-slate-800">
                   {classStudentsLoading ? (
                     <tr>
-                      <td colSpan={7} className="py-12 text-center text-slate-400">
+                      <td colSpan={8} className="py-12 text-center text-slate-400">
                         Memuat data capaian siswa kelas {selectedClassDetail.namaKelas}...
                       </td>
                     </tr>
                   ) : paginatedStudents.length === 0 ? (
                     <tr>
-                      <td colSpan={7} className="py-12 text-center text-slate-400">
-                        Belum ada rekaman latihan untuk siswa di kelas ini.
+                      <td colSpan={8} className="py-12 text-center text-slate-400">
+                        Belum ada siswa terdaftar pada rombel ini.
                       </td>
                     </tr>
                   ) : (
-                    paginatedStudents.map((s: any, idx: number) => (
-                      <tr key={s.id} className="hover:bg-slate-50/70 transition-colors">
-                        <td className="py-3 px-4 text-center text-slate-400 font-mono">
-                          {startIndex + idx + 1}
-                        </td>
-                        <td className="py-3 px-4">
-                          <div className="font-extrabold text-slate-900">{s.nama}</div>
-                          <div className="text-[11px] text-slate-400 font-mono">NIS: {s.nis}</div>
-                        </td>
-                        <td className="py-3 px-4">
-                          <div className="flex items-center gap-1.5 text-slate-600">
-                            <Building2 className="w-3.5 h-3.5 text-slate-400 shrink-0" />
-                            <span className="truncate max-w-[170px]">{s.industri || "-"}</span>
-                          </div>
-                        </td>
-                        <td className="py-3 px-4 text-center">
-                          <span className="font-bold text-slate-700">{s.totalPengerjaan}</span>
-                          <span className="text-[10px] text-slate-400 block font-normal">
-                            ({s.totalBenar} benar)
-                          </span>
-                        </td>
-                        <td className="py-3 px-4">
-                          <div className="flex items-center gap-2">
-                            <div className="w-20 bg-slate-100 rounded-full h-2 overflow-hidden">
-                              <div
-                                className={`h-full rounded-full ${
-                                  s.avgScore >= 75
-                                    ? "bg-emerald-500"
-                                    : s.avgScore >= 50
-                                    ? "bg-amber-500"
-                                    : "bg-rose-500"
-                                }`}
-                                style={{ width: `${s.avgScore}%` }}
-                              />
+                    paginatedStudents.map((s: any, idx: number) => {
+                      const score = Number(s.avgScore) || 0;
+                      const isBagus = score > 75;
+                      const isCukup = score > 50 && score <= 75;
+                      const isLambat = score <= 50;
+
+                      return (
+                        <tr key={s.id} className="hover:bg-slate-50/70 transition-colors">
+                          <td className="py-3 px-4 text-center text-slate-400 font-mono">
+                            {startIndex + idx + 1}
+                          </td>
+                          <td className="py-3 px-4">
+                            <div className="font-extrabold text-slate-900">{s.nama}</div>
+                            <div className="text-[11px] text-slate-400 font-mono">NIS: {s.nis}</div>
+                          </td>
+                          <td className="py-3 px-4">
+                            <div className="flex items-center gap-1.5 text-slate-600">
+                              <Building2 className="w-3.5 h-3.5 text-slate-400 shrink-0" />
+                              <span className="truncate max-w-[170px]">
+                                {s.industri || "Belum Ditentukan"}
+                              </span>
                             </div>
-                            <span className="font-extrabold text-xs text-slate-800">{s.avgScore}</span>
-                          </div>
-                        </td>
-                        <td className="py-3 px-4 text-center">
-                          {s.status === "TUNTAS" ? (
-                            <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-[10px] font-bold bg-emerald-100 text-emerald-800">
-                              <CheckCircle2 className="w-3 h-3" />
-                              <span>Tuntas</span>
+                          </td>
+                          <td className="py-3 px-4 text-center">
+                            <div className="flex flex-col items-center gap-1">
+                              {s.mapelPilihan1 ? (
+                                <span className="px-2 py-0.5 bg-blue-50 text-blue-700 font-bold text-[10px] rounded-md border border-blue-100">
+                                  {s.mapelPilihan1}
+                                </span>
+                              ) : (
+                                <span className="text-[10px] text-slate-400 italic">
+                                  Belum Pilih
+                                </span>
+                              )}
+                              {s.mapelPilihan2 && (
+                                <span className="px-2 py-0.5 bg-indigo-50 text-indigo-700 font-bold text-[10px] rounded-md border border-indigo-100">
+                                  {s.mapelPilihan2}
+                                </span>
+                              )}
+                            </div>
+                          </td>
+                          <td className="py-3 px-4 text-center">
+                            <span className="font-bold text-slate-700">{s.totalPengerjaan}</span>
+                            <span className="text-[10px] text-slate-400 block font-normal">
+                              ({s.totalBenar} benar)
                             </span>
-                          ) : s.status === "CUKUP" ? (
-                            <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-[10px] font-bold bg-amber-100 text-amber-800">
-                              <span>Cukup</span>
-                            </span>
-                          ) : (
-                            <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-[10px] font-bold bg-rose-100 text-rose-800">
-                              <AlertTriangle className="w-3 h-3" />
-                              <span>Perlu Bimbingan</span>
-                            </span>
-                          )}
-                        </td>
-                        <td className="py-3 px-4 text-right text-slate-500 font-mono text-[11px]">
-                          <div className="flex items-center justify-end gap-1">
-                            <Clock className="w-3 h-3 text-slate-400" />
-                            <span>
-                              {s.lastSync ? new Date(s.lastSync).toLocaleDateString("id-ID") : "-"}
-                            </span>
-                          </div>
-                        </td>
-                      </tr>
-                    ))
+                          </td>
+                          <td className="py-3 px-4">
+                            <div className="flex items-center gap-2">
+                              <div className="w-20 bg-slate-100 rounded-full h-2 overflow-hidden">
+                                <div
+                                  className={`h-full rounded-full ${
+                                    isBagus
+                                      ? "bg-emerald-500"
+                                      : isCukup
+                                      ? "bg-amber-500"
+                                      : "bg-rose-500"
+                                  }`}
+                                  style={{ width: `${score}%` }}
+                                />
+                              </div>
+                              <span className="font-extrabold text-xs text-slate-800">{score}%</span>
+                            </div>
+                          </td>
+                          <td className="py-3 px-4 text-center">
+                            {isBagus ? (
+                              <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-[10px] font-bold bg-emerald-100 text-emerald-800 border border-emerald-200">
+                                <CheckCircle2 className="w-3 h-3" />
+                                <span>Progres Bagus</span>
+                              </span>
+                            ) : isCukup ? (
+                              <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-[10px] font-bold bg-amber-100 text-amber-800 border border-amber-200">
+                                <Minus className="w-3 h-3" />
+                                <span>Progres Cukup</span>
+                              </span>
+                            ) : (
+                              <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-[10px] font-extrabold bg-rose-100 text-rose-800 border border-rose-200 animate-pulse">
+                                <AlertTriangle className="w-3 h-3" />
+                                <span>Progres Lambat</span>
+                              </span>
+                            )}
+                          </td>
+                          <td className="py-3 px-4 text-center">
+                            <button
+                              onClick={() => setSelectedStudent(s)}
+                              className="px-3 py-1.5 rounded-xl bg-blue-50 hover:bg-blue-100 text-blue-700 border border-blue-200 font-bold text-[11px] flex items-center gap-1.5 mx-auto transition-all shadow-2xs cursor-pointer"
+                            >
+                              <Eye className="w-3.5 h-3.5 text-blue-600" />
+                              <span>Lihat Progres</span>
+                            </button>
+                          </td>
+                        </tr>
+                      );
+                    })
                   )}
                 </tbody>
               </table>
@@ -529,9 +640,13 @@ export default function MonitoringProgresPage() {
             {/* Standard Pagination (10 data per page) */}
             <div className="p-4 bg-slate-50/70 border-t border-slate-200 flex flex-col sm:flex-row items-center justify-between gap-3 text-xs text-slate-500">
               <div>
-                Menampilkan <span className="font-bold text-slate-800">{totalFiltered > 0 ? startIndex + 1 : 0}</span> s.d.{" "}
-                <span className="font-bold text-slate-800">{endIndex}</span> dari{" "}
-                <span className="font-bold text-slate-800">{totalFiltered}</span> siswa di kelas {selectedClassDetail.namaKelas}
+                Menampilkan{" "}
+                <span className="font-bold text-slate-800">
+                  {totalFiltered > 0 ? startIndex + 1 : 0}
+                </span>{" "}
+                s.d. <span className="font-bold text-slate-800">{endIndex}</span> dari{" "}
+                <span className="font-bold text-slate-800">{totalFiltered}</span> siswa di kelas{" "}
+                {selectedClassDetail.namaKelas}
               </div>
 
               <div className="flex items-center gap-1.5">
@@ -546,7 +661,11 @@ export default function MonitoringProgresPage() {
 
                 <div className="flex items-center gap-1">
                   {Array.from({ length: totalPages }, (_, i) => i + 1).map((pg) => {
-                    if (pg === 1 || pg === totalPages || (pg >= currentPage - 1 && pg <= currentPage + 1)) {
+                    if (
+                      pg === 1 ||
+                      pg === totalPages ||
+                      (pg >= currentPage - 1 && pg <= currentPage + 1)
+                    ) {
                       return (
                         <button
                           key={pg}
@@ -580,6 +699,311 @@ export default function MonitoringProgresPage() {
                   <ChevronRight className="w-3.5 h-3.5" />
                 </button>
               </div>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* ========================================================================= */}
+      {/* LEVEL 3: MODAL DETAIL PROGRES LATIHAN PER SISWA */}
+      {/* (Menampilkan Daftar Mata Pelajaran TKA Wajib & Pilihan serta Capaiannya) */}
+      {/* ========================================================================= */}
+      {selectedStudent && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/60 backdrop-blur-xs animate-in fade-in duration-150">
+          <div className="bg-white w-full max-w-3xl rounded-3xl shadow-2xl border border-slate-200 max-h-[90vh] flex flex-col overflow-hidden animate-in zoom-in-95 duration-200">
+            {/* Modal Header */}
+            <div className="p-6 border-b border-slate-100 flex items-start justify-between gap-4 bg-slate-50/50">
+              <div className="flex items-center gap-3.5">
+                <div className="w-12 h-12 rounded-2xl bg-blue-100 text-blue-700 flex items-center justify-center font-black text-lg shadow-2xs">
+                  <GraduationCap className="w-6 h-6" />
+                </div>
+                <div>
+                  <div className="flex items-center gap-2 flex-wrap">
+                    <h3 className="text-lg font-black text-slate-900">{selectedStudent.nama}</h3>
+                    <span
+                      className={`px-2.5 py-0.5 rounded-full text-[10px] font-bold border ${
+                        selectedStudent.avgScore > 75
+                          ? "bg-emerald-100 text-emerald-800 border-emerald-200"
+                          : selectedStudent.avgScore > 50
+                          ? "bg-amber-100 text-amber-800 border-amber-200"
+                          : "bg-rose-100 text-rose-800 border-rose-200"
+                      }`}
+                    >
+                      {selectedStudent.avgScore > 75
+                        ? "🟢 Progres Bagus"
+                        : selectedStudent.avgScore > 50
+                        ? "🟡 Progres Cukup"
+                        : "🔴 Progres Lambat"}
+                    </span>
+                  </div>
+                  <p className="text-xs text-slate-500 mt-0.5">
+                    NIS: <strong>{selectedStudent.nis}</strong> • Kelas:{" "}
+                    <strong>{selectedStudent.namaKelas}</strong> • PKL:{" "}
+                    <strong>{selectedStudent.industri || "Belum Ditentukan"}</strong>
+                  </p>
+                </div>
+              </div>
+
+              <button
+                onClick={() => setSelectedStudent(null)}
+                className="p-2 text-slate-400 hover:text-slate-700 hover:bg-slate-200/60 rounded-xl transition-all cursor-pointer"
+              >
+                <X className="w-5 h-5" />
+              </button>
+            </div>
+
+            {/* Modal Body */}
+            <div className="p-6 overflow-y-auto space-y-6 flex-1">
+              {/* Overall Performance Card */}
+              <div className="bg-slate-50 rounded-2xl p-4 border border-slate-200/80 grid grid-cols-2 sm:grid-cols-4 gap-3 text-center">
+                <div className="bg-white p-3 rounded-xl border border-slate-200 shadow-2xs">
+                  <span className="text-[10px] font-bold text-slate-400 uppercase">Rata-Rata Skor</span>
+                  <div className="text-xl font-black text-slate-900">{selectedStudent.avgScore}%</div>
+                  <span className="text-[10px] text-slate-500">Skala 0-100</span>
+                </div>
+
+                <div className="bg-white p-3 rounded-xl border border-slate-200 shadow-2xs">
+                  <span className="text-[10px] font-bold text-slate-400 uppercase">Total Dikerjakan</span>
+                  <div className="text-xl font-black text-blue-900">
+                    {selectedStudent.totalPengerjaan}
+                  </div>
+                  <span className="text-[10px] text-slate-500">Butir Soal</span>
+                </div>
+
+                <div className="bg-white p-3 rounded-xl border border-slate-200 shadow-2xs">
+                  <span className="text-[10px] font-bold text-slate-400 uppercase">Jawaban Tepat</span>
+                  <div className="text-xl font-black text-emerald-900">
+                    {selectedStudent.totalBenar}
+                  </div>
+                  <span className="text-[10px] text-emerald-600 font-semibold">Benar</span>
+                </div>
+
+                <div className="bg-white p-3 rounded-xl border border-slate-200 shadow-2xs">
+                  <span className="text-[10px] font-bold text-slate-400 uppercase">Perlu Perbaikan</span>
+                  <div className="text-xl font-black text-rose-900">
+                    {selectedStudent.totalPengerjaan - selectedStudent.totalBenar}
+                  </div>
+                  <span className="text-[10px] text-rose-600 font-semibold">Salah / Meleset</span>
+                </div>
+              </div>
+
+              {/* SECTION A: Mata Pelajaran TKA Wajib */}
+              <div className="space-y-3">
+                <div className="flex items-center justify-between">
+                  <h4 className="font-extrabold text-slate-900 text-sm flex items-center gap-2">
+                    <BookOpen className="w-4 h-4 text-blue-600" />
+                    <span>Mata Pelajaran Wajib TKA (Otomatis Diujikan)</span>
+                  </h4>
+                  <span className="text-[11px] font-bold text-blue-700 bg-blue-50 px-2.5 py-0.5 rounded-full border border-blue-100">
+                    3 Mapel Nasional
+                  </span>
+                </div>
+
+                <div className="space-y-2.5">
+                  {(selectedStudent.subjectBreakdown || [])
+                    .filter((sub: any) => sub.category === "WAJIB")
+                    .map((sub: any) => (
+                      <div
+                        key={sub.id}
+                        className="bg-white rounded-2xl border border-slate-200 p-4 shadow-2xs space-y-2.5 hover:border-slate-300 transition-colors"
+                      >
+                        <div className="flex items-center justify-between gap-2">
+                          <div className="flex items-center gap-2">
+                            <span className="w-2 h-2 rounded-full bg-blue-600" />
+                            <span className="font-extrabold text-slate-900 text-xs">{sub.name}</span>
+                          </div>
+
+                          <span
+                            className={`px-2.5 py-0.5 rounded-full text-[10px] font-extrabold border ${
+                              sub.status === "BAGUS"
+                                ? "bg-emerald-100 text-emerald-800 border-emerald-200"
+                                : sub.status === "CUKUP"
+                                ? "bg-amber-100 text-amber-800 border-amber-200"
+                                : sub.status === "LAMBAT"
+                                ? "bg-rose-100 text-rose-800 border-rose-200"
+                                : "bg-slate-100 text-slate-600 border-slate-200"
+                            }`}
+                          >
+                            {sub.statusLabel}
+                          </span>
+                        </div>
+
+                        {/* Progress Bar & Details */}
+                        <div className="space-y-1">
+                          <div className="flex items-center justify-between text-[11px] font-bold text-slate-600">
+                            <span>Akurasi: {sub.score}%</span>
+                            <span>
+                              {sub.totalPengerjaan} Butir ({sub.totalBenar} Benar, {sub.totalSalah}{" "}
+                              Salah)
+                            </span>
+                          </div>
+                          <div className="h-2 w-full bg-slate-100 rounded-full overflow-hidden flex">
+                            <div
+                              style={{ width: `${sub.score}%` }}
+                              className={`h-full rounded-full transition-all duration-300 ${
+                                sub.status === "BAGUS"
+                                  ? "bg-emerald-500"
+                                  : sub.status === "CUKUP"
+                                  ? "bg-amber-500"
+                                  : sub.totalPengerjaan === 0
+                                  ? "bg-slate-300"
+                                  : "bg-rose-500"
+                              }`}
+                            />
+                          </div>
+                        </div>
+
+                        <div className="flex items-center justify-between text-[10px] text-slate-400">
+                          <span>Kategori: Wajib Nasional</span>
+                          <span>
+                            Terakhir Latihan:{" "}
+                            {sub.lastSync
+                              ? new Date(sub.lastSync).toLocaleDateString("id-ID")
+                              : "Belum Dikerjakan"}
+                          </span>
+                        </div>
+                      </div>
+                    ))}
+                </div>
+              </div>
+
+              {/* SECTION B: Mata Pelajaran TKA Pilihan Siswa */}
+              <div className="space-y-3">
+                <div className="flex items-center justify-between">
+                  <h4 className="font-extrabold text-slate-900 text-sm flex items-center gap-2">
+                    <Award className="w-4 h-4 text-purple-600" />
+                    <span>Mata Pelajaran Pilihan TKA Siswa</span>
+                  </h4>
+                  <span className="text-[11px] font-bold text-purple-700 bg-purple-50 px-2.5 py-0.5 rounded-full border border-purple-100">
+                    Pilihan Akademik / Kejuruan
+                  </span>
+                </div>
+
+                {(!selectedStudent.subjectBreakdown ||
+                  selectedStudent.subjectBreakdown.filter((s: any) =>
+                    s.category.startsWith("PILIHAN")
+                  ).length === 0) ? (
+                  <div className="p-4 bg-slate-50 rounded-2xl border border-slate-200 text-center text-xs text-slate-500">
+                    Siswa ini belum memilih mata pelajaran pilihan TKA pada akunnya.
+                  </div>
+                ) : (
+                  <div className="space-y-2.5">
+                    {selectedStudent.subjectBreakdown
+                      .filter((sub: any) => sub.category.startsWith("PILIHAN"))
+                      .map((sub: any) => (
+                        <div
+                          key={sub.id}
+                          className="bg-white rounded-2xl border border-purple-200/80 p-4 shadow-2xs space-y-2.5 hover:border-purple-300 transition-colors"
+                        >
+                          <div className="flex items-center justify-between gap-2">
+                            <div className="flex items-center gap-2">
+                              <span className="px-2 py-0.5 bg-purple-100 text-purple-800 font-black text-[10px] rounded-md">
+                                {sub.categoryLabel}
+                              </span>
+                              <span className="font-extrabold text-slate-900 text-xs">
+                                {sub.name}
+                              </span>
+                            </div>
+
+                            <span
+                              className={`px-2.5 py-0.5 rounded-full text-[10px] font-extrabold border ${
+                                sub.status === "BAGUS"
+                                  ? "bg-emerald-100 text-emerald-800 border-emerald-200"
+                                  : sub.status === "CUKUP"
+                                  ? "bg-amber-100 text-amber-800 border-amber-200"
+                                  : sub.status === "LAMBAT"
+                                  ? "bg-rose-100 text-rose-800 border-rose-200"
+                                  : "bg-slate-100 text-slate-600 border-slate-200"
+                              }`}
+                            >
+                              {sub.statusLabel}
+                            </span>
+                          </div>
+
+                          {/* Progress Bar & Details */}
+                          <div className="space-y-1">
+                            <div className="flex items-center justify-between text-[11px] font-bold text-slate-600">
+                              <span>Akurasi: {sub.score}%</span>
+                              <span>
+                                {sub.totalPengerjaan} Butir ({sub.totalBenar} Benar, {sub.totalSalah}{" "}
+                                Salah)
+                              </span>
+                            </div>
+                            <div className="h-2 w-full bg-slate-100 rounded-full overflow-hidden flex">
+                              <div
+                                style={{ width: `${sub.score}%` }}
+                                className={`h-full rounded-full transition-all duration-300 ${
+                                  sub.status === "BAGUS"
+                                    ? "bg-emerald-500"
+                                    : sub.status === "CUKUP"
+                                    ? "bg-amber-500"
+                                    : sub.totalPengerjaan === 0
+                                    ? "bg-slate-300"
+                                    : "bg-rose-500"
+                                }`}
+                              />
+                            </div>
+                          </div>
+
+                          <div className="flex items-center justify-between text-[10px] text-slate-400">
+                            <span>Status: Terdaftar pada Profil Siswa</span>
+                            <span>
+                              Terakhir Latihan:{" "}
+                              {sub.lastSync
+                                ? new Date(sub.lastSync).toLocaleDateString("id-ID")
+                                : "Belum Dikerjakan"}
+                            </span>
+                          </div>
+                        </div>
+                      ))}
+                  </div>
+                )}
+              </div>
+
+              {/* SECTION C: Latihan Mapel Tambahan / Eksplorasi (Jika Ada) */}
+              {selectedStudent.subjectBreakdown?.some((s: any) => s.category === "LAINNYA") && (
+                <div className="space-y-3 pt-2">
+                  <h4 className="font-extrabold text-slate-700 text-xs flex items-center gap-2">
+                    <FileText className="w-3.5 h-3.5 text-slate-500" />
+                    <span>Latihan Tambahan / Mapel Lain yang Pernah Dikerjakan</span>
+                  </h4>
+
+                  <div className="space-y-2">
+                    {selectedStudent.subjectBreakdown
+                      .filter((sub: any) => sub.category === "LAINNYA")
+                      .map((sub: any) => (
+                        <div
+                          key={sub.id}
+                          className="bg-slate-50 rounded-xl border border-slate-200 p-3 flex items-center justify-between text-xs"
+                        >
+                          <div>
+                            <span className="font-bold text-slate-800">{sub.name}</span>
+                            <div className="text-[10px] text-slate-500">
+                              {sub.totalPengerjaan} butir dikerjakan ({sub.totalBenar} benar)
+                            </div>
+                          </div>
+                          <div className="text-right">
+                            <span className="font-extrabold text-slate-900">{sub.score}%</span>
+                            <div className="text-[10px] text-slate-500">{sub.statusLabel}</div>
+                          </div>
+                        </div>
+                      ))}
+                  </div>
+                </div>
+              )}
+            </div>
+
+            {/* Modal Footer */}
+            <div className="p-4 bg-slate-50 border-t border-slate-100 flex items-center justify-between">
+              <div className="text-xs text-slate-500">
+                Data sinkronisasi latihan mandiri TKA siswa
+              </div>
+              <button
+                onClick={() => setSelectedStudent(null)}
+                className="px-4 py-2 bg-slate-900 hover:bg-slate-800 text-white rounded-xl text-xs font-bold transition-all cursor-pointer shadow-2xs"
+              >
+                Tutup Rincian
+              </button>
             </div>
           </div>
         </div>
