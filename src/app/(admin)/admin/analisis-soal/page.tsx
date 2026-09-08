@@ -23,6 +23,7 @@ import {
   ChevronDown,
   HelpCircle,
   SlidersHorizontal,
+  CheckSquare,
 } from "lucide-react";
 import MathRenderer from "@/components/math/MathRenderer";
 import {
@@ -979,17 +980,16 @@ export default function AnalisisSoalPage() {
                         {isExpanded ? "Tutup Pengecoh" : "Cek Pilihan Pengecoh"}
                       </button>
 
-                      {item.difficulty === "SULIT" && (
-                        <Link
-                          href={`/admin/generator-soal?topic=${encodeURIComponent(
-                            item.topik
-                          )}&mapel=${item.mapel}`}
-                          className="px-3 py-2 bg-indigo-50 hover:bg-indigo-100 text-indigo-700 border border-indigo-200 text-xs font-bold rounded-xl transition-all flex items-center gap-1.5"
-                        >
-                          <Sparkles className="w-3.5 h-3.5 text-indigo-600" />
-                          <span>AI Remedial</span>
-                        </Link>
-                      )}
+                      <Link
+                        href={`/admin/validasi-soal?mapel=${encodeURIComponent(
+                          item.mapel
+                        )}&tab=AKTIF`}
+                        className="px-3 py-2 bg-blue-50 hover:bg-blue-100 text-blue-700 border border-blue-200 text-xs font-bold rounded-xl transition-all flex items-center gap-1.5 shadow-2xs"
+                        title={`Buka butir soal mata pelajaran ${item.mapel} di modul Validasi Soal`}
+                      >
+                        <CheckSquare className="w-3.5 h-3.5 text-blue-600" />
+                        <span>Validasi Soal</span>
+                      </Link>
                     </div>
                   </div>
 

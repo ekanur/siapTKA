@@ -24,7 +24,7 @@ export async function GET(request: Request) {
     // -------------------------------------------------------------
     // CASE 1: SUMMARY ONLY (For Admin Subject Overview Grid)
     // -------------------------------------------------------------
-    if (isSummaryOnly && userRole === "ADMIN") {
+    if (isSummaryOnly) {
       const allActiveQuestions = await prisma.soal.findMany({
         where: { status: "AKTIF" },
         select: {

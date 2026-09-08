@@ -127,6 +127,22 @@ export default function ValidasiSoalPage() {
     return list;
   }, []);
 
+  // Sync URL query params if navigated with ?mapel=... or ?tab=...
+  useEffect(() => {
+    if (typeof window !== "undefined") {
+      const params = new URLSearchParams(window.location.search);
+      const mapelParam = params.get("mapel");
+      const tabParam = params.get("tab");
+      if (mapelParam) {
+        setSelectedMapel(mapelParam);
+        setManualMapel(mapelParam);
+      }
+      if (tabParam === "AKTIF" || tabParam === "MENUNGGU_VALIDASI" || tabParam === "DITOLAK") {
+        setActiveTab(tabParam);
+      }
+    }
+  }, []);
+
   // Sync role to selected mapel
   useEffect(() => {
     if (userRole === "GURU" && userMapel) {
