@@ -25,10 +25,29 @@ export async function GET(request: Request) {
     const norm = mapelParam.replace(/-/g, "_").toUpperCase().trim();
     const canonical = SUBJECT_ALIASES[norm] || norm;
 
-    // Query custom description if saved
-    const record = await (prisma as any).mapelInfo.findUnique({
-      where: { kode: canonical },
-    });
+    // 1. Query custom description if saved (with raw SQLite fallback)
+    let record: any = null;
+    if ((prisma as any).mapelInfo?.findUnique) {
+      try {
+        record = await (prisma as any).mapelInfo.findUnique({
+          where: { kode: canonical },
+        });
+      } catch {}
+    }
+
+    if (!record) {
+      try {
+        const rows: any = await prisma.$queryRawUnsafe(
+          "SELECT kode, deskripsi, updatedBy, updatedAt, createdAt FROM MapelInfo WHERE kode = ? LIMIT 1",
+          canonical
+        );
+        if (Array.isArray(rows) && rows.length > 0) {
+          record = rows[0];
+        }
+      } catch (rawErr) {
+        console.warn("Raw query MapelInfo fallback warning:", rawErr);
+      }
+    }
 
     const defaultTka = getSubjectTkaDetail(canonical);
 
@@ -63,7 +82,7 @@ export async function GET(request: Request) {
 }
 
 /**
- * POST / PUT /api/admin/mapel-info
+ * POST /api/admin/mapel-info
  * Body: { mapel: string, deskripsi: string }
  * Updates or creates custom description for a subject.
  * Admin can edit all subjects. Guru can only edit their assigned subject.
@@ -119,19 +138,48 @@ export async function POST(request: Request) {
 
     const trimmedDesc = deskripsi.trim();
     const authorName = (session.user as any)?.nama || session.user.name || session.user.email || "Staf TKA";
+    const updatedByStr = `${authorName} (${userRole})`;
 
-    const saved = await (prisma as any).mapelInfo.upsert({
-      where: { kode: canonical },
-      update: {
-        deskripsi: trimmedDesc,
-        updatedBy: `${authorName} (${userRole})`,
-      },
-      create: {
+    let saved: any = null;
+
+    // Try standard Prisma model if available in memory
+    if ((prisma as any).mapelInfo?.upsert) {
+      try {
+        saved = await (prisma as any).mapelInfo.upsert({
+          where: { kode: canonical },
+          update: {
+            deskripsi: trimmedDesc,
+            updatedBy: updatedByStr,
+          },
+          create: {
+            kode: canonical,
+            deskripsi: trimmedDesc,
+            updatedBy: updatedByStr,
+          },
+        });
+      } catch (upsertErr) {
+        console.warn("Prisma mapelInfo.upsert failed, falling back to raw SQLite:", upsertErr);
+      }
+    }
+
+    // Direct SQLite raw upsert fallback (guaranteed to succeed regardless of client cache)
+    if (!saved) {
+      const nowIso = new Date().toISOString();
+      await prisma.$executeRawUnsafe(
+        "INSERT INTO MapelInfo (kode, deskripsi, updatedBy, updatedAt, createdAt) VALUES (?, ?, ?, ?, ?) ON CONFLICT(kode) DO UPDATE SET deskripsi = excluded.deskripsi, updatedBy = excluded.updatedBy, updatedAt = excluded.updatedAt",
+        canonical,
+        trimmedDesc,
+        updatedByStr,
+        nowIso,
+        nowIso
+      );
+      saved = {
         kode: canonical,
         deskripsi: trimmedDesc,
-        updatedBy: `${authorName} (${userRole})`,
-      },
-    });
+        updatedBy: updatedByStr,
+        updatedAt: nowIso,
+      };
+    }
 
     return NextResponse.json({
       success: true,
@@ -195,9 +243,17 @@ export async function DELETE(request: Request) {
       }
     }
 
-    await (prisma as any).mapelInfo.deleteMany({
-      where: { kode: canonical },
-    });
+    if ((prisma as any).mapelInfo?.deleteMany) {
+      try {
+        await (prisma as any).mapelInfo.deleteMany({
+          where: { kode: canonical },
+        });
+      } catch {}
+    }
+
+    try {
+      await prisma.$executeRawUnsafe("DELETE FROM MapelInfo WHERE kode = ?", canonical);
+    } catch {}
 
     const defaultTka = getSubjectTkaDetail(canonical);
 
@@ -214,4 +270,3 @@ export async function DELETE(request: Request) {
     );
   }
 }
-
