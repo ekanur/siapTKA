@@ -47,6 +47,50 @@ export async function POST(request: Request) {
     }
 
     const body = await request.json();
+
+    // 1. Batch CSV Import for Guru & Staf
+    if (Array.isArray(body.users) && body.users.length > 0) {
+      let importedCount = 0;
+      for (const u of body.users) {
+        if (!u.username || !u.email || !u.nama) continue;
+        const normalizedUsername = String(u.username).trim().toLowerCase();
+        const normalizedEmail = String(u.email).trim().toLowerCase();
+        const role = String(u.role || "GURU").toUpperCase().trim() === "ADMIN" ? "ADMIN" : "GURU";
+
+        let finalMapel: string | null = null;
+        if (role === "GURU") {
+          const raw = String(u.mapel || "MATEMATIKA").toUpperCase().trim();
+          finalMapel = SUBJECT_ALIASES[raw] || raw;
+        }
+
+        await prisma.userAdmin.upsert({
+          where: { username: normalizedUsername },
+          create: {
+            username: normalizedUsername,
+            email: normalizedEmail,
+            nama: String(u.nama).trim(),
+            role,
+            mapel: finalMapel,
+            password: u.password ? String(u.password).trim() : "GuruTKA2026!",
+          },
+          update: {
+            email: normalizedEmail,
+            nama: String(u.nama).trim(),
+            role,
+            mapel: finalMapel,
+            ...(u.password ? { password: String(u.password).trim() } : {}),
+          },
+        });
+        importedCount++;
+      }
+
+      return NextResponse.json({
+        success: true,
+        count: importedCount,
+        message: `Berhasil mengimpor ${importedCount} data guru dan staf.`,
+      });
+    }
+
     const { username, email, nama, role, mapel, password } = body;
 
     if (!username || !email || !nama || !role) {

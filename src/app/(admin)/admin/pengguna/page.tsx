@@ -17,7 +17,10 @@ import {
   Sparkles,
   Info,
   Check,
+  UploadCloud,
+  FileSpreadsheet,
 } from "lucide-react";
+import Papa from "papaparse";
 import {
   MAPEL_WAJIB,
   MAPEL_PILIHAN_GROUPS,
@@ -57,6 +60,62 @@ export default function MasterPenggunaPage() {
     password: "",
   });
   const [saving, setSaving] = useState(false);
+
+  // CSV Import State for Guru & Staf
+  const [isCsvModalOpen, setIsCsvModalOpen] = useState(false);
+  const [csvStatusMsg, setCsvStatusMsg] = useState("");
+  const [csvUploading, setCsvUploading] = useState(false);
+
+  const handleCsvFileUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    setCsvStatusMsg("Menganalisis berkas CSV...");
+    setCsvUploading(true);
+
+    Papa.parse(file, {
+      header: true,
+      skipEmptyLines: true,
+      complete: async (results) => {
+        try {
+          const parsedData = results.data as any[];
+          if (!parsedData || parsedData.length === 0) {
+            setCsvStatusMsg("Berkas CSV kosong atau format tidak valid.");
+            setCsvUploading(false);
+            return;
+          }
+
+          setCsvStatusMsg(`Mengimpor ${parsedData.length} data guru dan staf...`);
+
+          const res = await fetch("/api/admin/pengguna", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ users: parsedData }),
+          });
+
+          const data = await res.json();
+          if (data.success) {
+            setCsvStatusMsg(`Berhasil! ${data.count} akun berhasil diimpor/disinkronkan.`);
+            fetchUsers();
+            setTimeout(() => {
+              setIsCsvModalOpen(false);
+              setCsvStatusMsg("");
+            }, 1800);
+          } else {
+            setCsvStatusMsg(`Gagal: ${data.error || "Gagal mengimpor data"}`);
+          }
+        } catch (err: any) {
+          setCsvStatusMsg(`Gagal: ${err.message || "Terjadi kesalahan jaringan"}`);
+        } finally {
+          setCsvUploading(false);
+        }
+      },
+      error: (err) => {
+        setCsvStatusMsg(`Gagal membaca CSV: ${err.message}`);
+        setCsvUploading(false);
+      },
+    });
+  };
 
   const fetchUsers = async () => {
     setLoading(true);
@@ -200,6 +259,13 @@ export default function MasterPenggunaPage() {
 
         {/* Primary and Secondary Action Buttons */}
         <div className="flex items-center gap-2.5 flex-wrap">
+          <button
+            onClick={() => setIsCsvModalOpen(true)}
+            className="px-3.5 py-2.5 bg-white hover:bg-slate-50 text-slate-700 border border-slate-200 rounded-xl text-xs font-bold shadow-xs transition-all flex items-center gap-1.5 cursor-pointer"
+          >
+            <UploadCloud className="w-4 h-4 text-emerald-600" />
+            <span>Import CSV Guru</span>
+          </button>
           <button
             onClick={() => handleOpenAdd("GURU")}
             className="px-4 py-2.5 bg-blue-600 hover:bg-blue-700 text-white rounded-xl text-xs font-bold shadow-md shadow-blue-500/20 transition-all flex items-center gap-2 cursor-pointer"
@@ -600,6 +666,66 @@ export default function MasterPenggunaPage() {
                 </button>
               </div>
             </form>
+          </div>
+        </div>
+      )}
+
+      {/* CSV Import Modal for Guru & Staf */}
+      {isCsvModalOpen && (
+        <div className="fixed inset-0 bg-slate-900/50 backdrop-blur-xs flex items-center justify-center p-4 z-50 animate-in fade-in duration-200">
+          <div className="bg-white rounded-3xl border border-slate-200 shadow-2xl max-w-md w-full p-6 space-y-4">
+            <div className="flex items-center justify-between border-b border-slate-100 pb-3">
+              <h3 className="font-extrabold text-slate-900 text-base">Import Data Guru & Staf CSV</h3>
+              <button
+                onClick={() => setIsCsvModalOpen(false)}
+                className="p-1.5 text-slate-400 hover:text-slate-600 hover:bg-slate-100 rounded-xl transition-colors cursor-pointer"
+              >
+                <X className="w-4 h-4" />
+              </button>
+            </div>
+
+            <div className="p-4 rounded-2xl bg-slate-50 border border-slate-200 text-xs text-slate-600 space-y-2">
+              <p className="font-bold text-slate-800">Format Kolom Header CSV:</p>
+              <code className="block p-2 rounded-lg bg-white border border-slate-200 text-slate-700 font-mono text-[11px]">
+                nama,email,username,password,role,mapel
+              </code>
+              <p className="text-[11px] text-slate-500">
+                Kolom <strong>role</strong>: <code className="text-slate-700 font-semibold">GURU</code> atau <code className="text-slate-700 font-semibold">ADMIN</code>.<br />
+                Kolom <strong>mapel</strong>: Sesuai kode/nama mapel (contoh: <code className="text-slate-700 font-semibold">PPLG</code>, <code className="text-slate-700 font-semibold">MATEMATIKA</code>, <code className="text-slate-700 font-semibold">TJKT</code>, dsb).
+              </p>
+            </div>
+
+            <div className="flex items-center justify-between gap-2 p-3 bg-blue-50/70 border border-blue-100 rounded-2xl">
+              <div className="flex items-center gap-2 text-xs font-semibold text-blue-900">
+                <FileSpreadsheet className="w-4 h-4 text-blue-600" />
+                <span>Belum punya format berkas?</span>
+              </div>
+              <a
+                href="/templates/template_guru.csv"
+                download="template_guru.csv"
+                className="px-3 py-1.5 bg-blue-600 hover:bg-blue-700 text-white rounded-xl text-xs font-bold transition-colors shrink-0 shadow-xs"
+              >
+                Unduh Template CSV
+              </a>
+            </div>
+
+            <div className="border-2 border-dashed border-slate-300 rounded-2xl p-6 text-center space-y-2 hover:border-blue-500 transition-colors">
+              <UploadCloud className="w-8 h-8 text-blue-600 mx-auto" />
+              <p className="text-xs font-bold text-slate-700">Pilih berkas CSV dari komputer</p>
+              <input
+                type="file"
+                accept=".csv"
+                disabled={csvUploading}
+                onChange={handleCsvFileUpload}
+                className="text-xs text-slate-500 file:mr-2 file:py-1.5 file:px-3 file:rounded-xl file:border-0 file:text-xs file:font-bold file:bg-blue-50 file:text-blue-700 hover:file:bg-blue-100 cursor-pointer disabled:opacity-50"
+              />
+            </div>
+
+            {csvStatusMsg && (
+              <div className="p-3 rounded-xl bg-emerald-50 border border-emerald-200 text-emerald-800 text-xs font-semibold">
+                {csvStatusMsg}
+              </div>
+            )}
           </div>
         </div>
       )}

@@ -1089,6 +1089,20 @@ export default function AdminSiswaPage() {
               </p>
             </div>
 
+            <div className="flex items-center justify-between gap-2 p-3 bg-blue-50/70 border border-blue-100 rounded-2xl">
+              <div className="flex items-center gap-2 text-xs font-semibold text-blue-900">
+                <FileSpreadsheet className="w-4 h-4 text-blue-600" />
+                <span>Belum punya format berkas?</span>
+              </div>
+              <a
+                href="/templates/template_siswa.csv"
+                download="template_siswa.csv"
+                className="px-3 py-1.5 bg-blue-600 hover:bg-blue-700 text-white rounded-xl text-xs font-bold transition-colors shrink-0 shadow-xs"
+              >
+                Unduh Template CSV
+              </a>
+            </div>
+
             <div className="border-2 border-dashed border-slate-300 rounded-2xl p-6 text-center space-y-2 hover:border-blue-500 transition-colors">
               <UploadCloud className="w-8 h-8 text-blue-600 mx-auto" />
               <p className="text-xs font-bold text-slate-700">Pilih berkas CSV dari komputer</p>
