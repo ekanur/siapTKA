@@ -56,20 +56,6 @@ function LoginForm() {
     }
   };
 
-  const handleQuickDemoLogin = async (demoType: "SISWA_DEMO") => {
-    setIsLoading(true);
-    setErrorMessage("");
-
-    if (demoType === "SISWA_DEMO") {
-      const res = await signIn("credentials", {
-        redirect: false,
-        emailOrUsername: "21141",
-        isDemoStudent: "true",
-      });
-      if (res?.ok) router.push("/latihan");
-    }
-    setIsLoading(false);
-  };
 
   return (
     <div className="w-full max-w-md">
@@ -162,31 +148,6 @@ function LoginForm() {
                 />
               </svg>
               <span>Masuk dengan Google Workspace</span>
-            </button>
-
-            <div className="relative my-4">
-              <div className="absolute inset-0 flex items-center">
-                <div className="w-full border-t border-slate-200"></div>
-              </div>
-              <div className="relative flex justify-center text-xs uppercase">
-                <span className="bg-white px-2 text-slate-400 font-semibold">
-                  Akses Cepat Pengujian / Juri
-                </span>
-              </div>
-            </div>
-
-            {/* Demo Instant Button */}
-            <button
-              type="button"
-              onClick={() => handleQuickDemoLogin("SISWA_DEMO")}
-              disabled={isLoading}
-              className="w-full py-2.5 px-3 bg-slate-900 hover:bg-slate-800 text-white font-semibold text-xs rounded-xl transition-all flex items-center justify-between cursor-pointer"
-            >
-              <div className="flex items-center gap-2">
-                <User className="w-4 h-4 text-cyan-400" />
-                <span>Login Siswa Demo</span>
-              </div>
-              <ArrowRight className="w-3.5 h-3.5 text-slate-400" />
             </button>
           </div>
         ) : (

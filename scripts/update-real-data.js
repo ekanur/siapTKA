@@ -8,17 +8,21 @@ const prisma = new PrismaClient();
 async function run() {
   console.log('=== Mulai Mengganti Data Guru, Admin, dan Siswa Sesuai Data Asli ===');
 
-  // 1. Baca CSV Guru
-  const guruPath = path.join(process.cwd(), 'public', 'templates', 'template_guru.csv');
+  // 1. Baca CSV Guru (cek folder server aman data/real terlebih dahulu)
+  const guruSecurePath = path.join(process.cwd(), 'data', 'real', 'template_guru.csv');
+  const guruFallbackPath = path.join(process.cwd(), 'public', 'templates', 'template_guru.csv');
+  const guruPath = fs.existsSync(guruSecurePath) ? guruSecurePath : guruFallbackPath;
   const guruCsvContent = fs.readFileSync(guruPath, 'utf8');
   const guruParsed = Papa.parse(guruCsvContent, { header: true, skipEmptyLines: true });
-  console.log(`Ditemukan ${guruParsed.data.length} baris akun guru & staf`);
+  console.log(`Ditemukan ${guruParsed.data.length} baris akun guru & staf dari ${guruPath}`);
 
-  // 2. Baca CSV Siswa
-  const siswaPath = path.join(process.cwd(), 'public', 'templates', 'template_siswa.csv');
+  // 2. Baca CSV Siswa (cek folder server aman data/real terlebih dahulu)
+  const siswaSecurePath = path.join(process.cwd(), 'data', 'real', 'template_siswa.csv');
+  const siswaFallbackPath = path.join(process.cwd(), 'public', 'templates', 'template_siswa.csv');
+  const siswaPath = fs.existsSync(siswaSecurePath) ? siswaSecurePath : siswaFallbackPath;
   const siswaCsvContent = fs.readFileSync(siswaPath, 'utf8');
   const siswaParsed = Papa.parse(siswaCsvContent, { header: true, skipEmptyLines: true });
-  console.log(`Ditemukan ${siswaParsed.data.length} baris siswa`);
+  console.log(`Ditemukan ${siswaParsed.data.length} baris siswa dari ${siswaPath}`);
 
   // 3. Bersihkan data lama
   console.log('Membersihkan data lama ProgresLatihan, Siswa, dan UserAdmin...');

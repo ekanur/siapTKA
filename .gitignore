@@ -1,4 +1,4 @@
-﻿# dependencies
+# dependencies
 /node_modules
 /.pnp
 .pnp.js
@@ -39,3 +39,7 @@ next-env.d.ts
 *.db
 *.db-journal
 dev.db
+
+# Sensitive School Data (Real CSVs)
+data/
+data/real/

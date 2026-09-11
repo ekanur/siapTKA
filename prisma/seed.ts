@@ -94,7 +94,9 @@ async function main() {
   }
 
   // 3. Siswa Berbasis Data CSV Resmi Sekolah
-  const siswaCsvPath = path.join(process.cwd(), "public", "templates", "template_siswa.csv");
+  const secureSiswaPath = path.join(process.cwd(), "data", "real", "template_siswa.csv");
+  const fallbackSiswaPath = path.join(process.cwd(), "public", "templates", "template_siswa.csv");
+  const siswaCsvPath = fs.existsSync(secureSiswaPath) ? secureSiswaPath : fallbackSiswaPath;
   const siswaCsvContent = fs.readFileSync(siswaCsvPath, "utf8");
   const siswaParsed = Papa.parse(siswaCsvContent, { header: true, skipEmptyLines: true });
 

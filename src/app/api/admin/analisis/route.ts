@@ -12,6 +12,10 @@ export async function GET(request: Request) {
     const userRole = (session?.user as any)?.role;
     const userMapel = (session?.user as any)?.mapel;
 
+    if (!session || !["ADMIN", "GURU"].includes(userRole)) {
+      return NextResponse.json({ success: false, error: "Akses tidak sah." }, { status: 401 });
+    }
+
     const { searchParams } = new URL(request.url);
     const isSummaryOnly = searchParams.get("summary") === "true";
     let mapel = searchParams.get("mapel");

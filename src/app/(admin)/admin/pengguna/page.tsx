@@ -701,7 +701,7 @@ export default function MasterPenggunaPage() {
                 <span>Belum punya format berkas?</span>
               </div>
               <a
-                href="/templates/template_guru.csv"
+                href="/api/admin/template-csv?type=guru"
                 download="template_guru.csv"
                 className="px-3 py-1.5 bg-blue-600 hover:bg-blue-700 text-white rounded-xl text-xs font-bold transition-colors shrink-0 shadow-xs"
               >
