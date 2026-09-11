@@ -473,14 +473,14 @@ export default function LatihanHubPage() {
                 </span>
               </div>
               <h2 className="text-2xl sm:text-3xl font-extrabold tracking-tight">
-                {session?.user?.name || "Aditya Pratama"}
+                {session?.user?.name || "ADRIANO ANANTA"}
               </h2>
               <div className="flex flex-wrap items-center gap-x-4 gap-y-1.5 text-xs text-slate-300">
-                <span>NIS: {(session?.user as any)?.nis || "22231001"}</span>
+                <span>NIS: {(session?.user as any)?.nis || "21141"}</span>
                 <span>•</span>
                 <span className="flex items-center gap-1.5">
                   <Building2 className="w-3.5 h-3.5 text-cyan-400" />
-                  {(session?.user as any)?.namaIndustriPkl || "PT Telkom Akses"}
+                  {(session?.user as any)?.namaIndustriPkl || "Cargloss Group"}
                 </span>
               </div>
             </div>
@@ -522,7 +522,7 @@ export default function LatihanHubPage() {
               </div>
               <div className="flex justify-between pb-2 border-b border-slate-200">
                 <span className="text-slate-500">NIS Siswa:</span>
-                <span className="font-mono font-bold text-slate-900">{(session?.user as any)?.nis || "22231001"}</span>
+                <span className="font-mono font-bold text-slate-900">{(session?.user as any)?.nis || "21141"}</span>
               </div>
               <div className="flex justify-between">
                 <span className="text-slate-500">Status Pendaftaran:</span>

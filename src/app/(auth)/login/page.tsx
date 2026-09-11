@@ -56,38 +56,17 @@ function LoginForm() {
     }
   };
 
-  const handleQuickDemoLogin = async (demoType: "SISWA_DEMO" | "GURU_MTK" | "GURU_PPLG" | "ADMIN") => {
+  const handleQuickDemoLogin = async (demoType: "SISWA_DEMO") => {
     setIsLoading(true);
     setErrorMessage("");
 
     if (demoType === "SISWA_DEMO") {
       const res = await signIn("credentials", {
         redirect: false,
-        emailOrUsername: "22231001",
+        emailOrUsername: "21141",
         isDemoStudent: "true",
       });
       if (res?.ok) router.push("/latihan");
-    } else if (demoType === "GURU_MTK") {
-      const res = await signIn("credentials", {
-        redirect: false,
-        emailOrUsername: "guru_matematika",
-        password: "gurumatematika2026",
-      });
-      if (res?.ok) router.push("/admin/dashboard");
-    } else if (demoType === "GURU_PPLG") {
-      const res = await signIn("credentials", {
-        redirect: false,
-        emailOrUsername: "guru_pplg",
-        password: "gurupplg2026",
-      });
-      if (res?.ok) router.push("/admin/dashboard");
-    } else if (demoType === "ADMIN") {
-      const res = await signIn("credentials", {
-        redirect: false,
-        emailOrUsername: "admin",
-        password: "adminpassword2026",
-      });
-      if (res?.ok) router.push("/admin/dashboard");
     }
     setIsLoading(false);
   };
@@ -223,7 +202,7 @@ function LoginForm() {
                   required
                   value={username}
                   onChange={(e) => setUsername(e.target.value)}
-                  placeholder="mis: guru_matematika atau admin"
+                  placeholder="mis: eka.nur atau admin_TKA"
                   className="w-full pl-10 pr-4 py-2.5 bg-slate-50 border border-slate-300 rounded-xl text-xs text-slate-900 focus:bg-white focus:outline-none focus:ring-2 focus:ring-blue-500"
                 />
               </div>
@@ -254,34 +233,6 @@ function LoginForm() {
               <span>{isLoading ? "Memverifikasi..." : "Masuk ke Dashboard Guru"}</span>
               <ArrowRight className="w-4 h-4" />
             </button>
-
-            <div className="relative my-3">
-              <div className="absolute inset-0 flex items-center">
-                <div className="w-full border-t border-slate-200"></div>
-              </div>
-              <div className="relative flex justify-center text-xs uppercase">
-                <span className="bg-white px-2 text-slate-400 font-semibold">
-                  1-Click Demo Akun Guru
-                </span>
-              </div>
-            </div>
-
-            <div className="grid grid-cols-2 gap-2">
-              <button
-                type="button"
-                onClick={() => handleQuickDemoLogin("GURU_MTK")}
-                className="p-2 bg-slate-100 hover:bg-blue-50 hover:text-blue-700 text-slate-700 font-medium text-[11px] rounded-lg border border-slate-200 transition-all text-left"
-              >
-                👩‍🏫 Guru Matematika
-              </button>
-              <button
-                type="button"
-                onClick={() => handleQuickDemoLogin("GURU_PPLG")}
-                className="p-2 bg-slate-100 hover:bg-blue-50 hover:text-blue-700 text-slate-700 font-medium text-[11px] rounded-lg border border-slate-200 transition-all text-left"
-              >
-                💻 Guru PPLG
-              </button>
-            </div>
           </form>
         )}
       </div>

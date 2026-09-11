@@ -1,10 +1,3 @@
 nama,email,username,password,role,mapel
-Drs. Bambang Hidayat M.Kom,bambang@sekolah.sch.id,guru_pplg,GuruTKA2026!,GURU,PPLG
-Siti Aminah S.Pd M.Pd,siti.aminah@sekolah.sch.id,guru_matematika,GuruTKA2026!,GURU,MATEMATIKA
-Ahmad Fauzi S.T,ahmad.fauzi@sekolah.sch.id,guru_tjkt,GuruTKA2026!,GURU,TJKT
-Nurul Hidayati S.Pd,nurul.h@sekolah.sch.id,guru_bindonesia,GuruTKA2026!,GURU,BAHASA_INDONESIA
-Budi Hartono S.Pd,budi.h@sekolah.sch.id,guru_binggris,GuruTKA2026!,GURU,BAHASA_INGGRIS
-Ir. Hendra Kusuma M.T,hendra.k@sekolah.sch.id,guru_mesin,GuruTKA2026!,GURU,TM
-Rina Wulandari S.Pd,rina.w@sekolah.sch.id,guru_dpib,GuruTKA2026!,GURU,DPIB
-Administrator Sekolah,admin@sekolah.sch.id,admin_utama,AdminTKA2026!,ADMIN,
-
+"Eka Nur Ahmad Romadhoni, S.Pd",eka.nur@stembayo.sch.id,eka.nur,GuruTKA2026!,GURU,PPLG
+Administrator Sekolah,admin@sekolah.sch.id,admin_TKA,AdminTKA2026!,ADMIN,
