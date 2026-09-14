@@ -135,12 +135,22 @@ echo -e "\n${BLUE}🔄 [6/7] Memperbarui proses di PM2...${NC}"
 
 APP_NAME="siaptka"
 
-if pm2 describe "$APP_NAME" > /dev/null 2>&1; then
-  echo -e "${GREEN}🔄 Menjalankan reload untuk proses '$APP_NAME'...${NC}"
-  pm2 reload "$APP_NAME" || pm2 restart "$APP_NAME"
+if [ -f "ecosystem.config.js" ]; then
+  if pm2 describe "$APP_NAME" > /dev/null 2>&1; then
+    echo -e "${GREEN}🔄 Menjalankan reload untuk proses '$APP_NAME' via ecosystem.config.js...${NC}"
+    pm2 reload ecosystem.config.js || pm2 restart ecosystem.config.js
+  else
+    echo -e "${YELLOW}ℹ️  Mendaftarkan proses baru dari ecosystem.config.js...${NC}"
+    pm2 start ecosystem.config.js
+  fi
 else
-  echo -e "${YELLOW}ℹ️  Proses '$APP_NAME' belum terdaftar di PM2. Mendaftarkan proses baru...${NC}"
-  pm2 start npm --name "$APP_NAME" -- start
+  if pm2 describe "$APP_NAME" > /dev/null 2>&1; then
+    echo -e "${GREEN}🔄 Menjalankan reload untuk proses '$APP_NAME'...${NC}"
+    pm2 reload "$APP_NAME" || pm2 restart "$APP_NAME"
+  else
+    echo -e "${YELLOW}ℹ️  Proses '$APP_NAME' belum terdaftar di PM2. Mendaftarkan proses baru...${NC}"
+    pm2 start npm --name "$APP_NAME" -- start
+  fi
 fi
 
 pm2 save
@@ -181,3 +191,4 @@ echo "    🌐  Aplikasi : https://siaptka.cloud                  "
 echo "    📌  Versi    : $(git rev-parse --short HEAD) - $(git log -1 --pretty=format:'%s') "
 echo "=========================================================="
 echo -e "${NC}"
+
