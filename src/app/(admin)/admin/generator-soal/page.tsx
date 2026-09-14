@@ -25,7 +25,14 @@ import {
 } from "lucide-react";
 import MathRenderer from "@/components/math/MathRenderer";
 import { buildGeminiPrompt, normalizeOpsiJawaban, normalizeKunciJawaban } from "@/lib/quiz/normalize";
-import { MAPEL_WAJIB, MAPEL_PILIHAN_GROUPS } from "@/lib/constants/subjects";
+import {
+  MAPEL_WAJIB,
+  MAPEL_PILIHAN_GROUPS,
+  isLanguageSubject,
+  GENRE_TEKS_INDONESIA,
+  GENRE_TEKS_ASING,
+  FOKUS_KEBAHASAAN_OPTIONS,
+} from "@/lib/constants/subjects";
 
 // Pusmendik framework presets covering multiple vocational disciplines
 const PUSMENDIK_PRESETS = [
@@ -39,19 +46,36 @@ const PUSMENDIK_PRESETS = [
   },
   {
     mapel: "BAHASA_INDONESIA",
-    label: "B. Indonesia: Teks Eksplanasi",
+    label: "B. Indonesia: Teks Eksplanasi Industri",
     elemen: "Membaca dan Memirsa",
     subElemen: "Teks Eksplanasi & Artikel Ilmiah Populer",
     kompetensi: "Mengevaluasi gagasan pokok, hubungan sebab-akibat (kausalitas), dan kalimat fakta vs opini dalam teks teknologis.",
     batasan: "Panjang teks stimulus 150-250 kata dengan topik inovasi teknologi atau rekayasa industri modern.",
+    jenisTeks: "Teks Eksplanasi (Penjelasan Sebab-Akibat Fenomena Teknis/Ilmiah)",
+    topikTeks: "Otomatisasi Industri & Keselamatan Kerja Vokasi",
+    fokusKebahasaan: "Menganalisis Makna Tersirat & Inferensi Logis (Inference / Implicit Meaning)",
   },
   {
     mapel: "BAHASA_INGGRIS",
-    label: "B. Inggris: Analytical Exposition",
+    label: "B. Inggris: Analytical Exposition K3",
     elemen: "Reading and Viewing",
     subElemen: "Analytical Exposition on Vocational Workplaces",
     kompetensi: "Menganalisis argumen utama, thesis statement, dan makna idiomatis/kosakata teknis dalam konteks keselamatan kerja (K3).",
-    batasan: "Teks bacaan bahasa Inggris level B1-B2 CEFR dengan panjang 180-220 kata bertema Occupational Safety and Health.",
+    batasan: "Teks bacaan bahasa Inggris dengan panjang 180-220 kata bertema Occupational Safety and Health.",
+    jenisTeks: "Analytical Exposition (Critical Issues, Safety, Technology)",
+    topikTeks: "Occupational Safety and Health (K3) Protocols in Modern Workshops",
+    fokusKebahasaan: "Menentukan Ide Pokok, Kalimat Utama & Gagasan Utama (Main Idea)",
+  },
+  {
+    mapel: "BAHASA_INGGRIS",
+    label: "B. Inggris: Technical Manual & SOP",
+    elemen: "Reading and Viewing",
+    subElemen: "Technical Procedure & Industrial Operating Manual",
+    kompetensi: "Menganalisis urutan instruksi kerja logis, makna istilah teknis spesifik, dan kata kerja imperatif dalam SOP bengkel.",
+    batasan: "Teks prosedur manual instruksi teknis pengoperasian alat workshop.",
+    jenisTeks: "Procedure Text / Operating Manual & SOP",
+    topikTeks: "Safe Operation and Preventive Maintenance of CNC Machines",
+    fokusKebahasaan: "Makna Kosakata Kontekstual, Istilah Teknis & Sinonim/Antonim",
   },
   {
     mapel: "TJKT",
@@ -131,6 +155,25 @@ export default function GeneratorSoalPage() {
   const [tipeSoal, setTipeSoal] = useState<"PILIHAN_GANDA" | "MCMA" | "PGK_KATEGORI">("PILIHAN_GANDA");
   const [jumlahSoal, setJumlahSoal] = useState(3);
 
+  // Status Asesmen Rumpun Bahasa & Literasi
+  const isLang = useMemo(() => isLanguageSubject(mapel), [mapel]);
+  const [modeStimulus, setModeStimulus] = useState<"AI_AUTO" | "CUSTOM_TEKS">("AI_AUTO");
+  const [stimulusTeks, setStimulusTeks] = useState("");
+  const [jenisTeks, setJenisTeks] = useState(GENRE_TEKS_INDONESIA[0]);
+  const [topikTeks, setTopikTeks] = useState("Otomatisasi Industri & Keselamatan Kerja Vokasi");
+  const [fokusKebahasaan, setFokusKebahasaan] = useState(FOKUS_KEBAHASAAN_OPTIONS[0]);
+
+  const handleMapelChange = (newMapel: string) => {
+    setMapel(newMapel);
+    if (isLanguageSubject(newMapel)) {
+      if (newMapel.toUpperCase().includes("INGGRIS") || (newMapel.startsWith("B_") && newMapel !== "B_INDO_LANJUT")) {
+        setJenisTeks(GENRE_TEKS_ASING[0]);
+      } else {
+        setJenisTeks(GENRE_TEKS_INDONESIA[0]);
+      }
+    }
+  };
+
   // Status API State
   const [apiStatus, setApiStatus] = useState<{
     isConfigured: boolean;
@@ -172,12 +215,21 @@ export default function GeneratorSoalPage() {
   }, []);
 
   const handleApplyPreset = (idx: number) => {
-    const p = PUSMENDIK_PRESETS[idx];
+    const p = PUSMENDIK_PRESETS[idx] as any;
     setMapel(p.mapel);
     setElemen(p.elemen);
     setSubElemen(p.subElemen);
     setKompetensi(p.kompetensi);
     setBatasan(p.batasan);
+    if (p.jenisTeks) setJenisTeks(p.jenisTeks);
+    if (p.topikTeks) setTopikTeks(p.topikTeks);
+    if (p.fokusKebahasaan) setFokusKebahasaan(p.fokusKebahasaan);
+    if (p.stimulusTeks) {
+      setStimulusTeks(p.stimulusTeks);
+      setModeStimulus("CUSTOM_TEKS");
+    } else {
+      setModeStimulus("AI_AUTO");
+    }
   };
 
   // Real-time constructed prompt preview
@@ -190,8 +242,26 @@ export default function GeneratorSoalPage() {
       subElemen,
       kompetensi,
       batasan,
+      jenisTeks: isLang ? jenisTeks : undefined,
+      topikTeks: isLang ? topikTeks : undefined,
+      stimulusTeks: isLang && modeStimulus === "CUSTOM_TEKS" ? stimulusTeks : undefined,
+      fokusKebahasaan: isLang ? fokusKebahasaan : undefined,
     });
-  }, [mapel, tipeSoal, jumlahSoal, elemen, subElemen, kompetensi, batasan]);
+  }, [
+    mapel,
+    tipeSoal,
+    jumlahSoal,
+    elemen,
+    subElemen,
+    kompetensi,
+    batasan,
+    isLang,
+    jenisTeks,
+    topikTeks,
+    modeStimulus,
+    stimulusTeks,
+    fokusKebahasaan,
+  ]);
 
   const handleCopyPrompt = () => {
     navigator.clipboard.writeText(livePrompt);
@@ -217,6 +287,10 @@ export default function GeneratorSoalPage() {
           batasan,
           tipeSoal,
           jumlahSoal,
+          jenisTeks: isLang ? jenisTeks : undefined,
+          topikTeks: isLang ? topikTeks : undefined,
+          stimulusTeks: isLang && modeStimulus === "CUSTOM_TEKS" ? stimulusTeks : undefined,
+          fokusKebahasaan: isLang ? fokusKebahasaan : undefined,
         }),
       });
 
@@ -371,7 +445,7 @@ export default function GeneratorSoalPage() {
               </label>
               <select
                 value={mapel}
-                onChange={(e) => setMapel(e.target.value)}
+                onChange={(e) => handleMapelChange(e.target.value)}
                 className="w-full px-3.5 py-2.5 rounded-xl border border-slate-200 text-xs font-bold text-slate-800 bg-white cursor-pointer focus:ring-2 focus:ring-blue-500"
               >
                 <optgroup label="Mata Pelajaran Wajib (TKA)">
@@ -427,18 +501,160 @@ export default function GeneratorSoalPage() {
             </div>
           </div>
 
+          {/* Panel Khusus Rumpun Bahasa & Literasi Membaca */}
+          {isLang && (
+            <div className="p-5 sm:p-6 rounded-3xl bg-gradient-to-br from-indigo-50/90 via-blue-50/50 to-slate-50 border-2 border-indigo-200/80 shadow-xs space-y-5">
+              <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 border-b border-indigo-100/80 pb-3.5">
+                <div className="flex items-center gap-3">
+                  <div className="w-9 h-9 rounded-2xl bg-indigo-600 text-white flex items-center justify-center font-bold text-base shadow-xs shrink-0">
+                    📖
+                  </div>
+                  <div>
+                    <h3 className="text-sm font-extrabold text-indigo-950 flex items-center gap-2">
+                      <span>Parameter Khusus Asesmen Bahasa & Literasi Membaca</span>
+                      <span className="text-[10px] px-2 py-0.5 rounded-full bg-indigo-200 text-indigo-900 font-black tracking-wide">
+                        AKTIF
+                      </span>
+                    </h3>
+                    <p className="text-[11px] text-indigo-700/80 mt-0.5">
+                      Disesuaikan untuk mata pelajaran rumpun bahasa (berbasis teks wacana bacaan dan analisis kebahasaan).
+                    </p>
+                  </div>
+                </div>
+
+                {/* Mode Stimulus Switcher */}
+                <div className="flex items-center bg-white p-1 rounded-xl border border-indigo-200 text-xs font-bold shrink-0 self-start sm:self-auto shadow-xs">
+                  <button
+                    type="button"
+                    onClick={() => setModeStimulus("AI_AUTO")}
+                    className={`px-3 py-1.5 rounded-lg transition-all cursor-pointer ${
+                      modeStimulus === "AI_AUTO"
+                        ? "bg-indigo-600 text-white shadow-xs"
+                        : "text-slate-600 hover:text-slate-900"
+                    }`}
+                  >
+                    🤖 AI Susun Wacana Otomatis
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => setModeStimulus("CUSTOM_TEKS")}
+                    className={`px-3 py-1.5 rounded-lg transition-all cursor-pointer ${
+                      modeStimulus === "CUSTOM_TEKS"
+                        ? "bg-indigo-600 text-white shadow-xs"
+                        : "text-slate-600 hover:text-slate-900"
+                    }`}
+                  >
+                    ✍️ Tempel Wacana Sendiri
+                  </button>
+                </div>
+              </div>
+
+              {/* Baris 1: Genre Teks & Topik Bacaan */}
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                <div className="space-y-1.5">
+                  <label className="text-xs font-bold text-slate-800 flex items-center justify-between">
+                    <span>Jenis / Genre Teks Wacana</span>
+                    <span className="text-[10px] text-indigo-600 font-semibold">Struktur Teks</span>
+                  </label>
+                  <select
+                    value={jenisTeks}
+                    onChange={(e) => setJenisTeks(e.target.value)}
+                    className="w-full px-3.5 py-2.5 rounded-xl border border-indigo-200 bg-white text-xs font-medium text-slate-800 focus:ring-2 focus:ring-indigo-500 cursor-pointer"
+                  >
+                    {(mapel.toUpperCase().includes("INGGRIS") || (mapel.startsWith("B_") && mapel !== "B_INDO_LANJUT")
+                      ? GENRE_TEKS_ASING
+                      : GENRE_TEKS_INDONESIA
+                    ).map((genre) => (
+                      <option key={genre} value={genre}>
+                        {genre}
+                      </option>
+                    ))}
+                  </select>
+                </div>
+
+                <div className="space-y-1.5">
+                  <label className="text-xs font-bold text-slate-800 flex items-center justify-between">
+                    <span>Topik / Tema Kontekstual Wacana</span>
+                    <span className="text-[10px] text-indigo-600 font-semibold">Konteks Bacaan</span>
+                  </label>
+                  <input
+                    type="text"
+                    value={topikTeks}
+                    onChange={(e) => setTopikTeks(e.target.value)}
+                    placeholder="mis: Keselamatan Kerja (K3), Otomatisasi AI di Industri, Etika Komunikasi..."
+                    className="w-full px-3.5 py-2.5 rounded-xl border border-indigo-200 bg-white text-xs font-medium text-slate-800 focus:ring-2 focus:ring-indigo-500"
+                  />
+                </div>
+              </div>
+
+              {/* Baris 2: Fokus Aspek Kebahasaan */}
+              <div className="space-y-1.5">
+                <label className="text-xs font-bold text-slate-800 flex items-center justify-between">
+                  <span>Fokus Aspek Kebahasaan yang Diuji</span>
+                  <span className="text-[10px] text-indigo-600 font-semibold">Target Pengukuran HOTS</span>
+                </label>
+                <select
+                  value={fokusKebahasaan}
+                  onChange={(e) => setFokusKebahasaan(e.target.value)}
+                  className="w-full px-3.5 py-2.5 rounded-xl border border-indigo-200 bg-white text-xs font-medium text-slate-800 focus:ring-2 focus:ring-indigo-500 cursor-pointer"
+                >
+                  {FOKUS_KEBAHASAAN_OPTIONS.map((fokus) => (
+                    <option key={fokus} value={fokus}>
+                      {fokus}
+                    </option>
+                  ))}
+                </select>
+              </div>
+
+              {/* Baris 3: Teks Wacana Mandiri (Jika mode CUSTOM_TEKS) */}
+              {modeStimulus === "CUSTOM_TEKS" ? (
+                <div className="space-y-1.5 bg-white p-4 rounded-2xl border border-indigo-200 shadow-xs">
+                  <div className="flex items-center justify-between">
+                    <label className="text-xs font-bold text-indigo-950 flex items-center gap-2">
+                      <span>Teks Wacana / Stimulus Bacaan Milik Guru</span>
+                      <span className="text-[10px] px-2 py-0.5 rounded-full bg-indigo-100 text-indigo-800 font-bold">
+                        SUMBER RESMI GURU
+                      </span>
+                    </label>
+                    <span className="text-[11px] text-slate-400">
+                      {stimulusTeks.trim() ? `${stimulusTeks.trim().split(/\s+/).length} kata` : "Belum diisi"}
+                    </span>
+                  </div>
+                  <textarea
+                    rows={6}
+                    value={stimulusTeks}
+                    onChange={(e) => setStimulusTeks(e.target.value)}
+                    placeholder="Tempelkan paragraf bacaan, naskah dialog percakapan, dokumen SOP bengkel, cerpen, atau artikel jurnal Anda di sini (disarankan 100 - 350 kata). Seluruh butir soal yang di-generate AI akan 100% mengacu pada teks ini..."
+                    className="w-full px-3.5 py-2.5 rounded-xl border border-slate-200 text-xs font-mono text-slate-800 focus:ring-2 focus:ring-indigo-500 leading-relaxed"
+                    required={modeStimulus === "CUSTOM_TEKS"}
+                  />
+                  <p className="text-[10px] text-slate-500">
+                    💡 <strong>Jaminan Ketat:</strong> Gemini AI akan diperintahkan secara absolut untuk tidak mengarang teks lain dan hanya menyusun soal berdasarkan wacana bacaan yang Anda tempel di atas.
+                  </p>
+                </div>
+              ) : (
+                <div className="p-3 bg-white/80 rounded-2xl border border-indigo-100 text-[11px] text-indigo-900 flex items-center gap-2.5">
+                  <Sparkles className="w-4 h-4 text-indigo-600 shrink-0" />
+                  <span>
+                    <strong>Mode AI Otomatis:</strong> Gemini akan terlebih dahulu menyusun wacana bacaan baru yang berkualitas sesuai genre <em>"{jenisTeks}"</em> bertema <em>"{topikTeks}"</em>, lalu membuat butir soal yang menguji pemahaman teks tersebut.
+                  </span>
+                </div>
+              )}
+            </div>
+          )}
+
           {/* 4 Pusmendik Parameters */}
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
             <div className="space-y-1.5">
               <label className="text-xs font-bold text-slate-700 flex items-center justify-between">
-                <span>1. Elemen / Materi Pokok</span>
+                <span>{isLang ? "1. Elemen / Keterampilan Bahasa" : "1. Elemen / Materi Pokok"}</span>
                 <span className="text-[10px] text-slate-400 font-normal">Acuan Prompt #4</span>
               </label>
               <input
                 type="text"
                 value={elemen}
                 onChange={(e) => setElemen(e.target.value)}
-                placeholder="Contoh: Aljabar dan Fungsi..."
+                placeholder={isLang ? "Contoh: Membaca dan Memirsa (Reading & Viewing)..." : "Contoh: Aljabar dan Fungsi..."}
                 className="w-full px-3.5 py-2.5 rounded-xl border border-slate-200 text-xs font-medium text-slate-800 focus:ring-2 focus:ring-blue-500"
                 required
               />
@@ -446,14 +662,14 @@ export default function GeneratorSoalPage() {
 
             <div className="space-y-1.5">
               <label className="text-xs font-bold text-slate-700 flex items-center justify-between">
-                <span>2. Sub-Elemen / Sub-Materi</span>
+                <span>{isLang ? "2. Sub-Elemen / Struktur Wacana" : "2. Sub-Elemen / Sub-Materi"}</span>
                 <span className="text-[10px] text-slate-400 font-normal">Acuan Prompt #5</span>
               </label>
               <input
                 type="text"
                 value={subElemen}
                 onChange={(e) => setSubElemen(e.target.value)}
-                placeholder="Contoh: Persamaan dan Fungsi Kuadrat..."
+                placeholder={isLang ? "Contoh: Teks Eksplanasi / Analytical Exposition..." : "Contoh: Persamaan dan Fungsi Kuadrat..."}
                 className="w-full px-3.5 py-2.5 rounded-xl border border-slate-200 text-xs font-medium text-slate-800 focus:ring-2 focus:ring-blue-500"
                 required
               />
@@ -468,7 +684,11 @@ export default function GeneratorSoalPage() {
                 rows={2}
                 value={kompetensi}
                 onChange={(e) => setKompetensi(e.target.value)}
-                placeholder="Contoh: Menyelesaikan masalah kontekstual yang berkaitan dengan nilai optimum fungsi kuadrat..."
+                placeholder={
+                  isLang
+                    ? "Contoh: Menganalisis ide pokok, hubungan sebab-akibat, dan inferensi makna tersirat dalam wacana..."
+                    : "Contoh: Menyelesaikan masalah kontekstual yang berkaitan dengan nilai optimum fungsi kuadrat..."
+                }
                 className="w-full px-3.5 py-2.5 rounded-xl border border-slate-200 text-xs font-medium text-slate-800 focus:ring-2 focus:ring-blue-500"
                 required
               />
@@ -486,7 +706,11 @@ export default function GeneratorSoalPage() {
                 rows={2}
                 value={batasan}
                 onChange={(e) => setBatasan(e.target.value)}
-                placeholder="Contoh: Nilai diskriminan D >= 0, tidak melibatkan bilangan imajiner, fungsi standar f(x) = ax^2 + bx + c..."
+                placeholder={
+                  isLang
+                    ? "Contoh: Panjang teks wacana 150-250 kata, konteks keselamatan kerja industri, kaidah ejaan baku..."
+                    : "Contoh: Nilai diskriminan D >= 0, tidak melibatkan bilangan imajiner, fungsi standar f(x) = ax^2 + bx + c..."
+                }
                 className="w-full px-3.5 py-2.5 rounded-xl border border-slate-200 text-xs font-medium text-slate-800 focus:ring-2 focus:ring-blue-500"
                 required
               />

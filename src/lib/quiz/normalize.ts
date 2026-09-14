@@ -1,3 +1,5 @@
+import { isLanguageSubject } from "@/lib/constants/subjects";
+
 export interface GeneratePromptParams {
   mapel: string;
   tipeSoal: "PILIHAN_GANDA" | "MCMA" | "PGK_KATEGORI";
@@ -6,6 +8,11 @@ export interface GeneratePromptParams {
   subElemen?: string;
   kompetensi?: string;
   batasan?: string;
+  // Parameter Khusus Asesmen Rumpun Bahasa & Literasi:
+  jenisTeks?: string;
+  topikTeks?: string;
+  stimulusTeks?: string;
+  fokusKebahasaan?: string;
 }
 
 /**
@@ -177,6 +184,10 @@ export function buildGeminiPrompt(params: GeneratePromptParams): string {
       ? "Pilihan Ganda Kompleks Multi-Jawaban / MCMA (Pilih lebih dari satu opsi benar)"
       : "Pilihan Ganda Kompleks Kategori (Matriks Pernyataan: Benar/Salah atau Sesuai/Tidak Sesuai)";
 
+  const isLanguage =
+    isLanguageSubject(mapel) ||
+    Boolean(params.jenisTeks || params.stimulusTeks || params.fokusKebahasaan);
+
   return `Anda adalah Pakar Asesmen Akademik & Kejuruan serta Pembuat Soal Ujian Nasional / Tes Kemampuan Akademik (TKA) Standar Resmi Pusmendik Kemendikdasmen RI.
 
 TUGAS UTAMA ANDA:
@@ -192,14 +203,52 @@ MATRIKS ASESMEN & PARAMETER ACUAN FORM:
 5. SUB-ELEMEN / SUB-MATERI: ${subElemen}
 6. KOMPETENSI / INDIKATOR ASESMEN: ${kompetensi}
 7. BATASAN RUANG LINGKUP & KONTEKS: ${batasan}
+${
+  isLanguage
+    ? `8. GENRE / JENIS TEKS: ${params.jenisTeks || "Teks Wacana Kontekstual"}
+9. TEMA / TOPIK BACAAN: ${params.topikTeks || "Dunia Kerja, Industri Vokasi, dan Inovasi Modern"}
+10. FOKUS ASPEK KEBAHASAAN: ${params.fokusKebahasaan || "Pemahaman Bacaan & Makna Kontekstual"}`
+    : ""
+}
 ============================================================
+${
+  isLanguage
+    ? params.stimulusTeks?.trim()
+      ? `
+============================================================
+TEKS WACANA / STIMULUS BACAAN (DISEDIAKAN OLEH GURU):
+"""
+${params.stimulusTeks.trim()}
+"""
+============================================================
+ATURAN WAJIB TEKS WACANA DARI GURU:
+1. Anda WAJIB MENJADIKAN TEKS BACAAN DI ATAS sebagai stimulus utama seluruh butir soal.
+2. Setiap pertanyaan ("pertanyaan") harus diawali atau merujuk secara eksplisit pada wacana di atas (misal: "Berdasarkan teks di atas,...").
+3. DILARANG mengarang teks wacana lain yang menyimpang dari teks bacaan yang telah disediakan guru di atas.
+4. Ujilah pemahaman siswa terhadap aspek kebahasaan: "${params.fokusKebahasaan || kompetensi}".`
+      : `
+============================================================
+INSTRUKSI PENYUSUNAN TEKS WACANA OLEH AI:
+1. Anda WAJIB MENULISKAN TEKS WACANA / DIALOG BACAAN UTUH yang orisinal, menarik, dan berbobot akademis sesuai Genre "${params.jenisTeks || "Wacana Kontekstual"}" bertema "${params.topikTeks || "Dunia Kerja & Vokasi"}".
+2. Panjang teks wacana berkisar 120-250 kata (atau 6-10 giliran bicara jika berbentuk dialog percakapan).
+3. Tampilkan teks wacana tersebut secara utuh pada awal properti "pertanyaan", diikuti pertanyaan asesmen yang menguji pemahaman teks tersebut.
+4. Ujilah pemahaman siswa terhadap aspek kebahasaan: "${params.fokusKebahasaan || kompetensi}".`
+    : ""
+}
 
 INSTRUKSI KONTEN & RELEVANSI KETAT (CRITICAL REQUIREMENTS):
 1. RELEVANSI 100% TERHADAP FORM: Seluruh stimulus narasi/kasus, pertanyaan, opsi jawaban, dan pembahasan WAJIB berakar secara spesifik pada Elemen "${elemen}" dan Sub-Elemen "${subElemen}". DILARANG membuat soal materi lain.
 2. PENGUJIAN KOMPETENSI: Setiap butir soal harus secara langsung mengukur kemampuan siswa dalam: "${kompetensi}".
 3. KEPATUHAN BATASAN RUANG LINGKUP: Patuhi batasan konteks: "${batasan}". Segala batasan variabel, asumsi, jenis alat, kedalaman rumus, ataupun skenario tidak boleh melampaui batasan ini.
-4. STIMULUS REALISTIS & KONTEKSTUAL: Setiap butir soal harus diawali dengan stimulus situasi nyata, permasalahan industri/PKL, data teknis, eksperimen, tabel, atau kasus konkret yang relevan bagi siswa SMK.
+4. STIMULUS REALISTIS & KONTEKSTUAL: Setiap butir soal harus diawali dengan stimulus situasi nyata, wacana bacaan, permasalahan industri/PKL, data teknis, eksperimen, tabel, atau kasus konkret yang relevan bagi siswa SMK.
 5. NOTASI SAINS & MATEMATIKA: Gunakan notasi LaTeX standar untuk rumus atau persamaan matematika/fisika/kimia ($...$ untuk inline, $$...$$ untuk display blok).
+${
+  mapel.toUpperCase().includes("INGGRIS")
+    ? `6. BAHASA PENGANTAR (TARGET LANGUAGE): Teks stimulus wacana bacaan, pertanyaan, serta opsi jawaban (A-E) WAJIB DISUSUN DALAM BAHASA INGGRIS BAKU (Standard English). Pembahasan dapat disajikan dalam Bahasa Indonesia atau bilingual agar memudahkan guru dan siswa.`
+    : isLanguage
+    ? `6. BAHASA PENGANTAR: Teks stimulus, pertanyaan, opsi jawaban, dan pembahasan disajikan dengan kaidah ejaan dan tata bahasa yang baku sesuai target bahasa.`
+    : ""
+}
 
 KETENTUAN STRUKTUR JSON SESUAI BENTUK SOAL:
 ${

@@ -349,3 +349,71 @@ export function getSubjectCategoryInfo(codeOrId: string): SubjectCategoryInfo {
   };
 }
 
+/**
+ * Daftar ID mata pelajaran rumpun Bahasa (Wajib & Pilihan)
+ */
+export const MAPEL_BAHASA_IDS = [
+  "BAHASA_INDONESIA",
+  "BAHASA_INGGRIS",
+  "B_INDO_LANJUT",
+  "B_INGGRIS_LANJUT",
+  "B_PRANCIS",
+  "B_JERMAN",
+  "B_JEPANG",
+  "B_MANDARIN",
+  "B_KOREA",
+  "B_ARAB",
+];
+
+/**
+ * Memeriksa apakah suatu mata pelajaran termasuk ke dalam rumpun Bahasa
+ */
+export function isLanguageSubject(codeOrId: string): boolean {
+  if (!codeOrId) return false;
+  const norm = codeOrId.toUpperCase().trim();
+  const alias = SUBJECT_ALIASES[norm] || norm;
+  return MAPEL_BAHASA_IDS.includes(norm) || MAPEL_BAHASA_IDS.includes(alias);
+}
+
+/**
+ * Genre teks wacana standar untuk Bahasa Indonesia
+ */
+export const GENRE_TEKS_INDONESIA = [
+  "Teks Eksplanasi (Penjelasan Sebab-Akibat Fenomena Teknis/Ilmiah)",
+  "Teks Eksposisi & Opini Editorial (Analisis Isu Kritis)",
+  "Teks Prosedur & Petunjuk Kerja Teknis (SOP Industri)",
+  "Teks Laporan Hasil Observasi (LHO)",
+  "Teks Negosiasi & Komunikasi Bisnis",
+  "Teks Artikel Ilmiah Populer & Berita Terkini",
+  "Teks Narasi, Cerpen & Anekdot",
+  "Surat Resmi Dinas & Korespondensi Profesional",
+];
+
+/**
+ * Genre teks wacana standar untuk Bahasa Inggris & Bahasa Asing Pilihan
+ */
+export const GENRE_TEKS_ASING = [
+  "Analytical Exposition (Critical Issues, Safety, Technology)",
+  "Hortatory Exposition (Persuasive Workplace Recommendations)",
+  "Technical Report / Factual Report Text",
+  "Procedure Text / Operating Manual & SOP",
+  "Workplace Dialogue & Professional Communication",
+  "Business Letter, Job Application & Formal Email",
+  "News Item / Industrial Press Release",
+  "Descriptive Text (Industrial Equipment & Modern Innovations)",
+  "Narrative & Biographical Recount",
+];
+
+/**
+ * Fokus aspek kebahasaan yang diuji pada soal asesmen
+ */
+export const FOKUS_KEBAHASAAN_OPTIONS = [
+  "Menentukan Ide Pokok, Kalimat Utama & Gagasan Utama (Main Idea)",
+  "Mengidentifikasi Informasi Tersurat & Fakta Rinci (Explicit Details)",
+  "Menganalisis Makna Tersirat & Inferensi Logis (Inference / Implicit Meaning)",
+  "Makna Kosakata Kontekstual, Istilah Teknis & Sinonim/Antonim",
+  "Kaidah Kebahasaan, Struktur Kalimat & Tata Bahasa (Grammar / Syntax)",
+  "Analisis Kohesi, Koherensi & Hubungan Sebab-Akibat Paragraf",
+  "Mengevaluasi Sudut Pandang, Tujuan Penulis & Nada Wacana (Author's Purpose)",
+];
+

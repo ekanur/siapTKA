@@ -6,18 +6,12 @@ import {
   GeneratePromptParams,
 } from "@/lib/quiz/normalize";
 
+import { isLanguageSubject } from "@/lib/constants/subjects";
+
 export { normalizeOpsiJawaban, normalizeKunciJawaban, buildGeminiPrompt };
 export type { GeneratePromptParams };
 
-export interface GenerateParams {
-  mapel: string;
-  tipeSoal: "PILIHAN_GANDA" | "MCMA" | "PGK_KATEGORI";
-  jumlahSoal?: number;
-  elemen?: string;
-  subElemen?: string;
-  kompetensi?: string;
-  batasan?: string;
-}
+export interface GenerateParams extends GeneratePromptParams {}
 
 export interface GeneratedSoalResult {
   pertanyaan: string;
@@ -213,6 +207,10 @@ export function generateContextualSimulatedQuestions(params: GenerateParams): Ge
   const results: GeneratedSoalResult[] = [];
   const isMath = mapel.toUpperCase().includes("MATEMATIKA");
 
+  const isLang =
+    isLanguageSubject(mapel) ||
+    Boolean(params.jenisTeks || params.stimulusTeks || params.fokusKebahasaan);
+
   for (let i = 1; i <= count; i++) {
     if (tipeSoal === "PILIHAN_GANDA") {
       let pertanyaan = "";
@@ -238,6 +236,68 @@ export function generateContextualSimulatedQuestions(params: GenerateParams): Ge
 2. Titik puncak (sumbu simetri) dihitung dengan $x_p = -\\frac{b}{2a} = -\\frac{-${i * 4}}{2(${i + 1})} = \\frac{${i * 2}}{${i + 1}}$.
 3. Karena $a = ${i + 1} > 0$, kurva membuka ke atas sehingga menghasilkan nilai minimum, sesuai dengan kompetensi: "${kompetensi}".
 4. Nilai optimum diperoleh dengan mensubstitusikan $x_p$ ke fungsi. Jadi Opsi A adalah jawaban yang benar dan presisi.`;
+      } else if (isLang) {
+        const isEnglish = mapel.toUpperCase().includes("INGGRIS");
+        const customPassage = params.stimulusTeks?.trim();
+        const passage =
+          customPassage ||
+          (isEnglish
+            ? `The implementation of occupational safety and health (K3) protocols in technical workshops significantly mitigates industrial hazards. Recent research demonstrates that standardized operating procedures (SOP), regular equipment calibration, and mandatory personal protective equipment (PPE) reduce workplace accidents by up to 40%. Vocational technicians who proactively comply with safety guidelines demonstrate higher operational productivity and workplace efficiency.`
+            : `Penerapan prosedur keselamatan dan kesehatan kerja (K3) di lingkungan industri dan bengkel kerja vokasi terbukti efektif mereduksi risiko insiden kerja hingga 40%. Seorang teknisi tidak hanya dituntut menguasai keterampilan mengoperasikan mesin, tetapi juga harus cermat menelaah petunjuk teknis (SOP) dan simbol peringatan bahaya. Kepatuhan terhadap standar operasional kerja secara konsisten mampu meminimalkan downtime mesin dan meningkatkan efisiensi operasional secara berkelanjutan.`);
+
+        if (isEnglish) {
+          pertanyaan = `Read the following text carefully:\n\n"${passage}"\n\nBased on the text above, which of the following statements best reflects the primary focus regarding "${params.fokusKebahasaan || kompetensi}"?`;
+          opsiJawaban = [
+            {
+              id: "A",
+              label: `Strict adherence to standardized workplace safety procedures directly diminishes industrial risks and boosts operational productivity.`,
+            },
+            {
+              id: "B",
+              label: `Personal protective equipment is solely required during heavy machinery maintenance operations.`,
+            },
+            {
+              id: "C",
+              label: `Operational productivity remains unaffected by the implementation of occupational safety guidelines.`,
+            },
+            {
+              id: "D",
+              label: `Vocational technicians are exempted from safety compliance if machines are calibrated regularly.`,
+            },
+            {
+              id: "E",
+              label: `The research indicates that safety guidelines only apply to newly recruited technicians.`,
+            },
+          ];
+          kunciJawaban = "A";
+          pembahasan = `**Reading Comprehension Analysis:**\n- **Target Competency:** ${params.fokusKebahasaan || kompetensi}\n- **Text Focus:** ${params.jenisTeks || "Analytical/Exposition Text"}\n- **Correct Answer (A):** Statement A accurately captures the main synthesis of the passage that adhering to safety procedures reduces industrial risks while boosting efficiency.\n- **Distractor Analysis:** Options B, C, D, and E contradict explicit facts stated in the reading stimulus.`;
+        } else {
+          pertanyaan = `Cermatilah wacana bacaan berikut dengan saksama:\n\n"${passage}"\n\nBerdasarkan wacana di atas, berkaitan dengan fokus pengujian *"${params.fokusKebahasaan || kompetensi}"*, gagasan pokok atau simpulan yang paling tepat dan selaras dengan isi teks adalah...`;
+          opsiJawaban = [
+            {
+              id: "A",
+              label: `Penerapan prosedur operasional dan standar K3 secara konsisten mereduksi risiko bahaya industri sekaligus meningkatkan produktivitas kerja.`,
+            },
+            {
+              id: "B",
+              label: `Kepatuhan terhadap SOP hanya diperlukan pada saat pengoperasian mesin berat berisiko tinggi.`,
+            },
+            {
+              id: "C",
+              label: `Penggunaan alat pelindung diri tidak memberikan dampak signifikan terhadap efisiensi operasional bengkel.`,
+            },
+            {
+              id: "D",
+              label: `Kecelakaan kerja di bengkel vokasi sepenuhnya merupakan tanggung jawab instruktur bengkel.`,
+            },
+            {
+              id: "E",
+              label: `Penelitian membuktikan bahwa efisiensi kerja hanya dapat dicapai dengan mengabaikan prosedur yang rumit.`,
+            },
+          ];
+          kunciJawaban = "A";
+          pembahasan = `**Analisis Literasi Membaca (${mapel}):**\n- **Fokus Kebahasaan:** ${params.fokusKebahasaan || kompetensi}\n- **Genre Wacana:** ${params.jenisTeks || "Teks Eksplanasi/Eksposisi"}\n- **Pembuktian Jawaban Benar (A):** Paragraf menyatakan secara lugas bahwa kepatuhan pada SOP dan K3 mereduksi risiko hingga 40% dan mengoptimalkan efisiensi produksi.\n- **Analisis Pengecoh:** Opsi B, C, D, dan E bertentangan dengan fakta tertulis dalam wacana stimulus.`;
+        }
       } else {
         pertanyaan = `Pada pelaksanaan studi kasus di dunia industri terkait mata pelajaran **${mapel}**, peserta didik menganalisis elemen **${elemen}** dengan fokus bahasan **${subElemen}**.
 Diberikan skenario kasus: *"Dalam penerapannya di lapangan dengan memperhatikan batasan: '${batasan}', tim teknis perlu mengambil keputusan strategis guna ${kompetensi.toLowerCase()}."*

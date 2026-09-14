@@ -41,7 +41,19 @@ export async function POST(request: Request) {
     }
 
     const body = await request.json();
-    const { mapel, elemen, subElemen, kompetensi, batasan, tipeSoal, jumlahSoal } = body;
+    const {
+      mapel,
+      elemen,
+      subElemen,
+      kompetensi,
+      batasan,
+      tipeSoal,
+      jumlahSoal,
+      jenisTeks,
+      topikTeks,
+      stimulusTeks,
+      fokusKebahasaan,
+    } = body;
 
     if (!mapel || !tipeSoal) {
       return NextResponse.json({ success: false, error: "Mata pelajaran dan bentuk soal wajib dipilih." }, { status: 400 });
@@ -52,7 +64,7 @@ export async function POST(request: Request) {
     const finalKompetensi = kompetensi?.trim() || "Menganalisis dan memecahkan persoalan kontekstual";
     const finalBatasan = batasan?.trim() || "Sesuai batasan ruang lingkup kurikulum";
 
-    // Panggil Gemini Service dengan 7 parameter matriks asesmen
+    // Panggil Gemini Service dengan parameter matriks asesmen & parameter bahasa
     const generationResult = await generateSoalWithGemini({
       mapel,
       tipeSoal,
@@ -61,6 +73,10 @@ export async function POST(request: Request) {
       subElemen: finalSubElemen,
       kompetensi: finalKompetensi,
       batasan: finalBatasan,
+      jenisTeks: jenisTeks?.trim(),
+      topikTeks: topikTeks?.trim(),
+      stimulusTeks: stimulusTeks?.trim(),
+      fokusKebahasaan: fokusKebahasaan?.trim(),
     });
 
     // Simpan ke Database dengan status MENUNGGU_VALIDASI
