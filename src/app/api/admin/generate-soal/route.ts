@@ -46,6 +46,7 @@ export async function POST(request: Request) {
       elemen,
       subElemen,
       kompetensi,
+      subKompetensi,
       batasan,
       tipeSoal,
       jumlahSoal,
@@ -62,6 +63,7 @@ export async function POST(request: Request) {
     const finalElemen = elemen?.trim() || "Materi Pokok Kurikulum";
     const finalSubElemen = subElemen?.trim() || "Fokus Sub-Topik Asesmen";
     const finalKompetensi = kompetensi?.trim() || "Menganalisis dan memecahkan persoalan kontekstual";
+    const finalSubKompetensi = subKompetensi?.trim() || finalSubElemen;
     const finalBatasan = batasan?.trim() || "Sesuai batasan ruang lingkup kurikulum";
 
     // Panggil Gemini Service dengan parameter matriks asesmen & parameter bahasa
@@ -72,6 +74,7 @@ export async function POST(request: Request) {
       elemen: finalElemen,
       subElemen: finalSubElemen,
       kompetensi: finalKompetensi,
+      subKompetensi: finalSubKompetensi,
       batasan: finalBatasan,
       jenisTeks: jenisTeks?.trim(),
       topikTeks: topikTeks?.trim(),

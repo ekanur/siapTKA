@@ -47,9 +47,10 @@ const PUSMENDIK_PRESETS = [
   {
     mapel: "BAHASA_INDONESIA",
     label: "B. Indonesia: Teks Eksplanasi Industri",
+    kompetensi: "Membaca dan Memirsa (Literasi Wacana)",
+    subKompetensi: "Mengevaluasi gagasan pokok, hubungan sebab-akibat (kausalitas), dan kalimat fakta vs opini dalam teks teknologis.",
     elemen: "Membaca dan Memirsa",
     subElemen: "Teks Eksplanasi & Artikel Ilmiah Populer",
-    kompetensi: "Mengevaluasi gagasan pokok, hubungan sebab-akibat (kausalitas), dan kalimat fakta vs opini dalam teks teknologis.",
     batasan: "Panjang teks stimulus 150-250 kata dengan topik inovasi teknologi atau rekayasa industri modern.",
     jenisTeks: "Teks Eksplanasi (Penjelasan Sebab-Akibat Fenomena Teknis/Ilmiah)",
     topikTeks: "Otomatisasi Industri & Keselamatan Kerja Vokasi",
@@ -58,9 +59,10 @@ const PUSMENDIK_PRESETS = [
   {
     mapel: "BAHASA_INGGRIS",
     label: "B. Inggris: Analytical Exposition K3",
+    kompetensi: "Reading and Viewing",
+    subKompetensi: "Menganalisis argumen utama, thesis statement, dan makna idiomatis/kosakata teknis dalam konteks keselamatan kerja (K3).",
     elemen: "Reading and Viewing",
     subElemen: "Analytical Exposition on Vocational Workplaces",
-    kompetensi: "Menganalisis argumen utama, thesis statement, dan makna idiomatis/kosakata teknis dalam konteks keselamatan kerja (K3).",
     batasan: "Teks bacaan bahasa Inggris dengan panjang 180-220 kata bertema Occupational Safety and Health.",
     jenisTeks: "Analytical Exposition (Critical Issues, Safety, Technology)",
     topikTeks: "Occupational Safety and Health (K3) Protocols in Modern Workshops",
@@ -69,9 +71,10 @@ const PUSMENDIK_PRESETS = [
   {
     mapel: "BAHASA_INGGRIS",
     label: "B. Inggris: Technical Manual & SOP",
+    kompetensi: "Reading and Viewing",
+    subKompetensi: "Menganalisis urutan instruksi kerja logis, makna istilah teknis spesifik, dan kata kerja imperatif dalam SOP bengkel.",
     elemen: "Reading and Viewing",
     subElemen: "Technical Procedure & Industrial Operating Manual",
-    kompetensi: "Menganalisis urutan instruksi kerja logis, makna istilah teknis spesifik, dan kata kerja imperatif dalam SOP bengkel.",
     batasan: "Teks prosedur manual instruksi teknis pengoperasian alat workshop.",
     jenisTeks: "Procedure Text / Operating Manual & SOP",
     topikTeks: "Safe Operation and Preventive Maintenance of CNC Machines",
@@ -157,6 +160,9 @@ export default function GeneratorSoalPage() {
 
   // Status Asesmen Rumpun Bahasa & Literasi
   const isLang = useMemo(() => isLanguageSubject(mapel), [mapel]);
+  const [subKompetensi, setSubKompetensi] = useState(
+    "Mengevaluasi gagasan pokok, hubungan sebab-akibat (kausalitas), dan kalimat fakta vs opini dalam teks wacana."
+  );
   const [modeStimulus, setModeStimulus] = useState<"AI_AUTO" | "CUSTOM_TEKS">("AI_AUTO");
   const [stimulusTeks, setStimulusTeks] = useState("");
   const [jenisTeks, setJenisTeks] = useState(GENRE_TEKS_INDONESIA[0]);
@@ -221,6 +227,12 @@ export default function GeneratorSoalPage() {
     setSubElemen(p.subElemen);
     setKompetensi(p.kompetensi);
     setBatasan(p.batasan);
+    setElemen(p.elemen || "");
+    setSubElemen(p.subElemen || "");
+    setKompetensi(p.kompetensi || "");
+    if (p.subKompetensi) setSubKompetensi(p.subKompetensi);
+    else if (p.subElemen) setSubKompetensi(p.subElemen);
+    setBatasan(p.batasan || "");
     if (p.jenisTeks) setJenisTeks(p.jenisTeks);
     if (p.topikTeks) setTopikTeks(p.topikTeks);
     if (p.fokusKebahasaan) setFokusKebahasaan(p.fokusKebahasaan);
@@ -238,10 +250,11 @@ export default function GeneratorSoalPage() {
       mapel,
       tipeSoal,
       jumlahSoal,
-      elemen,
-      subElemen,
+      elemen: !isLang ? elemen : undefined,
+      subElemen: !isLang ? subElemen : undefined,
       kompetensi,
-      batasan,
+      subKompetensi: isLang ? subKompetensi : undefined,
+      batasan: !isLang ? batasan : undefined,
       jenisTeks: isLang ? jenisTeks : undefined,
       topikTeks: isLang ? topikTeks : undefined,
       stimulusTeks: isLang && modeStimulus === "CUSTOM_TEKS" ? stimulusTeks : undefined,
@@ -254,6 +267,7 @@ export default function GeneratorSoalPage() {
     elemen,
     subElemen,
     kompetensi,
+    subKompetensi,
     batasan,
     isLang,
     jenisTeks,
@@ -281,10 +295,11 @@ export default function GeneratorSoalPage() {
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           mapel,
-          elemen,
-          subElemen,
+          elemen: !isLang ? elemen : undefined,
+          subElemen: !isLang ? subElemen : undefined,
           kompetensi,
-          batasan,
+          subKompetensi: isLang ? subKompetensi : undefined,
+          batasan: !isLang ? batasan : undefined,
           tipeSoal,
           jumlahSoal,
           jenisTeks: isLang ? jenisTeks : undefined,
@@ -643,82 +658,122 @@ export default function GeneratorSoalPage() {
             </div>
           )}
 
-          {/* 4 Pusmendik Parameters */}
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-            <div className="space-y-1.5">
-              <label className="text-xs font-bold text-slate-700 flex items-center justify-between">
-                <span>{isLang ? "1. Elemen / Keterampilan Bahasa" : "1. Elemen / Materi Pokok"}</span>
-                <span className="text-[10px] text-slate-400 font-normal">Acuan Prompt #4</span>
-              </label>
-              <input
-                type="text"
-                value={elemen}
-                onChange={(e) => setElemen(e.target.value)}
-                placeholder={isLang ? "Contoh: Membaca dan Memirsa (Reading & Viewing)..." : "Contoh: Aljabar dan Fungsi..."}
-                className="w-full px-3.5 py-2.5 rounded-xl border border-slate-200 text-xs font-medium text-slate-800 focus:ring-2 focus:ring-blue-500"
-                required
-              />
-            </div>
+          {/* Parameter Asesmen: Rumpun Bahasa (Kompetensi & Sub-Kompetensi Saja) VS Non-Bahasa (4 Parameter Pusmendik) */}
+          {isLang ? (
+            <div className="bg-white p-5 sm:p-6 rounded-3xl border border-indigo-200/80 shadow-xs space-y-4">
+              <div className="flex items-center justify-between border-b border-slate-100 pb-3">
+                <span className="text-xs font-extrabold text-indigo-950 flex items-center gap-2">
+                  <Layers className="w-4 h-4 text-indigo-600" />
+                  <span>Kompetensi & Sub-Kompetensi Asesmen Bahasa</span>
+                </span>
+                <span className="text-[10px] text-slate-400 font-medium">Acuan Target Pembelajaran</span>
+              </div>
 
-            <div className="space-y-1.5">
-              <label className="text-xs font-bold text-slate-700 flex items-center justify-between">
-                <span>{isLang ? "2. Sub-Elemen / Struktur Wacana" : "2. Sub-Elemen / Sub-Materi"}</span>
-                <span className="text-[10px] text-slate-400 font-normal">Acuan Prompt #5</span>
-              </label>
-              <input
-                type="text"
-                value={subElemen}
-                onChange={(e) => setSubElemen(e.target.value)}
-                placeholder={isLang ? "Contoh: Teks Eksplanasi / Analytical Exposition..." : "Contoh: Persamaan dan Fungsi Kuadrat..."}
-                className="w-full px-3.5 py-2.5 rounded-xl border border-slate-200 text-xs font-medium text-slate-800 focus:ring-2 focus:ring-blue-500"
-                required
-              />
-            </div>
+              <div className="space-y-4">
+                <div className="space-y-1.5">
+                  <label className="text-xs font-bold text-slate-700 flex items-center justify-between">
+                    <span>1. Kompetensi</span>
+                    <span className="text-[10px] text-indigo-600 font-semibold">Capaian Pembelajaran Bahasa</span>
+                  </label>
+                  <input
+                    type="text"
+                    value={kompetensi}
+                    onChange={(e) => setKompetensi(e.target.value)}
+                    placeholder="misal: Membaca dan Memirsa (Reading and Viewing) / Menyimak / Menulis..."
+                    className="w-full px-3.5 py-2.5 rounded-xl border border-slate-200 text-xs font-medium text-slate-800 focus:ring-2 focus:ring-indigo-500"
+                    required
+                  />
+                </div>
 
-            <div className="space-y-1.5 sm:col-span-2">
-              <label className="text-xs font-bold text-slate-700 flex items-center justify-between">
-                <span>3. Kompetensi / Indikator Asesmen (HOTS)</span>
-                <span className="text-[10px] text-slate-400 font-normal">Acuan Prompt #6</span>
-              </label>
-              <textarea
-                rows={2}
-                value={kompetensi}
-                onChange={(e) => setKompetensi(e.target.value)}
-                placeholder={
-                  isLang
-                    ? "Contoh: Menganalisis ide pokok, hubungan sebab-akibat, dan inferensi makna tersirat dalam wacana..."
-                    : "Contoh: Menyelesaikan masalah kontekstual yang berkaitan dengan nilai optimum fungsi kuadrat..."
-                }
-                className="w-full px-3.5 py-2.5 rounded-xl border border-slate-200 text-xs font-medium text-slate-800 focus:ring-2 focus:ring-blue-500"
-                required
-              />
-              <p className="text-[10px] text-slate-400">
-                Gunakan kata kerja operasional HOTS (menganalisis, mengevaluasi, memecahkan masalah, merancang, mengidentifikasi malafungsi).
-              </p>
+                <div className="space-y-1.5">
+                  <label className="text-xs font-bold text-slate-700 flex items-center justify-between">
+                    <span>2. Sub-Kompetensi</span>
+                    <span className="text-[10px] text-indigo-600 font-semibold">Indikator Ketercapaian HOTS</span>
+                  </label>
+                  <textarea
+                    rows={2}
+                    value={subKompetensi}
+                    onChange={(e) => setSubKompetensi(e.target.value)}
+                    placeholder="misal: Mengevaluasi gagasan pokok, hubungan sebab-akibat (kausalitas), dan kalimat fakta vs opini dalam teks wacana..."
+                    className="w-full px-3.5 py-2.5 rounded-xl border border-slate-200 text-xs font-medium text-slate-800 focus:ring-2 focus:ring-indigo-500"
+                    required
+                  />
+                  <p className="text-[10px] text-slate-400">
+                    Menentukan kemampuan spesifik yang harus ditunjukkan siswa saat menganalisis wacana bacaan.
+                  </p>
+                </div>
+              </div>
             </div>
+          ) : (
+            /* 4 Pusmendik Parameters untuk Mapel Non-Bahasa (Eksak & Kejuruan SMK) */
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+              <div className="space-y-1.5">
+                <label className="text-xs font-bold text-slate-700 flex items-center justify-between">
+                  <span>1. Elemen / Materi Pokok</span>
+                  <span className="text-[10px] text-slate-400 font-normal">Acuan Prompt #4</span>
+                </label>
+                <input
+                  type="text"
+                  value={elemen}
+                  onChange={(e) => setElemen(e.target.value)}
+                  placeholder="Contoh: Aljabar dan Fungsi..."
+                  className="w-full px-3.5 py-2.5 rounded-xl border border-slate-200 text-xs font-medium text-slate-800 focus:ring-2 focus:ring-blue-500"
+                  required
+                />
+              </div>
 
-            <div className="space-y-1.5 sm:col-span-2">
-              <label className="text-xs font-bold text-slate-700 flex items-center justify-between">
-                <span>4. Batasan Konteks & Ruang Lingkup Materi</span>
-                <span className="text-[10px] text-slate-400 font-normal">Acuan Prompt #7</span>
-              </label>
-              <textarea
-                rows={2}
-                value={batasan}
-                onChange={(e) => setBatasan(e.target.value)}
-                placeholder={
-                  isLang
-                    ? "Contoh: Panjang teks wacana 150-250 kata, konteks keselamatan kerja industri, kaidah ejaan baku..."
-                    : "Contoh: Nilai diskriminan D >= 0, tidak melibatkan bilangan imajiner, fungsi standar f(x) = ax^2 + bx + c..."
-                }
-                className="w-full px-3.5 py-2.5 rounded-xl border border-slate-200 text-xs font-medium text-slate-800 focus:ring-2 focus:ring-blue-500"
-                required
-              />
-              <p className="text-[10px] text-slate-400">
-                Menjadi koridor pembatas ketat agar AI tidak membuat soal di luar lingkup materi yang dipelajari siswa.
-              </p>
+              <div className="space-y-1.5">
+                <label className="text-xs font-bold text-slate-700 flex items-center justify-between">
+                  <span>2. Sub-Elemen / Sub-Materi</span>
+                  <span className="text-[10px] text-slate-400 font-normal">Acuan Prompt #5</span>
+                </label>
+                <input
+                  type="text"
+                  value={subElemen}
+                  onChange={(e) => setSubElemen(e.target.value)}
+                  placeholder="Contoh: Persamaan dan Fungsi Kuadrat..."
+                  className="w-full px-3.5 py-2.5 rounded-xl border border-slate-200 text-xs font-medium text-slate-800 focus:ring-2 focus:ring-blue-500"
+                  required
+                />
+              </div>
+
+              <div className="space-y-1.5 sm:col-span-2">
+                <label className="text-xs font-bold text-slate-700 flex items-center justify-between">
+                  <span>3. Kompetensi / Indikator Asesmen (HOTS)</span>
+                  <span className="text-[10px] text-slate-400 font-normal">Acuan Prompt #6</span>
+                </label>
+                <textarea
+                  rows={2}
+                  value={kompetensi}
+                  onChange={(e) => setKompetensi(e.target.value)}
+                  placeholder="Contoh: Menyelesaikan masalah kontekstual yang berkaitan dengan nilai optimum fungsi kuadrat..."
+                  className="w-full px-3.5 py-2.5 rounded-xl border border-slate-200 text-xs font-medium text-slate-800 focus:ring-2 focus:ring-blue-500"
+                  required
+                />
+                <p className="text-[10px] text-slate-400">
+                  Gunakan kata kerja operasional HOTS (menganalisis, mengevaluasi, memecahkan masalah, merancang, mengidentifikasi malafungsi).
+                </p>
+              </div>
+
+              <div className="space-y-1.5 sm:col-span-2">
+                <label className="text-xs font-bold text-slate-700 flex items-center justify-between">
+                  <span>4. Batasan Konteks & Ruang Lingkup Materi</span>
+                  <span className="text-[10px] text-slate-400 font-normal">Acuan Prompt #7</span>
+                </label>
+                <textarea
+                  rows={2}
+                  value={batasan}
+                  onChange={(e) => setBatasan(e.target.value)}
+                  placeholder="Contoh: Nilai diskriminan D >= 0, tidak melibatkan bilangan imajiner, fungsi standar f(x) = ax^2 + bx + c..."
+                  className="w-full px-3.5 py-2.5 rounded-xl border border-slate-200 text-xs font-medium text-slate-800 focus:ring-2 focus:ring-blue-500"
+                  required
+                />
+                <p className="text-[10px] text-slate-400">
+                  Menjadi koridor pembatas ketat agar AI tidak membuat soal di luar lingkup materi yang dipelajari siswa.
+                </p>
+              </div>
             </div>
-          </div>
+          )}
 
           {/* Live Prompt Preview Section */}
           <div className="border border-slate-200 rounded-2xl overflow-hidden">
