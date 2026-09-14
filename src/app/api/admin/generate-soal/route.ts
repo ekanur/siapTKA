@@ -60,11 +60,6 @@ export async function POST(request: Request) {
       return NextResponse.json({ success: false, error: "Mata pelajaran dan bentuk soal wajib dipilih." }, { status: 400 });
     }
 
-    const finalElemen = elemen?.trim() || "Materi Pokok Kurikulum";
-    const finalSubElemen = subElemen?.trim() || "Fokus Sub-Topik Asesmen";
-    const finalKompetensi = kompetensi?.trim() || "Menganalisis dan memecahkan persoalan kontekstual";
-    const finalSubKompetensi = subKompetensi?.trim() || finalSubElemen;
-    const finalBatasan = batasan?.trim() || "Sesuai batasan ruang lingkup kurikulum";
     if (!kompetensi || !kompetensi.trim()) {
       return NextResponse.json({ success: false, error: "Kompetensi / Indikator Asesmen wajib diisi." }, { status: 400 });
     }
