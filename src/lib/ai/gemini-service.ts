@@ -199,9 +199,17 @@ export function generateContextualSimulatedQuestions(params: GenerateParams): Ge
   const count = params.jumlahSoal || 3;
   const elemen = params.elemen?.trim() || "Materi Pokok Kejuruan & Akademik";
   const subElemen = params.subElemen?.trim() || "Fokus Sub-Topik Asesmen";
+  const hasElemen = Boolean(params.elemen?.trim());
+  const hasSubElemen = Boolean(params.subElemen?.trim());
+  const hasBatasan = Boolean(params.batasan?.trim());
+
+  const mapel = params.mapel || "MATEMATIKA";
+  const elemen = hasElemen ? params.elemen!.trim() : `Materi Pokok ${mapel}`;
+  const subElemen = hasSubElemen ? params.subElemen!.trim() : "Fokus Sub-Topik Terkait";
   const kompetensi = params.kompetensi?.trim() || "Menganalisis dan memecahkan persoalan kontekstual";
   const batasan = params.batasan?.trim() || "Sesuai batasan ruang lingkup kurikulum";
   const mapel = params.mapel || "MATEMATIKA";
+  const batasan = hasBatasan ? params.batasan!.trim() : "Standar Kurikulum Resmi Nasional";
   const tipeSoal = params.tipeSoal || "PILIHAN_GANDA";
 
   const results: GeneratedSoalResult[] = [];

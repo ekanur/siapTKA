@@ -136,6 +136,30 @@ const PUSMENDIK_PRESETS = [
     kompetensi: "Menghitung konsentrasi analit dan mengevaluasi pemilihan indikator pH yang tepat berdasarkan kurva titrasi.",
     batasan: "Titrasi asam kuat - basa kuat dan asam lemah - basa kuat, mengabaikan efek kekuatan ionik sekunder.",
   },
+  {
+    mapel: "KIMIA",
+    label: "Kimia: Laju Reaksi & Kesetimbangan",
+    kompetensi: "Menganalisis faktor-faktor yang mempengaruhi laju reaksi dan pergeseran arah kesetimbangan kimia dalam sistem industri.",
+    elemen: "Kimia Fisik",
+    subElemen: "Kinetika dan Kesetimbangan Kimia",
+    batasan: "",
+  },
+  {
+    mapel: "EKONOMI",
+    label: "Ekonomi: Kebijakan Moneter & Inflasi",
+    kompetensi: "Mengevaluasi efektivitas bauran kebijakan moneter dan fiskal dalam mengendalikan laju inflasi dan menjaga stabilitas makroekonomi.",
+    elemen: "Ekonomi Makro",
+    subElemen: "Kebijakan Moneter dan Fiskal",
+    batasan: "",
+  },
+  {
+    mapel: "SEJARAH",
+    label: "Sejarah: Transformasi Sosial Ekonomi",
+    kompetensi: "Menganalisis keterkaitan kausalitas peristiwa sejarah terhadap transformasi struktur sosial, ekonomi, dan politik bangsa.",
+    elemen: "Sejarah Nasional",
+    subElemen: "Dinamika Kebangsaan dan Kemerdekaan",
+    batasan: "",
+  },
 ];
 
 export default function GeneratorSoalPage() {
@@ -673,6 +697,12 @@ export default function GeneratorSoalPage() {
                 <div className="space-y-1.5">
                   <label className="text-xs font-bold text-slate-700 flex items-center justify-between">
                     <span>1. Kompetensi</span>
+                    <div className="flex items-center gap-2">
+                      <span>1. Kompetensi</span>
+                      <span className="text-[10px] px-2 py-0.5 rounded-full bg-rose-100 text-rose-700 font-extrabold tracking-wide">
+                        WAJIB DIISI
+                      </span>
+                    </div>
                     <span className="text-[10px] text-indigo-600 font-semibold">Capaian Pembelajaran Bahasa</span>
                   </label>
                   <input
@@ -688,6 +718,12 @@ export default function GeneratorSoalPage() {
                 <div className="space-y-1.5">
                   <label className="text-xs font-bold text-slate-700 flex items-center justify-between">
                     <span>2. Sub-Kompetensi</span>
+                    <div className="flex items-center gap-2">
+                      <span>2. Sub-Kompetensi</span>
+                      <span className="text-[10px] px-1.5 py-0.5 rounded bg-slate-100 text-slate-500 font-normal">
+                        Opsional
+                      </span>
+                    </div>
                     <span className="text-[10px] text-indigo-600 font-semibold">Indikator Ketercapaian HOTS</span>
                   </label>
                   <textarea
@@ -695,28 +731,62 @@ export default function GeneratorSoalPage() {
                     value={subKompetensi}
                     onChange={(e) => setSubKompetensi(e.target.value)}
                     placeholder="misal: Mengevaluasi gagasan pokok, hubungan sebab-akibat (kausalitas), dan kalimat fakta vs opini dalam teks wacana..."
+                    placeholder="misal: Mengevaluasi gagasan pokok, hubungan sebab-akibat (kausalitas)... (opsional, boleh dikosongkan)"
                     className="w-full px-3.5 py-2.5 rounded-xl border border-slate-200 text-xs font-medium text-slate-800 focus:ring-2 focus:ring-indigo-500"
                     required
                   />
                   <p className="text-[10px] text-slate-400">
                     Menentukan kemampuan spesifik yang harus ditunjukkan siswa saat menganalisis wacana bacaan.
+                    Opsional. Boleh dikosongkan jika hanya ingin mengacu pada kompetensi utama.
                   </p>
                 </div>
               </div>
             </div>
           ) : (
             /* 4 Pusmendik Parameters untuk Mapel Non-Bahasa (Eksak & Kejuruan SMK) */
+            /* 4 Parameter Asesmen untuk Mapel Non-Bahasa (Eksak, Akademik & Kejuruan SMK) */
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+              <div className="space-y-1.5 sm:col-span-2">
+                <label className="text-xs font-bold text-slate-700 flex items-center justify-between">
+                  <div className="flex items-center gap-2">
+                    <span>1. Kompetensi / Indikator Asesmen (HOTS)</span>
+                    <span className="text-[10px] px-2 py-0.5 rounded-full bg-rose-100 text-rose-700 font-extrabold tracking-wide">
+                      WAJIB DIISI
+                    </span>
+                  </div>
+                  <span className="text-[10px] text-blue-600 font-semibold">Fokus Utama Pengukuran</span>
+                </label>
+                <textarea
+                  rows={2}
+                  value={kompetensi}
+                  onChange={(e) => setKompetensi(e.target.value)}
+                  placeholder="Contoh: Menganalisis faktor-faktor yang mempengaruhi laju reaksi / Menyelesaikan masalah kontekstual nilai optimum..."
+                  className="w-full px-3.5 py-2.5 rounded-xl border border-slate-200 text-xs font-medium text-slate-800 focus:ring-2 focus:ring-blue-500"
+                  required
+                />
+                <p className="text-[10px] text-slate-400">
+                  Target kemampuan utama yang harus diukur dalam butir soal. Gunakan kata kerja operasional HOTS (menganalisis, mengevaluasi, memecahkan masalah).
+                </p>
+              </div>
+
               <div className="space-y-1.5">
                 <label className="text-xs font-bold text-slate-700 flex items-center justify-between">
                   <span>1. Elemen / Materi Pokok</span>
                   <span className="text-[10px] text-slate-400 font-normal">Acuan Prompt #4</span>
+                  <div className="flex items-center gap-2">
+                    <span>2. Elemen / Materi Pokok</span>
+                    <span className="text-[10px] px-1.5 py-0.5 rounded bg-slate-100 text-slate-500 font-normal">
+                      Opsional
+                    </span>
+                  </div>
+                  <span className="text-[10px] text-slate-400 font-normal">Acuan Materi</span>
                 </label>
                 <input
                   type="text"
                   value={elemen}
                   onChange={(e) => setElemen(e.target.value)}
                   placeholder="Contoh: Aljabar dan Fungsi..."
+                  placeholder="Contoh: Kimia Fisik / Aljabar dan Fungsi... (boleh dikosongkan)"
                   className="w-full px-3.5 py-2.5 rounded-xl border border-slate-200 text-xs font-medium text-slate-800 focus:ring-2 focus:ring-blue-500"
                   required
                 />
@@ -726,12 +796,20 @@ export default function GeneratorSoalPage() {
                 <label className="text-xs font-bold text-slate-700 flex items-center justify-between">
                   <span>2. Sub-Elemen / Sub-Materi</span>
                   <span className="text-[10px] text-slate-400 font-normal">Acuan Prompt #5</span>
+                  <div className="flex items-center gap-2">
+                    <span>3. Sub-Elemen / Sub-Materi</span>
+                    <span className="text-[10px] px-1.5 py-0.5 rounded bg-slate-100 text-slate-500 font-normal">
+                      Opsional
+                    </span>
+                  </div>
+                  <span className="text-[10px] text-slate-400 font-normal">Acuan Sub-Topik</span>
                 </label>
                 <input
                   type="text"
                   value={subElemen}
                   onChange={(e) => setSubElemen(e.target.value)}
                   placeholder="Contoh: Persamaan dan Fungsi Kuadrat..."
+                  placeholder="Contoh: Laju Reaksi / Persamaan Kuadrat... (boleh dikosongkan)"
                   className="w-full px-3.5 py-2.5 rounded-xl border border-slate-200 text-xs font-medium text-slate-800 focus:ring-2 focus:ring-blue-500"
                   required
                 />
@@ -741,6 +819,13 @@ export default function GeneratorSoalPage() {
                 <label className="text-xs font-bold text-slate-700 flex items-center justify-between">
                   <span>3. Kompetensi / Indikator Asesmen (HOTS)</span>
                   <span className="text-[10px] text-slate-400 font-normal">Acuan Prompt #6</span>
+                  <div className="flex items-center gap-2">
+                    <span>4. Batasan Konteks & Catatan Materi</span>
+                    <span className="text-[10px] px-1.5 py-0.5 rounded bg-slate-100 text-slate-500 font-normal">
+                      Opsional
+                    </span>
+                  </div>
+                  <span className="text-[10px] text-slate-400 font-normal">Catatan Tambahan</span>
                 </label>
                 <textarea
                   rows={2}
@@ -765,11 +850,13 @@ export default function GeneratorSoalPage() {
                   value={batasan}
                   onChange={(e) => setBatasan(e.target.value)}
                   placeholder="Contoh: Nilai diskriminan D >= 0, tidak melibatkan bilangan imajiner, fungsi standar f(x) = ax^2 + bx + c..."
+                  placeholder="Contoh: Tidak melibatkan orde reaksi pecahan / hanya reaksi suhu kamar... (boleh dikosongkan jika tidak ada batasan)"
                   className="w-full px-3.5 py-2.5 rounded-xl border border-slate-200 text-xs font-medium text-slate-800 focus:ring-2 focus:ring-blue-500"
                   required
                 />
                 <p className="text-[10px] text-slate-400">
                   Menjadi koridor pembatas ketat agar AI tidak membuat soal di luar lingkup materi yang dipelajari siswa.
+                  Opsional. Boleh dikosongkan jika mata pelajaran (seperti Kimia, PKn, Ekonomi, Geografi, Sosiologi, Sejarah, Antropologi, dsb.) tidak memiliki catatan batasan khusus.
                 </p>
               </div>
             </div>
@@ -857,6 +944,17 @@ export default function GeneratorSoalPage() {
               </h3>
               <p className="text-xs text-slate-500 mt-0.5">
                 Merujuk pada Elemen <strong>{elemen}</strong>, Sub-Elemen <strong>{subElemen}</strong> ({mapel}).
+                {isLang ? (
+                  <>
+                    Merujuk pada Kompetensi <strong>{kompetensi}</strong> ({mapel}).
+                  </>
+                ) : (
+                  <>
+                    Merujuk pada Kompetensi <strong>{kompetensi}</strong>
+                    {elemen && <> &bull; Elemen <strong>{elemen}</strong></>}
+                    {subElemen && <> ({subElemen})</>} ({mapel}).
+                  </>
+                )}
               </p>
             </div>
 

@@ -175,8 +175,17 @@ export function buildGeminiPrompt(params: GeneratePromptParams): string {
   const subElemen = params.subElemen || "Sub-Materi Asesmen";
   const kompetensi = params.kompetensi || "Kompetensi penalaran akademik tingkat tinggi (HOTS)";
   const batasan = params.batasan || "Standar kerangka asesmen nasional Pusmendik";
+  const hasElemen = Boolean(params.elemen?.trim());
+  const hasSubElemen = Boolean(params.subElemen?.trim());
+  const hasBatasan = Boolean(params.batasan?.trim());
+
   const mapel = params.mapel || "MATEMATIKA";
   const tipeSoal = params.tipeSoal || "PILIHAN_GANDA";
+
+  const elemen = hasElemen ? params.elemen!.trim() : `Materi Pokok ${mapel}`;
+  const subElemen = hasSubElemen ? params.subElemen!.trim() : "Fokus Sub-Topik Terkait";
+  const kompetensi = params.kompetensi?.trim() || "Kompetensi penalaran akademik tingkat tinggi (HOTS)";
+  const batasan = hasBatasan ? params.batasan!.trim() : "Tidak ada batasan khusus (sesuai standar kurikulum resmi SMA/SMK)";
 
   const tipeSoalLabel =
     tipeSoal === "PILIHAN_GANDA"
@@ -190,6 +199,7 @@ export function buildGeminiPrompt(params: GeneratePromptParams): string {
     Boolean(params.jenisTeks || params.stimulusTeks || params.fokusKebahasaan);
 
   const finalSubKompetensi = params.subKompetensi || params.subElemen || "Menganalisis dan menyimpulkan wacana secara komprehensif";
+  const finalSubKompetensi = params.subKompetensi?.trim() || (hasSubElemen ? subElemen : "Menganalisis dan menyimpulkan wacana secara komprehensif");
 
   return `Anda adalah Pakar Asesmen Akademik & Kejuruan serta Pembuat Soal Ujian Nasional / Tes Kemampuan Akademik (TKA) Standar Resmi Pusmendik Kemendikdasmen RI.
 
@@ -206,11 +216,13 @@ ${
 2. BENTUK SOAL: ${tipeSoalLabel} (${tipeSoal})
 3. JUMLAH BUTIR SOAL: ${count} butir
 4. KOMPETENSI UTAMA: ${kompetensi}
+4. KOMPETENSI UTAMA (WAJIB): ${kompetensi}
 5. SUB-KOMPETENSI: ${finalSubKompetensi}
 6. GENRE / JENIS TEKS: ${params.jenisTeks || "Teks Wacana Kontekstual"}
 7. TEMA / TOPIK BACAAN: ${params.topikTeks || "Dunia Kerja, Industri Vokasi, dan Inovasi Modern"}
 8. FOKUS ASPEK KEBAHASAAN: ${params.fokusKebahasaan || "Pemahaman Bacaan & Makna Kontekstual"}`
     : `MATRIKS ASESMEN TEKNIS & KEJURUAN:
+    : `MATRIKS ASESMEN AKADEMIK & KEJURUAN:
 ============================================================
 1. MATA PELAJARAN: ${mapel}
 2. BENTUK SOAL: ${tipeSoalLabel} (${tipeSoal})
@@ -219,6 +231,10 @@ ${
 5. SUB-ELEMEN / SUB-MATERI: ${subElemen}
 6. KOMPETENSI / INDIKATOR ASESMEN: ${kompetensi}
 7. BATASAN RUANG LINGKUP & KONTEKS: ${batasan}`
+4. KOMPETENSI / INDIKATOR ASESMEN (UTAMA & WAJIB): ${kompetensi}
+5. ELEMEN / MATERI POKOK: ${hasElemen ? elemen : `Sesuai ruang lingkup mata pelajaran ${mapel} (Tidak ada pembatasan elemen spesifik)`}
+6. SUB-ELEMEN / SUB-MATERI: ${hasSubElemen ? subElemen : "Sesuai topik bahasan terkait indikator kompetensi"}
+7. BATASAN RUANG LINGKUP & KONTEKS: ${hasBatasan ? batasan : "Tidak ada batasan khusus (sesuai standar kurikulum nasional dan konteks wajar jenjang SMA/SMK)"}`
 }
 ============================================================
 ${
@@ -256,6 +272,10 @@ ${
 2. PENGUJIAN KOMPETENSI: Setiap butir soal harus secara langsung mengukur kemampuan siswa dalam: "${kompetensi}".
 3. KEPATUHAN BATASAN RUANG LINGKUP: Patuhi batasan konteks: "${batasan}". Segala batasan variabel, asumsi, jenis alat, kedalaman rumus, ataupun skenario tidak boleh melampaui batasan ini.
 4. STIMULUS REALISTIS & KONTEKSTUAL: Setiap butir soal harus diawali dengan stimulus situasi nyata, wacana bacaan, permasalahan industri/PKL, data teknis, eksperimen, tabel, atau kasus konkret yang relevan bagi siswa SMK.`
+    : `1. PENGUJIAN KOMPETENSI (KRITERIA UTAMA & WAJIB): Setiap butir soal WAJIB secara langsung dan spesifik mengukur kemampuan siswa dalam: "${kompetensi}".
+2. KESELARASAN MATERI: ${hasElemen ? `Seluruh stimulus kasus, pertanyaan, opsi, dan pembahasan harus berakar pada Elemen "${elemen}" ${hasSubElemen ? `dan Sub-Elemen "${subElemen}"` : ""}.` : `Seluruh butir soal harus relevan dan selaras dengan cakupan kurikulum mata pelajaran ${mapel}.`}
+3. KEPATUHAN BATASAN RUANG LINGKUP: ${hasBatasan ? `Patuhi secara ketat batasan konteks: "${batasan}". Segala batasan variabel, asumsi, jenis alat, kedalaman rumus, ataupun skenario tidak boleh melampaui batasan ini.` : `Gunakan batasan ruang lingkup wajar sesuai standar kurikulum resmi SMA/SMK tanpa membatasi kreativitas soal kontekstual.`}
+4. STIMULUS REALISTIS & KONTEKSTUAL: Setiap butir soal harus diawali dengan stimulus situasi nyata, permasalahan industri/kehidupan sehari-hari, data teknis/eksperimen, tabel, atau kasus konkret yang relevan bagi siswa.`
 }
 5. NOTASI SAINS & MATEMATIKA: Gunakan notasi LaTeX standar untuk rumus atau persamaan matematika/fisika/kimia ($...$ untuk inline, $$...$$ untuk display blok).
 ${

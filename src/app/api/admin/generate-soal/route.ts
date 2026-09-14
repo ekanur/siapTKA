@@ -65,6 +65,15 @@ export async function POST(request: Request) {
     const finalKompetensi = kompetensi?.trim() || "Menganalisis dan memecahkan persoalan kontekstual";
     const finalSubKompetensi = subKompetensi?.trim() || finalSubElemen;
     const finalBatasan = batasan?.trim() || "Sesuai batasan ruang lingkup kurikulum";
+    if (!kompetensi || !kompetensi.trim()) {
+      return NextResponse.json({ success: false, error: "Kompetensi / Indikator Asesmen wajib diisi." }, { status: 400 });
+    }
+
+    const finalElemen = elemen?.trim() || undefined;
+    const finalSubElemen = subElemen?.trim() || undefined;
+    const finalKompetensi = kompetensi.trim();
+    const finalSubKompetensi = subKompetensi?.trim() || undefined;
+    const finalBatasan = batasan?.trim() || undefined;
 
     // Panggil Gemini Service dengan parameter matriks asesmen & parameter bahasa
     const generationResult = await generateSoalWithGemini({
