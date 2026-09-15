@@ -1,8 +1,80 @@
 const { PrismaClient } = require('@prisma/client');
-const fs = require('fs');
-const path = require('path');
 
 const prisma = new PrismaClient();
+
+const DATA_71_SISWA = [
+  { nis: "21141", nama: "ADRIANO ANANTA PUTRA RAHARIANTO", email: "21141@student.stembayo.sch.id", kelas: "13 SIJA A", jurusan: "SIJA", namaIndustriPkl: "Cargloss Group" },
+  { nis: "21142", nama: "ADRIANO KIANDRA CAESAR RAMADHAN", email: "21142@student.stembayo.sch.id", kelas: "13 SIJA A", jurusan: "SIJA", namaIndustriPkl: "Cargloss Group" },
+  { nis: "21143", nama: "AGITAMI KARTIKA PUTERI", email: "21143@student.stembayo.sch.id", kelas: "13 SIJA A", jurusan: "SIJA", namaIndustriPkl: "Cargloss Group" },
+  { nis: "21145", nama: "AISYAH MUNA FATIH", email: "21145@student.stembayo.sch.id", kelas: "13 SIJA A", jurusan: "SIJA", namaIndustriPkl: "PT. Aksa Digital Group" },
+  { nis: "21146", nama: "ALIFA QONITA AGUSTINA", email: "21146@student.stembayo.sch.id", kelas: "13 SIJA A", jurusan: "SIJA", namaIndustriPkl: "Cargloss Group" },
+  { nis: "21147", nama: "ALVINSA ISNANDA PUTRA", email: "21147@student.stembayo.sch.id", kelas: "13 SIJA A", jurusan: "SIJA", namaIndustriPkl: "PT Gamatechno Indonesia" },
+  { nis: "21148", nama: "AMANDA MAYA WIJAYANTI", email: "21148@student.stembayo.sch.id", kelas: "13 SIJA A", jurusan: "SIJA", namaIndustriPkl: "Cargloss Group" },
+  { nis: "21149", nama: "ARDIANSYAH RIZKY PRATAMA", email: "21149@student.stembayo.sch.id", kelas: "13 SIJA A", jurusan: "SIJA", namaIndustriPkl: "PT Aksa Digital Group" },
+  { nis: "21150", nama: "ATHAYA FATIH AZIZ", email: "21150@student.stembayo.sch.id", kelas: "13 SIJA A", jurusan: "SIJA", namaIndustriPkl: "PT. Aksa Digital Group" },
+  { nis: "21151", nama: "AURAFELA FATTAHUNESWARI", email: "21151@student.stembayo.sch.id", kelas: "13 SIJA A", jurusan: "SIJA", namaIndustriPkl: "PT. Aksa Digital Group" },
+  { nis: "21152", nama: "AZIZ HADI WICAKSONO", email: "21152@student.stembayo.sch.id", kelas: "13 SIJA A", jurusan: "SIJA", namaIndustriPkl: "Cargloss Group" },
+  { nis: "21153", nama: "BINTANG PRATAMA PUTRA SULISTYO", email: "21153@student.stembayo.sch.id", kelas: "13 SIJA A", jurusan: "SIJA", namaIndustriPkl: "Cargloss Group" },
+  { nis: "21154", nama: "DAFFA HAFIDZUDIN ARSYAD", email: "21154@student.stembayo.sch.id", kelas: "13 SIJA A", jurusan: "SIJA", namaIndustriPkl: "PT. Aksa Digital Group" },
+  { nis: "21155", nama: "DALIL AMINUDDIN", email: "21155@student.stembayo.sch.id", kelas: "13 SIJA A", jurusan: "SIJA", namaIndustriPkl: "PT. Aksa Digital Group" },
+  { nis: "21156", nama: "DHEA PENI NADINE SHAFIRA", email: "21156@student.stembayo.sch.id", kelas: "13 SIJA A", jurusan: "SIJA", namaIndustriPkl: "Cargloss Group" },
+  { nis: "21157", nama: "DIKA SETYA PRATAMA", email: "21157@student.stembayo.sch.id", kelas: "13 SIJA A", jurusan: "SIJA", namaIndustriPkl: "PT Aksa Digital Group" },
+  { nis: "21158", nama: "DONITA CESARE HUDI", email: "21158@student.stembayo.sch.id", kelas: "13 SIJA A", jurusan: "SIJA", namaIndustriPkl: "PT. Aksa Digital Group" },
+  { nis: "21159", nama: "ELFREDA FARREL YUWANA", email: "21159@student.stembayo.sch.id", kelas: "13 SIJA A", jurusan: "SIJA", namaIndustriPkl: "PLN Icon Plus" },
+  { nis: "21160", nama: "FADHIRRAHMAN ADZDZAKY", email: "21160@student.stembayo.sch.id", kelas: "13 SIJA A", jurusan: "SIJA", namaIndustriPkl: "PT. Gamatechno Indonesia" },
+  { nis: "21161", nama: "FAKHRI DARMANSYAH ARSYAD", email: "21161@student.stembayo.sch.id", kelas: "13 SIJA A", jurusan: "SIJA", namaIndustriPkl: "Cargloss Group" },
+  { nis: "21162", nama: "FALIH ARKAN AL FATHANI RASENDRIYA", email: "21162@student.stembayo.sch.id", kelas: "13 SIJA A", jurusan: "SIJA", namaIndustriPkl: "PT. Gamatechno Indonesia" },
+  { nis: "21163", nama: "GEMA SABDA BHASKARA", email: "21163@student.stembayo.sch.id", kelas: "13 SIJA A", jurusan: "SIJA", namaIndustriPkl: "MultiIntegra Technology Group" },
+  { nis: "21164", nama: "GHANIA ANJANI HUSNA", email: "21164@student.stembayo.sch.id", kelas: "13 SIJA A", jurusan: "SIJA", namaIndustriPkl: "TEFA" },
+  { nis: "21165", nama: "GUNAWAN WIBISANA", email: "21165@student.stembayo.sch.id", kelas: "13 SIJA A", jurusan: "SIJA", namaIndustriPkl: "MultiIntegra Technology Group" },
+  { nis: "21166", nama: "HANIF NAUFAL SANI", email: "21166@student.stembayo.sch.id", kelas: "13 SIJA A", jurusan: "SIJA", namaIndustriPkl: "CV Karya Hidup Sentosa" },
+  { nis: "21167", nama: "HILMY DAMARJATI BUDIHARTO", email: "21167@student.stembayo.sch.id", kelas: "13 SIJA A", jurusan: "SIJA", namaIndustriPkl: "Cargloss Group" },
+  { nis: "21168", nama: "ILHAM NURHIDAYAT", email: "21168@student.stembayo.sch.id", kelas: "13 SIJA A", jurusan: "SIJA", namaIndustriPkl: "CV Karya Hidup Sentosa" },
+  { nis: "21169", nama: "ILHAM RAHMAWAN PUTRA", email: "21169@student.stembayo.sch.id", kelas: "13 SIJA A", jurusan: "SIJA", namaIndustriPkl: "Cargloss Group" },
+  { nis: "21170", nama: "JONAS ADRIAN PRADANA", email: "21170@student.stembayo.sch.id", kelas: "13 SIJA A", jurusan: "SIJA", namaIndustriPkl: "PT. AINO INDONESIA" },
+  { nis: "21171", nama: "KHEYZA AMRINA ROSHADA", email: "21171@student.stembayo.sch.id", kelas: "13 SIJA A", jurusan: "SIJA", namaIndustriPkl: "CV Karya Hidup Sentosa" },
+  { nis: "21172", nama: "KHILYA KHOIRINA", email: "21172@student.stembayo.sch.id", kelas: "13 SIJA A", jurusan: "SIJA", namaIndustriPkl: "PT Gamatechno Indonesia" },
+  { nis: "21173", nama: "LIDWINA AIRA WASISTHA DWIYUSA", email: "21173@student.stembayo.sch.id", kelas: "13 SIJA A", jurusan: "SIJA", namaIndustriPkl: "PT. Urban Plastik Indonesia" },
+  { nis: "21174", nama: "LUNETA GAVRILLA KODRI", email: "21174@student.stembayo.sch.id", kelas: "13 SIJA A", jurusan: "SIJA", namaIndustriPkl: "PT. AINO INDONESIA" },
+  { nis: "21175", nama: "LUTFIANSYAH AUFAWINDRA", email: "21175@student.stembayo.sch.id", kelas: "13 SIJA A", jurusan: "SIJA", namaIndustriPkl: "PT Gamatechno Indonesia" },
+  { nis: "21176", nama: "MARVELLINO APRIEDO", email: "21176@student.stembayo.sch.id", kelas: "13 SIJA A", jurusan: "SIJA", namaIndustriPkl: "MultiIntegra Technology Group" },
+  { nis: "21177", nama: "MIFTAHUL HUDA", email: "21177@student.stembayo.sch.id", kelas: "13 SIJA B", jurusan: "SIJA", namaIndustriPkl: "PT. Aksa Digital Group" },
+  { nis: "21178", nama: "MUHAMMAD AHSAN SANADI", email: "21178@student.stembayo.sch.id", kelas: "13 SIJA B", jurusan: "SIJA", namaIndustriPkl: "PT Divistant Teknologi Indonesia" },
+  { nis: "21179", nama: "MUHAMMAD ARIZAL AFRIANTARA", email: "21179@student.stembayo.sch.id", kelas: "13 SIJA B", jurusan: "SIJA", namaIndustriPkl: "CV Karya Hidup Sentosa" },
+  { nis: "21180", nama: "MUHAMMAD DWI PRAYOGA", email: "21180@student.stembayo.sch.id", kelas: "13 SIJA B", jurusan: "SIJA", namaIndustriPkl: "PT. SIMS - Life Media" },
+  { nis: "21181", nama: "MUHAMMAD EMIRZA DEWANTARA", email: "21181@student.stembayo.sch.id", kelas: "13 SIJA B", jurusan: "SIJA", namaIndustriPkl: "PT. Kereta Api Indonesia" },
+  { nis: "21182", nama: "MUHAMMAD FARREL RABBANI", email: "21182@student.stembayo.sch.id", kelas: "13 SIJA B", jurusan: "SIJA", namaIndustriPkl: "MultiIntegra Technology Group" },
+  { nis: "21183", nama: "MUHAMMAD QURTIFA WIJAYA", email: "21183@student.stembayo.sch.id", kelas: "13 SIJA B", jurusan: "SIJA", namaIndustriPkl: "PT Botika Teknologi Indonesia" },
+  { nis: "21184", nama: "MUHAMMAD RIDHWAN KURNIAWAN", email: "21184@student.stembayo.sch.id", kelas: "13 SIJA B", jurusan: "SIJA", namaIndustriPkl: "MultiIntegra Technology Group" },
+  { nis: "21185", nama: "MUHAMMAD ZAKI 'ILMIN HUDA", email: "21185@student.stembayo.sch.id", kelas: "13 SIJA B", jurusan: "SIJA", namaIndustriPkl: "TEFA" },
+  { nis: "21186", nama: "NANDA ISNAINI MUHYI", email: "21186@student.stembayo.sch.id", kelas: "13 SIJA B", jurusan: "SIJA", namaIndustriPkl: "PT Gunung Sejahtera Ibu Pertiwi" },
+  { nis: "21187", nama: "NAYLA RAZAQ AZ-ZAHRA", email: "21187@student.stembayo.sch.id", kelas: "13 SIJA B", jurusan: "SIJA", namaIndustriPkl: "Cargloss Group" },
+  { nis: "21188", nama: "NISA NUR AINI", email: "21188@student.stembayo.sch.id", kelas: "13 SIJA B", jurusan: "SIJA", namaIndustriPkl: "Cargloss Group" },
+  { nis: "21189", nama: "NISRINA RAIHANA PUTRI", email: "21189@student.stembayo.sch.id", kelas: "13 SIJA B", jurusan: "SIJA", namaIndustriPkl: "PT KAI DAOP 6 Yogyakarta" },
+  { nis: "21190", nama: "RAFI AHMAD ZAINI", email: "21190@student.stembayo.sch.id", kelas: "13 SIJA B", jurusan: "SIJA", namaIndustriPkl: "MultiIntegra Technology Group" },
+  { nis: "21191", nama: "RAFIF ARIBAH", email: "21191@student.stembayo.sch.id", kelas: "13 SIJA B", jurusan: "SIJA", namaIndustriPkl: "PT Aksa Digital Group" },
+  { nis: "21192", nama: "RAFSA RAYHAN SAPUTRA", email: "21192@student.stembayo.sch.id", kelas: "13 SIJA B", jurusan: "SIJA", namaIndustriPkl: "CV Karya Hidup Sentosa" },
+  { nis: "21193", nama: "RAHMADHANA DITYA ARDIYANTO", email: "21193@student.stembayo.sch.id", kelas: "13 SIJA B", jurusan: "SIJA", namaIndustriPkl: "PT. Kereta Api Indonesia" },
+  { nis: "21194", nama: "RANI KRISMANTARI", email: "21194@student.stembayo.sch.id", kelas: "13 SIJA B", jurusan: "SIJA", namaIndustriPkl: "PT Aksa Digital Group" },
+  { nis: "21195", nama: "RANI LESTARI PUTRI", email: "21195@student.stembayo.sch.id", kelas: "13 SIJA B", jurusan: "SIJA", namaIndustriPkl: "PT. Javis Teknologi Albarokah" },
+  { nis: "21196", nama: "REJAKA ABIMANYU SUSANTO", email: "21196@student.stembayo.sch.id", kelas: "13 SIJA B", jurusan: "SIJA", namaIndustriPkl: "PT Botika Teknologi Indonesia" },
+  { nis: "21197", nama: "RENDI SUSANTO", email: "21197@student.stembayo.sch.id", kelas: "13 SIJA B", jurusan: "SIJA", namaIndustriPkl: "PT. Kereta Api Indonesia" },
+  { nis: "21198", nama: "RIZKY FAUZAN HANIF", email: "21198@student.stembayo.sch.id", kelas: "13 SIJA B", jurusan: "SIJA", namaIndustriPkl: "PT Era Awan Digital (Eranyacloud)" },
+  { nis: "21199", nama: "SALLY OKTAVINA YUSUF", email: "21199@student.stembayo.sch.id", kelas: "13 SIJA B", jurusan: "SIJA", namaIndustriPkl: "Cargloss Group" },
+  { nis: "21200", nama: "SALSABILA RAFEYFA ASYLA", email: "21200@student.stembayo.sch.id", kelas: "13 SIJA B", jurusan: "SIJA", namaIndustriPkl: "Cargloss Group" },
+  { nis: "21201", nama: "SASONGKO ALFAUZAN SUDIRAYUDA", email: "21201@student.stembayo.sch.id", kelas: "13 SIJA B", jurusan: "SIJA", namaIndustriPkl: "PT Aksa Digital Group" },
+  { nis: "21202", nama: "SELLY OKTA RAMADHANI", email: "21202@student.stembayo.sch.id", kelas: "13 SIJA B", jurusan: "SIJA", namaIndustriPkl: "CV Karya Hidup Sentosa" },
+  { nis: "21203", nama: "SHAFA OCTAZA RAMADHAN", email: "21203@student.stembayo.sch.id", kelas: "13 SIJA B", jurusan: "SIJA", namaIndustriPkl: "PT Aksa Digital Group" },
+  { nis: "21204", nama: "SHAZIA EL HAMID", email: "21204@student.stembayo.sch.id", kelas: "13 SIJA B", jurusan: "SIJA", namaIndustriPkl: "PT. Javis Teknologi Albarokah" },
+  { nis: "21205", nama: "SHEILA NUR ARINI", email: "21205@student.stembayo.sch.id", kelas: "13 SIJA B", jurusan: "SIJA", namaIndustriPkl: "CV Karya Hidup Sentosa" },
+  { nis: "21206", nama: "SHIFA NABILA AMANDA", email: "21206@student.stembayo.sch.id", kelas: "13 SIJA B", jurusan: "SIJA", namaIndustriPkl: "Cargloss Group" },
+  { nis: "21207", nama: "SULTHAN RASYA FIRJATULLAH", email: "21207@student.stembayo.sch.id", kelas: "13 SIJA B", jurusan: "SIJA", namaIndustriPkl: "PT. Kereta Api Indonesia" },
+  { nis: "21208", nama: "TAUFIQUL UMAM CHENA", email: "21208@student.stembayo.sch.id", kelas: "13 SIJA B", jurusan: "SIJA", namaIndustriPkl: "PT. Aksa Digital Group" },
+  { nis: "21209", nama: "VALENTINO LOVERADO RINUMPOKO", email: "21209@student.stembayo.sch.id", kelas: "13 SIJA B", jurusan: "SIJA", namaIndustriPkl: "TEFA" },
+  { nis: "21210", nama: "YOGANTA AURELIAN RAMADHANI", email: "21210@student.stembayo.sch.id", kelas: "13 SIJA B", jurusan: "SIJA", namaIndustriPkl: "Cargloss Group" },
+  { nis: "21211", nama: "YUNUS BAHRAN NUFAIL", email: "21211@student.stembayo.sch.id", kelas: "13 SIJA B", jurusan: "SIJA", namaIndustriPkl: "PT Aksa Digital Group" },
+  { nis: "21212", nama: "ZAHBARQAL SYAHZINHOULHAQ", email: "21212@student.stembayo.sch.id", kelas: "13 SIJA B", jurusan: "SIJA", namaIndustriPkl: "PT. Kereta Api Indonesia" },
+];
 
 async function main() {
   console.log("🚀 Memulai pemulihan data 71 siswa & akun sistem resmi SMKN 2 Depok Sleman...");
@@ -76,66 +148,31 @@ async function main() {
     "13 SIJA B": kelasB.id,
   };
 
-  // 4. Baca CSV data siswa resmi
-  const csvPath = path.join(__dirname, "..", "data", "real", "template_siswa.csv");
-  if (!fs.existsSync(csvPath)) {
-    console.error("❌ Berkas CSV tidak ditemukan di:", csvPath);
-    process.exit(1);
-  }
-
-  const content = fs.readFileSync(csvPath, "utf8");
-  const lines = content.split(/\r?\n/).filter((l) => l.trim().length > 0);
-
+  // 4. Masukkan seluruh 71 Siswa (Upsert aman tanpa ketergantungan file luar)
   let restored = 0;
-  for (let i = 1; i < lines.length; i++) {
-    const line = lines[i];
-    const matches = [];
-    let current = "";
-    let inQuotes = false;
-    for (let c = 0; c < line.length; c++) {
-      const char = line[c];
-      if (char === '"') {
-        inQuotes = !inQuotes;
-      } else if (char === ',' && !inQuotes) {
-        matches.push(current.trim());
-        current = "";
-      } else {
-        current += char;
-      }
-    }
-    matches.push(current.trim());
-
-    const nis = matches[0];
-    const nama = matches[1];
-    const email = matches[2];
-    const kelas = matches[3];
-    const jurusan = matches[4] || "SIJA";
-    const namaIndustriPkl = matches[5] || "Belum Ditentukan";
-
-    if (!nis || !nama || !email) continue;
-
-    const kelasId = classMap[kelas] || null;
+  for (const s of DATA_71_SISWA) {
+    const kelasId = classMap[s.kelas] || null;
 
     await prisma.siswa.upsert({
-      where: { nis: String(nis).trim() },
+      where: { nis: s.nis },
       create: {
-        nis: String(nis).trim(),
-        nama: String(nama).trim(),
-        email: String(email).trim().toLowerCase(),
-        jurusan: jurusan.trim().toUpperCase(),
+        nis: s.nis,
+        nama: s.nama,
+        email: s.email,
+        jurusan: s.jurusan,
         kelasId,
-        namaKelas: kelas.trim(),
-        namaIndustriPkl: namaIndustriPkl.trim() || "Belum Ditentukan",
+        namaKelas: s.kelas,
+        namaIndustriPkl: s.namaIndustriPkl,
         statusAkun: "BELUM_AKTIF",
         statusTka: "BELUM_MERESPONS",
       },
       update: {
-        nama: String(nama).trim(),
-        email: String(email).trim().toLowerCase(),
-        jurusan: jurusan.trim().toUpperCase(),
+        nama: s.nama,
+        email: s.email,
+        jurusan: s.jurusan,
         kelasId: kelasId || undefined,
-        namaKelas: kelas.trim(),
-        namaIndustriPkl: namaIndustriPkl.trim() || undefined,
+        namaKelas: s.kelas,
+        namaIndustriPkl: s.namaIndustriPkl || undefined,
       },
     });
     restored++;
