@@ -35,133 +35,8 @@ import {
   FOKUS_KEBAHASAAN_OPTIONS,
 } from "@/lib/constants/subjects";
 
-// Pusmendik framework presets covering multiple vocational disciplines
-const PUSMENDIK_PRESETS = [
-  {
-    mapel: "MATEMATIKA",
-    label: "Matematika: Fungsi Kuadrat",
-    elemen: "Aljabar dan Fungsi",
-    subElemen: "Persamaan dan Fungsi Kuadrat",
-    kompetensi: "Menyelesaikan masalah kontekstual yang berkaitan dengan nilai optimum fungsi kuadrat.",
-    batasan: "Fungsi kuadrat dalam bentuk standar f(x) = ax^2 + bx + c dengan nilai diskriminan D >= 0, tidak melibatkan akar bilangan imajiner.",
-  },
-  {
-    mapel: "BAHASA_INDONESIA",
-    label: "B. Indonesia: Teks Eksplanasi Industri",
-    kompetensi: "Membaca dan Memirsa (Literasi Wacana)",
-    subKompetensi: "Mengevaluasi gagasan pokok, hubungan sebab-akibat (kausalitas), dan kalimat fakta vs opini dalam teks teknologis.",
-    elemen: "Membaca dan Memirsa",
-    subElemen: "Teks Eksplanasi & Artikel Ilmiah Populer",
-    batasan: "Panjang teks stimulus 150-250 kata dengan topik inovasi teknologi atau rekayasa industri modern.",
-    jenisTeks: "Teks Eksplanasi (Penjelasan Sebab-Akibat Fenomena Teknis/Ilmiah)",
-    topikTeks: "Otomatisasi Industri & Keselamatan Kerja Vokasi",
-    fokusKebahasaan: "Menganalisis Makna Tersirat & Inferensi Logis (Inference / Implicit Meaning)",
-  },
-  {
-    mapel: "BAHASA_INGGRIS",
-    label: "B. Inggris: Analytical Exposition K3",
-    kompetensi: "Reading and Viewing",
-    subKompetensi: "Menganalisis argumen utama, thesis statement, dan makna idiomatis/kosakata teknis dalam konteks keselamatan kerja (K3).",
-    elemen: "Reading and Viewing",
-    subElemen: "Analytical Exposition on Vocational Workplaces",
-    batasan: "Teks bacaan bahasa Inggris dengan panjang 180-220 kata bertema Occupational Safety and Health.",
-    jenisTeks: "Analytical Exposition (Critical Issues, Safety, Technology)",
-    topikTeks: "Occupational Safety and Health (K3) Protocols in Modern Workshops",
-    fokusKebahasaan: "Menentukan Ide Pokok, Kalimat Utama & Gagasan Utama (Main Idea)",
-  },
-  {
-    mapel: "BAHASA_INGGRIS",
-    label: "B. Inggris: Technical Manual & SOP",
-    kompetensi: "Reading and Viewing",
-    subKompetensi: "Menganalisis urutan instruksi kerja logis, makna istilah teknis spesifik, dan kata kerja imperatif dalam SOP bengkel.",
-    elemen: "Reading and Viewing",
-    subElemen: "Technical Procedure & Industrial Operating Manual",
-    batasan: "Teks prosedur manual instruksi teknis pengoperasian alat workshop.",
-    jenisTeks: "Procedure Text / Operating Manual & SOP",
-    topikTeks: "Safe Operation and Preventive Maintenance of CNC Machines",
-    fokusKebahasaan: "Makna Kosakata Kontekstual, Istilah Teknis & Sinonim/Antonim",
-  },
-  {
-    mapel: "TJKT",
-    label: "TJKT: Keamanan Jaringan & VLAN",
-    elemen: "Infrastruktur Jaringan dan Komputasi Awan",
-    subElemen: "Virtual LAN (VLAN) & Network Access Control",
-    kompetensi: "Merancang konfigurasi trunking 802.1Q dan Access Control List (ACL) untuk segmentasi lalu lintas jaringan departemen.",
-    batasan: "Topologi jaringan enterprise dengan maksimal 3 switch terkelola dan 1 router gateway.",
-  },
-  {
-    mapel: "PPLG",
-    label: "PPLG: OOP & Arsitektur Perangkat Lunak",
-    elemen: "Pemrograman Berorientasi Objek (OOP)",
-    subElemen: "Prinsip Enkapsulasi, Pewarisan, dan Polimorfisme",
-    kompetensi: "Menganalisis perancangan kelas, hierarki inheritance, dan interface untuk membangun kode modular yang mudah diuji.",
-    batasan: "Bahasa pemrograman modern (Java / TypeScript / Python), kedalaman hierarki inheritance maksimal 3 level.",
-  },
-  {
-    mapel: "DPIB",
-    label: "DPIB: Pemodelan Struktur Bangunan",
-    elemen: "Desain Pemodelan dan Informasi Bangunan",
-    subElemen: "Analisis Beban Struktur & Gambar Kerja 2D/3D",
-    kompetensi: "Menghitung pembebanan struktur balok beton bertulang dan menganalisis simbol kerja standar konstruksi sipil.",
-    batasan: "Konstruksi bangunan gedung bertingkat rendah (1-2 lantai) dengan beban mati dan beban hidup standar SNI.",
-  },
-  {
-    mapel: "TITL",
-    label: "TITL: Kendali Motor Listrik",
-    elemen: "Instalasi Tenaga Listrik",
-    subElemen: "Sistem Kendali Elektromagnetik Motor 3 Fasa",
-    kompetensi: "Mendiagnosis rangkaian daya dan kontrol forward-reverse serta sistem proteksi Thermal Overload Relay (TOR).",
-    batasan: "Tegangan kerja 380V/220V dengan proteksi MCB dan TOR standar PUIL 2011.",
-  },
-  {
-    mapel: "TM",
-    label: "Teknik Mesin: Parameter Bubut CNC",
-    elemen: "Teknik Pemesinan Bubut dan Frais",
-    subElemen: "Perhitungan Parameter Pemotongan (Cutting Speed & Feed Rate)",
-    kompetensi: "Menentukan kecepatan putar spindel (RPM) dan waktu pemesinan efektif berdasarkan karakteristik material benda kerja.",
-    batasan: "Material baja karbon menengah (St 42 / St 60) dengan pahat HSS dan karbida, toleransi pembubutan ISO standar.",
-  },
-  {
-    mapel: "TO",
-    label: "Teknik Otomotif: Electronic Fuel Injection",
-    elemen: "Pemeliharaan Mesin Kendaraan Ringan",
-    subElemen: "Sistem Electronic Fuel Injection (EFI) & Sensor Mesin",
-    kompetensi: "Mendiagnosis malafungsi sinyal sensor Mass Air Flow (MAF) dan O2 Sensor menggunakan scan tool dan multimeter.",
-    batasan: "Sistem injeksi bensin multi-point (MPI) 4-silinder siklus Otto.",
-  },
-  {
-    mapel: "KA",
-    label: "Kimia Analisis: Titrasi Volumetri",
-    elemen: "Analisis Kimia Kuantitatif",
-    subElemen: "Titrasi Asam-Basa (Asidi-Alkalimetri)",
-    kompetensi: "Menghitung konsentrasi analit dan mengevaluasi pemilihan indikator pH yang tepat berdasarkan kurva titrasi.",
-    batasan: "Titrasi asam kuat - basa kuat dan asam lemah - basa kuat, mengabaikan efek kekuatan ionik sekunder.",
-  },
-  {
-    mapel: "KIMIA",
-    label: "Kimia: Laju Reaksi & Kesetimbangan",
-    kompetensi: "Menganalisis faktor-faktor yang mempengaruhi laju reaksi dan pergeseran arah kesetimbangan kimia dalam sistem industri.",
-    elemen: "Kimia Fisik",
-    subElemen: "Kinetika dan Kesetimbangan Kimia",
-    batasan: "",
-  },
-  {
-    mapel: "EKONOMI",
-    label: "Ekonomi: Kebijakan Moneter & Inflasi",
-    kompetensi: "Mengevaluasi efektivitas bauran kebijakan moneter dan fiskal dalam mengendalikan laju inflasi dan menjaga stabilitas makroekonomi.",
-    elemen: "Ekonomi Makro",
-    subElemen: "Kebijakan Moneter dan Fiskal",
-    batasan: "",
-  },
-  {
-    mapel: "SEJARAH",
-    label: "Sejarah: Transformasi Sosial Ekonomi",
-    kompetensi: "Menganalisis keterkaitan kausalitas peristiwa sejarah terhadap transformasi struktur sosial, ekonomi, dan politik bangsa.",
-    elemen: "Sejarah Nasional",
-    subElemen: "Dinamika Kebangsaan dan Kemerdekaan",
-    batasan: "",
-  },
-];
+
+
 
 export default function GeneratorSoalPage() {
   const { data: session, status: authStatus } = useSession();
@@ -243,29 +118,7 @@ export default function GeneratorSoalPage() {
     checkApiStatus();
   }, []);
 
-  const handleApplyPreset = (idx: number) => {
-    const p = PUSMENDIK_PRESETS[idx] as any;
-    setMapel(p.mapel);
-    setElemen(p.elemen);
-    setSubElemen(p.subElemen);
-    setKompetensi(p.kompetensi);
-    setBatasan(p.batasan);
-    setElemen(p.elemen || "");
-    setSubElemen(p.subElemen || "");
-    setKompetensi(p.kompetensi || "");
-    if (p.subKompetensi) setSubKompetensi(p.subKompetensi);
-    else if (p.subElemen) setSubKompetensi(p.subElemen);
-    setBatasan(p.batasan || "");
-    if (p.jenisTeks) setJenisTeks(p.jenisTeks);
-    if (p.topikTeks) setTopikTeks(p.topikTeks);
-    if (p.fokusKebahasaan) setFokusKebahasaan(p.fokusKebahasaan);
-    if (p.stimulusTeks) {
-      setStimulusTeks(p.stimulusTeks);
-      setModeStimulus("CUSTOM_TEKS");
-    } else {
-      setModeStimulus("AI_AUTO");
-    }
-  };
+
 
   // Real-time constructed prompt preview
   const livePrompt = useMemo(() => {
@@ -459,36 +312,6 @@ export default function GeneratorSoalPage() {
         </div>
       </div>
 
-      {/* Preset Quick Select */}
-      <div className="bg-white rounded-3xl border border-slate-200 p-5 shadow-sm space-y-3">
-        <div className="flex items-center justify-between text-xs">
-          <span className="font-extrabold text-slate-800 flex items-center gap-2">
-            <BookOpen className="w-4 h-4 text-blue-600" />
-            <span>Preset Cepat Matriks Pusmendik (1-Klik Isi Seluruh Parameter Form)</span>
-          </span>
-          <span className="text-slate-400 font-medium text-[11px]">Pilih untuk mengisi form otomatis</span>
-        </div>
-        <div className="grid grid-cols-2 sm:grid-cols-5 gap-2">
-          {PUSMENDIK_PRESETS.map((p, idx) => (
-            <button
-              key={idx}
-              type="button"
-              onClick={() => handleApplyPreset(idx)}
-              className="p-2.5 rounded-xl bg-slate-50 hover:bg-blue-50 hover:border-blue-300 border border-slate-200 text-left transition-all cursor-pointer group"
-            >
-              <span className="text-[10px] font-extrabold text-blue-700 block uppercase tracking-wider group-hover:text-blue-800">
-                {p.mapel}
-              </span>
-              <span className="text-xs font-bold text-slate-800 block line-clamp-1 mt-0.5">
-                {p.label.split(":")[1] || p.label}
-              </span>
-              <span className="text-[10px] text-slate-400 block line-clamp-1 mt-0.5">
-                {p.elemen}
-              </span>
-            </button>
-          ))}
-        </div>
-      </div>
 
       {/* Main Generator Form */}
       <div className="bg-white rounded-3xl border border-slate-200 shadow-sm p-6 sm:p-8">
@@ -504,7 +327,6 @@ export default function GeneratorSoalPage() {
           <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
             <div className="space-y-1.5">
               <label className="text-xs font-bold text-slate-700 flex items-center justify-between">
-                <span>Mata Pelajaran</span>
                 <div className="flex items-center gap-1">
                   <span>Mata Pelajaran</span>
                   <span className="text-rose-500 font-bold">*</span>
@@ -537,7 +359,6 @@ export default function GeneratorSoalPage() {
 
             <div className="space-y-1.5">
               <label className="text-xs font-bold text-slate-700 flex items-center justify-between">
-                <span>Bentuk Soal</span>
                 <div className="flex items-center gap-1">
                   <span>Bentuk Soal</span>
                   <span className="text-rose-500 font-bold">*</span>
@@ -557,7 +378,6 @@ export default function GeneratorSoalPage() {
 
             <div className="space-y-1.5">
               <label className="text-xs font-bold text-slate-700 flex items-center justify-between">
-                <span>Jumlah Butir Soal</span>
                 <div className="flex items-center gap-1">
                   <span>Jumlah Butir Soal</span>
                   <span className="text-rose-500 font-bold">*</span>

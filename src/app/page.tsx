@@ -287,7 +287,7 @@ export default async function LandingPage() {
 
                 {/* Progress bar info */}
                 <div className="pt-2 border-t border-outline-variant/40 flex items-center justify-between text-xs text-on-surface-variant">
-                  <span>Penyimpanan Lokal: IndexedDB</span>
+                  <span>Penyimpanan Offline Lokal</span>
                   <span className="font-semibold text-on-surface">Aman & Terenkripsi</span>
                 </div>
               </div>

@@ -774,7 +774,7 @@ export default function LatihanHubPage() {
                               onClick={() => handleDownloadSubject(subj)}
                               disabled={isSyncing}
                               className="w-9 h-9 rounded-lg bg-[#dce7f9] hover:bg-blue-200 text-blue-600 flex items-center justify-center transition-colors disabled:opacity-50"
-                              title={`Unduh Bank Soal ${subj.name} ke IndexedDB`}
+                              title={`Unduh Bank Soal ${subj.name} untuk Mode Offline`}
                             >
                               <Download className={`w-4 h-4 ${isSyncing ? "animate-bounce" : ""}`} />
                             </button>
