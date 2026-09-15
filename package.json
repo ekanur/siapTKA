@@ -10,6 +10,7 @@
     "prisma:generate": "prisma generate",
     "prisma:push": "prisma db push",
     "prisma:seed": "tsx prisma/seed.ts",
+    "restore:siswa": "node scripts/restore-siswa.js",
     "type-check": "tsc --noEmit"
   },
   "dependencies": {
