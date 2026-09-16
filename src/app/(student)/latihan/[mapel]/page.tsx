@@ -234,6 +234,7 @@ export default function SubjectDetailPage() {
   // Dynamic Statistics
   const stats = useMemo(() => {
     const totalQuestions = questions.length > 0 ? questions.length : 120;
+    const totalQuestions = questions.length;
     const realWorked = submissions.length;
     const realBenar = submissions.filter((s) => s.isBenar).length;
     const realSalah = realWorked - realBenar;
@@ -250,11 +251,16 @@ export default function SubjectDetailPage() {
     }
 
     // Default benchmark matching screenshot (78% skor, 45/120 soal, 94 benar, 26 salah)
+    // Default zero-state when student hasn't worked on questions yet
     return {
       skorPercent: "78%",
       totalWorkedText: `45 / ${totalQuestions} Soal`,
       benar: 94,
       salah: 26,
+      skorPercent: "0%",
+      totalWorkedText: `0 / ${totalQuestions} Soal`,
+      benar: 0,
+      salah: 0,
     };
   }, [questions, submissions]);
 

@@ -32,6 +32,12 @@ export async function GET() {
         nama: true,
         email: true,
         jurusan: true,
+        namaKelas: true,
+        kelas: {
+          select: {
+            nama: true,
+          },
+        },
         namaIndustriPkl: true,
         statusTka: true,
         mapelPilihan1: true,
@@ -69,10 +75,58 @@ export async function GET() {
       }
     });
 
+    // Aggregate real student progress from progresLatihan (unique worked questions)
+    const studentProgressRecords = await prisma.progresLatihan.findMany({
+      where: { siswaId: student.id },
+      select: {
+        soalId: true,
+        soal: {
+          select: { mapel: true },
+        },
+      },
+    });
+
+    const mapelWorkedCounts: Record<string, number> = {};
+    const seenSoalPerMapel: Record<string, Set<string>> = {};
+
+    for (const record of studentProgressRecords) {
+      const rawMapel = record.soal?.mapel || "";
+      if (!rawMapel) continue;
+      const norm = rawMapel.replace(/-/g, "_").toUpperCase();
+      const canonical = SUBJECT_ALIASES[norm] || norm;
+
+      if (!seenSoalPerMapel[canonical]) {
+        seenSoalPerMapel[canonical] = new Set();
+      }
+      seenSoalPerMapel[canonical].add(record.soalId);
+    }
+
+    for (const [mapelKey, soalSet] of Object.entries(seenSoalPerMapel)) {
+      mapelWorkedCounts[mapelKey] = soalSet.size;
+    }
+
+    // Expand aliases for worked counts
+    Object.entries(SUBJECT_ALIASES).forEach(([alias, canonical]) => {
+      const canonicalWorked = mapelWorkedCounts[canonical] || 0;
+      const aliasWorked = mapelWorkedCounts[alias] || 0;
+      const maxWorked = Math.max(canonicalWorked, aliasWorked);
+      if (maxWorked > 0) {
+        mapelWorkedCounts[alias] = maxWorked;
+        mapelWorkedCounts[canonical] = maxWorked;
+      }
+    });
+
+    const resolvedNamaKelas = student.namaKelas || student.kelas?.nama || null;
+
     return NextResponse.json({
       success: true,
       student,
+      student: {
+        ...student,
+        namaKelas: resolvedNamaKelas,
+      },
       mapelQuestionCounts,
+      mapelWorkedCounts,
     });
   } catch (error: any) {
     console.error("GET Student Konfirmasi error:", error);
@@ -161,6 +215,7 @@ export async function POST(request: Request) {
         statusTka: updated.statusTka,
         mapelPilihan1: updated.mapelPilihan1,
         mapelPilihan2: updated.mapelPilihan2,
+        namaKelas: updated.namaKelas,
       },
     });
   } catch (error: any) {

@@ -123,6 +123,8 @@ export const authOptions: NextAuthOptions = {
         (user as any).name = student.nama;
         (user as any).statusTka = student.statusTka;
         (user as any).namaIndustriPkl = student.namaIndustriPkl;
+        (user as any).namaKelas = student.namaKelas;
+        (user as any).jurusan = student.jurusan;
 
         // Auto activate student account on first Google login
         if (student.statusAkun === "BELUM_AKTIF") {
@@ -141,12 +143,15 @@ export const authOptions: NextAuthOptions = {
     },
     async jwt({ token, user }) {
       if (user) {
+        token.id = user.id;
         token.id = (user as any).id || user.id;
         token.role = (user as any).role || "SISWA";
         token.mapel = (user as any).mapel;
         token.nis = (user as any).nis;
         token.statusTka = (user as any).statusTka;
         token.namaIndustriPkl = (user as any).namaIndustriPkl;
+        token.namaKelas = (user as any).namaKelas;
+        token.jurusan = (user as any).jurusan;
       }
 
       // Pastikan token selalu memiliki ID siswa database asli bahkan untuk sesi Google aktif
@@ -161,6 +166,8 @@ export const authOptions: NextAuthOptions = {
           token.nis = student.nis;
           token.statusTka = student.statusTka;
           token.namaIndustriPkl = student.namaIndustriPkl;
+          token.namaKelas = student.namaKelas;
+          token.jurusan = student.jurusan;
         }
       }
 
@@ -174,6 +181,8 @@ export const authOptions: NextAuthOptions = {
         (session.user as any).nis = token.nis;
         (session.user as any).statusTka = token.statusTka;
         (session.user as any).namaIndustriPkl = token.namaIndustriPkl;
+        (session.user as any).namaKelas = token.namaKelas;
+        (session.user as any).jurusan = token.jurusan;
       }
       return session;
     },
