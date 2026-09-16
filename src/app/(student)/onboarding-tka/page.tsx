@@ -35,6 +35,7 @@ export default function OnboardingTkaPage() {
   const [isSuccess, setIsSuccess] = useState(false);
   const [alreadyConfirmed, setAlreadyConfirmed] = useState(false);
   const [loadingData, setLoadingData] = useState(true);
+  const [studentProfile, setStudentProfile] = useState<any>(null);
 
   const [timeline, setTimeline] = useState<{
     isWithinPeriod: boolean;
@@ -91,6 +92,7 @@ export default function OnboardingTkaPage() {
       .then((d) => {
         if (d.success && d.student) {
           const s = d.student;
+          setStudentProfile(s);
           if (s.statusTka && s.statusTka !== "BELUM_MERESPONS") {
             setStatusTka(s.statusTka);
             setAlreadyConfirmed(true);
@@ -284,16 +286,20 @@ export default function OnboardingTkaPage() {
             </div>
             <div>
               <h2 className="font-bold text-slate-900 text-sm sm:text-base">
-                {session?.user?.name || "Memuat Nama Siswa..."}
+                {studentProfile?.nama || session?.user?.name || "Memuat Nama Siswa..."}
               </h2>
               <div className="flex flex-wrap items-center gap-2 text-xs text-slate-500 mt-0.5">
-                <span className="font-mono font-medium">NIS: {(session?.user as any)?.nis || "10001"}</span>
+                <span className="font-mono font-medium">NIS: {studentProfile?.nis || (session?.user as any)?.nis || "-"}</span>
                 <span>•</span>
-                <span>Jurusan: {(session?.user as any)?.jurusan || "SIJA"}</span>
+                <span>
+                  {studentProfile?.namaKelas || (session?.user as any)?.namaKelas
+                    ? `Kelas: ${studentProfile?.namaKelas || (session?.user as any)?.namaKelas}`
+                    : `Jurusan: ${studentProfile?.jurusan || (session?.user as any)?.jurusan || "-"}`}
+                </span>
                 <span>•</span>
                 <span className="text-slate-700 font-semibold flex items-center gap-1">
                   <Building2 className="w-3.5 h-3.5 text-slate-400" />
-                  {(session?.user as any)?.namaIndustriPkl || "Industri PKL"}
+                  {studentProfile?.namaIndustriPkl || (session?.user as any)?.namaIndustriPkl || "Belum Ditentukan"}
                 </span>
               </div>
             </div>

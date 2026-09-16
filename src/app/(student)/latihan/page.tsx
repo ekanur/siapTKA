@@ -90,35 +90,21 @@ export default function LatihanHubPage() {
         name: "Matematika",
         type: "WAJIB",
         slug: "matematika",
-        totalBank: getBankCount("MATEMATIKA", 2),
-        defaultPercent: 37.5,
-        defaultReady: true,
         totalBank: getBankCount("MATEMATIKA", 0),
-        defaultPercent: 0,
-        defaultReady: false,
       },
       {
         code: "BAHASA_INDONESIA",
         name: "Bahasa Indonesia",
         type: "WAJIB",
         slug: "bahasa_indonesia",
-        totalBank: getBankCount("BAHASA_INDONESIA", 1),
-        defaultPercent: 20,
-        defaultReady: true,
         totalBank: getBankCount("BAHASA_INDONESIA", 0),
-        defaultPercent: 0,
-        defaultReady: false,
       },
       {
         code: "BAHASA_INGGRIS",
         name: "Bahasa Inggris",
         type: "WAJIB",
         slug: "bahasa_inggris",
-        totalBank: getBankCount("BAHASA_INGGRIS", 1),
-        defaultPercent: 6.6,
         totalBank: getBankCount("BAHASA_INGGRIS", 0),
-        defaultPercent: 0,
-        defaultReady: false,
       },
     ];
 
@@ -130,10 +116,6 @@ export default function LatihanHubPage() {
         type: "PILIHAN",
         slug: mapel1.toLowerCase(),
         totalBank: count1,
-        defaultPercent: count1 > 0 ? 42.5 : 0,
-        defaultReady: count1 > 0,
-        defaultPercent: 0,
-        defaultReady: false,
       });
     }
 
@@ -145,9 +127,6 @@ export default function LatihanHubPage() {
         type: "PILIHAN",
         slug: mapel2.toLowerCase(),
         totalBank: count2,
-        defaultPercent: 0,
-        defaultReady: count2 > 0,
-        defaultReady: false,
       });
     }
 
@@ -179,7 +158,6 @@ export default function LatihanHubPage() {
           })
           .count();
 
-        const worked = await clientDb.offlineSubmissions
         // 1. Ambil pengerjaan lokal dan deduplikasi ID butir soal unik yang telah dijawab
         const localSubmissions = await clientDb.offlineSubmissions
           .filter((s) => {
@@ -189,7 +167,6 @@ export default function LatihanHubPage() {
             }
             return m === norm;
           })
-          .count();
           .toArray();
 
         const localUniqueSoalIds = new Set(localSubmissions.map((s) => s.soalId));
@@ -198,16 +175,13 @@ export default function LatihanHubPage() {
         const serverWorked = serverWorkedCounts[norm] || 0;
 
         // 3. Progres riil gabungan (minimal sebesar unik lokal atau unik server)
-        const worked = Math.max(localUniqueSoalIds.size, serverWorked);
+        const rawWorked = Math.max(localUniqueSoalIds.size, serverWorked);
 
         const isReset = resetMapels.includes(subj.code);
         const effectiveTotal = Math.max(subj.totalBank, cached);
         const hasQuestions = effectiveTotal > 0;
+        const worked = isReset ? 0 : rawWorked;
 
-        let percent = subj.defaultPercent;
-        if (isReset || !hasQuestions) {
-          percent = 0;
-        } else if (worked > 0) {
         let percent = 0;
         if (!isReset && hasQuestions && worked > 0) {
           percent = Math.min(100, Math.round((worked / effectiveTotal) * 1000) / 10);
@@ -218,7 +192,6 @@ export default function LatihanHubPage() {
         statsObj[subj.code] = {
           cached,
           worked,
-          worked: isReset ? 0 : worked,
           percent,
           isOfflineReady,
           hasQuestions,
@@ -237,8 +210,6 @@ export default function LatihanHubPage() {
     return {
       cached: 0,
       worked: 0,
-      percent: resetMapels.includes(subj.code) || !hasQuestions ? 0 : subj.defaultPercent,
-      isOfflineReady: subj.defaultReady,
       percent: 0,
       isOfflineReady: false,
       hasQuestions,
@@ -383,7 +354,6 @@ export default function LatihanHubPage() {
 
     const handleOnline = () => {
       setIsOnline(true);
-      syncPendingSubmissions().then(() => refreshStats());
       syncPendingSubmissions().then(() => {
         refreshStats();
         loadStudentProfile();
@@ -402,7 +372,6 @@ export default function LatihanHubPage() {
 
   useEffect(() => {
     refreshSubjectStats();
-  }, [subjectRows, resetMapels]);
   }, [subjectRows, resetMapels, serverWorkedCounts]);
 
   const handleDownloadBank = async () => {
@@ -505,7 +474,6 @@ export default function LatihanHubPage() {
             <div className="space-y-2">
               <div className="flex items-center gap-2">
                 <span className="px-3 py-0.5 bg-white/10 border border-white/20 rounded-full text-xs font-bold text-cyan-300">
-                  Siswa SIJA Kelas 13
                   {studentProfile?.namaKelas || (session?.user as any)?.namaKelas
                     ? `Kelas ${studentProfile?.namaKelas || (session?.user as any)?.namaKelas}`
                     : studentProfile?.jurusan || (session?.user as any)?.jurusan
@@ -523,16 +491,13 @@ export default function LatihanHubPage() {
                 </span>
               </div>
               <h2 className="text-2xl sm:text-3xl font-extrabold tracking-tight">
-                {session?.user?.name || "ADRIANO ANANTA"}
                 {studentProfile?.nama || session?.user?.name || "Siswa"}
               </h2>
               <div className="flex flex-wrap items-center gap-x-4 gap-y-1.5 text-xs text-slate-300">
-                <span>NIS: {(session?.user as any)?.nis || "21141"}</span>
                 <span>NIS: {studentProfile?.nis || (session?.user as any)?.nis || "-"}</span>
                 <span>•</span>
                 <span className="flex items-center gap-1.5">
                   <Building2 className="w-3.5 h-3.5 text-cyan-400" />
-                  {(session?.user as any)?.namaIndustriPkl || "Cargloss Group"}
                   {studentProfile?.namaIndustriPkl || (session?.user as any)?.namaIndustriPkl || "Belum Ditentukan"}
                 </span>
               </div>
@@ -571,12 +536,10 @@ export default function LatihanHubPage() {
             <div className="p-4 bg-slate-50 rounded-2xl border border-slate-200 text-left text-xs space-y-2.5 text-slate-700 max-w-md mx-auto">
               <div className="flex justify-between pb-2 border-b border-slate-200">
                 <span className="text-slate-500">Nama Siswa:</span>
-                <span className="font-bold text-slate-900">{session?.user?.name || "Siswa SIJA"}</span>
                 <span className="font-bold text-slate-900">{studentProfile?.nama || session?.user?.name || "Siswa"}</span>
               </div>
               <div className="flex justify-between pb-2 border-b border-slate-200">
                 <span className="text-slate-500">NIS Siswa:</span>
-                <span className="font-mono font-bold text-slate-900">{(session?.user as any)?.nis || "21141"}</span>
                 <span className="font-mono font-bold text-slate-900">{studentProfile?.nis || (session?.user as any)?.nis || "-"}</span>
               </div>
               <div className="flex justify-between">
@@ -776,15 +739,6 @@ export default function LatihanHubPage() {
                             <span>Belum ada soal, silakan hubungi tim Persiapan TKA Sekolah</span>
                           </span>
                         ) : (
-                          <div className="w-36 h-6 rounded-full bg-slate-200/90 relative overflow-hidden flex items-center justify-center">
-                            {percent > 0 && (
-                              <div
-                                className={`absolute left-0 top-0 bottom-0 transition-all duration-500 rounded-full ${getProgressColor(percent)}`}
-                                style={{ width: `${percent}%` }}
-                              />
-                            )}
-                            <span className="relative z-10 text-xs font-bold text-slate-700 select-none">
-                              {percent}%
                           <div className="flex flex-col items-center gap-1">
                             <div className="w-36 h-6 rounded-full bg-slate-200/90 relative overflow-hidden flex items-center justify-center">
                               {percent > 0 && (
@@ -942,7 +896,6 @@ export default function LatihanHubPage() {
                     <div className="space-y-1">
                       <div className="flex items-center justify-between text-xs font-semibold text-slate-600">
                         <span>Progres Latihan</span>
-                        <span className="font-bold text-slate-800">{percent}% Dikerjakan</span>
                         <span className="font-bold text-slate-800">{state.worked}/{subj.totalBank} Soal ({percent}%)</span>
                       </div>
                       <div className="w-full h-5 rounded-full bg-slate-200/90 relative overflow-hidden flex items-center justify-center">

@@ -120,7 +120,6 @@ export async function GET() {
 
     return NextResponse.json({
       success: true,
-      student,
       student: {
         ...student,
         namaKelas: resolvedNamaKelas,

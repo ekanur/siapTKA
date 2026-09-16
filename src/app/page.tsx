@@ -34,7 +34,7 @@ export default async function LandingPage() {
   const totalSiswa = await prisma.siswa.count();
   const siswaAktif = await prisma.siswa.count({ where: { statusAkun: "AKTIF" } });
   const konfirmasiIkut = await prisma.siswa.count({ where: { statusTka: "IKUT" } });
-  const percentConfirmed = totalSiswa > 0 ? Math.round(((siswaAktif + konfirmasiIkut) / (totalSiswa * 2)) * 100) : 85;
+  const percentConfirmed = totalSiswa > 0 ? Math.round(((siswaAktif + konfirmasiIkut) / (totalSiswa * 2)) * 100) : 0;
 
   const settings = await prisma.pengaturanTka.findUnique({ where: { id: "default" } });
   const now = new Date();
