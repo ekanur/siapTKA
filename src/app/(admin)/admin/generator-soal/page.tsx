@@ -70,7 +70,7 @@ export default function GeneratorSoalPage() {
   const [modeStimulus, setModeStimulus] = useState<"AI_AUTO" | "CUSTOM_TEKS">("AI_AUTO");
   const [stimulusTeks, setStimulusTeks] = useState("");
   const [jenisTeks, setJenisTeks] = useState(GENRE_TEKS_INDONESIA[0]);
-  const [topikTeks, setTopikTeks] = useState("Otomatisasi Industri & Keselamatan Kerja Vokasi");
+  const [topikTeks, setTopikTeks] = useState("");
 
   // Progress Bar & Overlay State
   const [progress, setProgress] = useState(0);
@@ -641,7 +641,7 @@ export default function GeneratorSoalPage() {
                 <div className="p-3 bg-white/80 rounded-2xl border border-indigo-100 text-[11px] text-indigo-900 flex items-center gap-2.5">
                   <Sparkles className="w-4 h-4 text-indigo-600 shrink-0" />
                   <span>
-                    <strong>Mode AI Otomatis:</strong> Gemini akan terlebih dahulu menyusun wacana bacaan baru yang berkualitas sesuai genre <em>"{jenisTeks}"</em> bertema <em>"{topikTeks}"</em>, lalu membuat butir soal yang menguji pemahaman teks tersebut.
+                    <strong>Mode AI Otomatis:</strong> Gemini akan terlebih dahulu menyusun wacana bacaan baru yang berkualitas sesuai genre <em>"{jenisTeks}"</em> bertema <em>"{topikTeks.trim() || "Dunia Kerja, Industri Vokasi & Inovasi Modern (Default)"}"</em>, lalu membuat butir soal yang menguji pemahaman teks tersebut.
                   </span>
                 </div>
               )}
