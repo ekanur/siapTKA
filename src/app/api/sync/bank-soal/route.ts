@@ -22,9 +22,15 @@ export async function GET(request: Request) {
     };
 
     // If requester is a student, enforce that only Wajib and selected electives are accessible
-    if (userRole === "SISWA" && userId) {
-      const student = await prisma.siswa.findUnique({
-        where: { id: userId },
+    if (userRole === "SISWA" && (userId || session?.user?.email)) {
+      const userEmail = session?.user?.email ? session.user.email.toLowerCase().trim() : undefined;
+      const student = await prisma.siswa.findFirst({
+        where: {
+          OR: [
+            ...(userId ? [{ id: userId }] : []),
+            ...(userEmail ? [{ email: userEmail }] : []),
+          ],
+        },
         select: {
           statusTka: true,
           mapelPilihan1: true,

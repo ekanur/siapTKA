@@ -11,13 +11,21 @@ export async function GET() {
   try {
     const session = await getServerSession(authOptions);
     const userId = (session?.user as any)?.id;
+    const userEmail = session?.user?.email ? session.user.email.toLowerCase().trim() : null;
+    const userNis = (session?.user as any)?.nis;
 
-    if (!userId) {
+    if (!userId && !userEmail) {
       return NextResponse.json({ success: false, error: "Akses tidak sah" }, { status: 401 });
     }
 
-    const student = await prisma.siswa.findUnique({
-      where: { id: userId },
+    const student = await prisma.siswa.findFirst({
+      where: {
+        OR: [
+          ...(userId ? [{ id: userId }] : []),
+          ...(userEmail ? [{ email: userEmail }] : []),
+          ...(userNis ? [{ nis: userNis }] : []),
+        ],
+      },
       select: {
         id: true,
         nis: true,
@@ -79,8 +87,10 @@ export async function POST(request: Request) {
 
     const { statusTka, mapelPilihan1, mapelPilihan2, studentId } = body;
     const targetId = session?.user ? (session.user as any).id : studentId;
+    const userEmail = session?.user?.email ? session.user.email.toLowerCase().trim() : null;
+    const userNis = (session?.user as any)?.nis;
 
-    if (!targetId) {
+    if (!targetId && !userEmail) {
       return NextResponse.json({ success: false, error: "Akses tidak sah" }, { status: 401 });
     }
 
@@ -116,8 +126,14 @@ export async function POST(request: Request) {
       }
     }
 
-    const student = await prisma.siswa.findUnique({
-      where: { id: targetId },
+    const student = await prisma.siswa.findFirst({
+      where: {
+        OR: [
+          ...(targetId ? [{ id: targetId }] : []),
+          ...(userEmail ? [{ email: userEmail }] : []),
+          ...(userNis ? [{ nis: userNis }] : []),
+        ],
+      },
     });
 
     if (!student) {

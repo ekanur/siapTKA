@@ -116,6 +116,14 @@ export const authOptions: NextAuthOptions = {
           return "/login?error=EmailBelumTerdaftar";
         }
 
+        // Petakan identitas resmi dari tabel Siswa ke objek user session
+        (user as any).id = student.id;
+        (user as any).role = "SISWA";
+        (user as any).nis = student.nis;
+        (user as any).name = student.nama;
+        (user as any).statusTka = student.statusTka;
+        (user as any).namaIndustriPkl = student.namaIndustriPkl;
+
         // Auto activate student account on first Google login
         if (student.statusAkun === "BELUM_AKTIF") {
           await prisma.siswa.update({
@@ -133,13 +141,29 @@ export const authOptions: NextAuthOptions = {
     },
     async jwt({ token, user }) {
       if (user) {
-        token.id = user.id;
+        token.id = (user as any).id || user.id;
         token.role = (user as any).role || "SISWA";
         token.mapel = (user as any).mapel;
         token.nis = (user as any).nis;
         token.statusTka = (user as any).statusTka;
         token.namaIndustriPkl = (user as any).namaIndustriPkl;
       }
+
+      // Pastikan token selalu memiliki ID siswa database asli bahkan untuk sesi Google aktif
+      if (token.email && (!token.role || token.role === "SISWA")) {
+        const normalizedEmail = token.email.toLowerCase().trim();
+        const student = await prisma.siswa.findUnique({
+          where: { email: normalizedEmail },
+        });
+        if (student) {
+          token.id = student.id;
+          token.role = "SISWA";
+          token.nis = student.nis;
+          token.statusTka = student.statusTka;
+          token.namaIndustriPkl = student.namaIndustriPkl;
+        }
+      }
+
       return token;
     },
     async session({ session, token }) {
