@@ -3,6 +3,7 @@ import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/auth";
 import prisma from "@/lib/prisma";
 import { generateSoalWithGemini, getGeminiApiStatus } from "@/lib/ai/gemini-service";
+import { isLanguageSubject } from "@/lib/constants/subjects";
 
 export const dynamic = "force-dynamic";
 
@@ -62,6 +63,10 @@ export async function POST(request: Request) {
 
     if (!kompetensi || !kompetensi.trim()) {
       return NextResponse.json({ success: false, error: "Kompetensi / Indikator Asesmen wajib diisi." }, { status: 400 });
+    }
+
+    if (isLanguageSubject(mapel) && (!subKompetensi || !subKompetensi.trim())) {
+      return NextResponse.json({ success: false, error: "Sub-Kompetensi untuk mata pelajaran bahasa wajib diisi." }, { status: 400 });
     }
 
     const finalElemen = elemen?.trim() || undefined;

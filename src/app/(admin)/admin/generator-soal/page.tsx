@@ -187,6 +187,17 @@ export default function GeneratorSoalPage() {
     e.preventDefault();
     setErrorMsg("");
     setSuccessMsg("");
+
+    if (!kompetensi.trim()) {
+      setErrorMsg("Kompetensi wajib diisi.");
+      return;
+    }
+
+    if (isLang && !subKompetensi.trim()) {
+      setErrorMsg("Sub-Kompetensi untuk mata pelajaran bahasa wajib diisi.");
+      return;
+    }
+
     setIsLoading(true);
     setProgress(5);
     setProgressStep(PROGRESS_STEPS[0]);
@@ -680,19 +691,20 @@ export default function GeneratorSoalPage() {
 
                 <div className="space-y-1.5">
                   <label className="text-xs font-bold text-slate-700 flex items-center justify-between">
-                    <span>2. Sub-Kompetensi</span>
+                    <div className="flex items-center gap-1">
+                      <span>2. Sub-Kompetensi</span>
+                      <span className="text-rose-500 font-bold">*</span>
+                    </div>
                     <span className="text-[10px] text-indigo-600 font-semibold">Indikator Ketercapaian HOTS</span>
                   </label>
                   <textarea
                     rows={2}
                     value={subKompetensi}
                     onChange={(e) => setSubKompetensi(e.target.value)}
-                    placeholder="Opsional mengacu pada Kerangka Asesmen bagian Sub-Elemen"
+                    placeholder="Wajib diisi mengacu pada Matriks Asesmen pada Kerangka Asesmen bagian Sub-Kompetensi"
                     className="w-full px-3.5 py-2.5 rounded-xl border border-slate-200 text-xs font-medium text-slate-800 focus:ring-2 focus:ring-indigo-500"
+                    required={isLang}
                   />
-                  <p className="text-[10px] text-slate-400">
-                    Opsional. Boleh dikosongkan jika hanya ingin mengacu pada kompetensi utama.
-                  </p>
                 </div>
               </div>
             </div>
