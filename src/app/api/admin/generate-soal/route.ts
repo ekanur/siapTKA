@@ -69,6 +69,7 @@ export async function POST(request: Request) {
     const finalKompetensi = kompetensi.trim();
     const finalSubKompetensi = subKompetensi?.trim() || undefined;
     const finalBatasan = batasan?.trim() || undefined;
+    const finalFokusKebahasaan = fokusKebahasaan?.trim() || (finalSubKompetensi ? `${finalKompetensi} (${finalSubKompetensi})` : finalKompetensi);
 
     // Panggil Gemini Service dengan parameter matriks asesmen & parameter bahasa
     const generationResult = await generateSoalWithGemini({
@@ -83,7 +84,7 @@ export async function POST(request: Request) {
       jenisTeks: jenisTeks?.trim(),
       topikTeks: topikTeks?.trim(),
       stimulusTeks: stimulusTeks?.trim(),
-      fokusKebahasaan: fokusKebahasaan?.trim(),
+      fokusKebahasaan: finalFokusKebahasaan,
     });
 
     // Simpan ke Database dengan status MENUNGGU_VALIDASI

@@ -214,7 +214,7 @@ ${
 5. SUB-KOMPETENSI: ${finalSubKompetensi}
 6. GENRE / JENIS TEKS: ${params.jenisTeks || "Teks Wacana Kontekstual"}
 7. TEMA / TOPIK BACAAN: ${params.topikTeks || "Dunia Kerja, Industri Vokasi, dan Inovasi Modern"}
-8. FOKUS ASPEK KEBAHASAAN: ${params.fokusKebahasaan || "Pemahaman Bacaan & Makna Kontekstual"}`
+8. FOKUS ASPEK KEBAHASAAN: Mengacu langsung pada target pencapaian Kompetensi ("${kompetensi}") dan Sub-Kompetensi ("${finalSubKompetensi}")`
     : `MATRIKS ASESMEN AKADEMIK & KEJURUAN:
 ============================================================
 1. MATA PELAJARAN: ${mapel}
@@ -240,14 +240,14 @@ ATURAN WAJIB TEKS WACANA DARI GURU:
 1. Anda WAJIB MENJADIKAN TEKS BACAAN DI ATAS sebagai stimulus utama seluruh butir soal.
 2. Setiap pertanyaan ("pertanyaan") harus diawali atau merujuk secara eksplisit pada wacana di atas (misal: "Berdasarkan teks di atas,...").
 3. DILARANG mengarang teks wacana lain yang menyimpang dari teks bacaan yang telah disediakan guru di atas.
-4. Ujilah pemahaman siswa terhadap Kompetensi: "${kompetensi}", Sub-Kompetensi: "${finalSubKompetensi}", dan Aspek Kebahasaan: "${params.fokusKebahasaan || finalSubKompetensi}".`
+4. Ujilah pemahaman siswa secara terfokus terhadap Kompetensi: "${kompetensi}" dan Sub-Kompetensi: "${finalSubKompetensi}".`
       : `
 ============================================================
 INSTRUKSI PENYUSUNAN TEKS WACANA OLEH AI:
 1. Anda WAJIB MENULISKAN TEKS WACANA / DIALOG BACAAN UTUH yang orisinal, menarik, dan berbobot akademis sesuai Genre "${params.jenisTeks || "Wacana Kontekstual"}" bertema "${params.topikTeks || "Dunia Kerja & Vokasi"}".
 2. Panjang teks wacana berkisar 120-250 kata (atau 6-10 giliran bicara jika berbentuk dialog percakapan).
 3. Tampilkan teks wacana tersebut secara utuh pada awal properti "pertanyaan", diikuti pertanyaan asesmen yang menguji pemahaman teks tersebut.
-4. Ujilah pemahaman siswa terhadap Kompetensi: "${kompetensi}", Sub-Kompetensi: "${finalSubKompetensi}", dan Aspek Kebahasaan: "${params.fokusKebahasaan || finalSubKompetensi}".`
+4. Ujilah pemahaman siswa secara terfokus terhadap Kompetensi: "${kompetensi}" dan Sub-Kompetensi: "${finalSubKompetensi}".`
     : ""
 }
 
@@ -255,7 +255,7 @@ INSTRUKSI KONTEN & RELEVANSI KETAT (CRITICAL REQUIREMENTS):
 ${
   isLanguage
     ? `1. RELEVANSI 100% TERHADAP KOMPETENSI: Seluruh stimulus narasi/kasus, pertanyaan, opsi jawaban, dan pembahasan WAJIB berakar secara spesifik pada Kompetensi "${kompetensi}" dan Sub-Kompetensi "${finalSubKompetensi}". DILARANG membuat soal di luar kompetensi ini.
-2. PENGUJIAN FOKUS KEBAHASAAN: Setiap butir soal harus secara langsung mengukur kemampuan siswa dalam aspek: "${params.fokusKebahasaan || finalSubKompetensi}".
+2. PENGUJIAN ASPEK KEBAHASAAN: Setiap butir soal harus secara langsung mengukur ketercapaian target Kompetensi ("${kompetensi}") dan Sub-Kompetensi ("${finalSubKompetensi}"). Dilarang menyimpang ke aspek kebahasaan di luar kompetensi tersebut.
 3. STIMULUS TEKS WACANA: Setiap butir soal harus terikat dengan wacana bacaan kontekstual yang relevan dan mencerminkan literasi membaca tingkat tinggi.`
     : `1. PENGUJIAN KOMPETENSI (KRITERIA UTAMA & WAJIB): Setiap butir soal WAJIB secara langsung dan spesifik mengukur kemampuan siswa dalam: "${kompetensi}".
 2. KESELARASAN MATERI: ${hasElemen ? `Seluruh stimulus kasus, pertanyaan, opsi, dan pembahasan harus berakar pada Elemen "${elemen}" ${hasSubElemen ? `dan Sub-Elemen "${subElemen}"` : ""}.` : `Seluruh butir soal harus relevan dan selaras dengan cakupan kurikulum mata pelajaran ${mapel}.`}

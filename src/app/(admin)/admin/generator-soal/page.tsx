@@ -32,11 +32,17 @@ import {
   isLanguageSubject,
   GENRE_TEKS_INDONESIA,
   GENRE_TEKS_ASING,
-  FOKUS_KEBAHASAAN_OPTIONS,
 } from "@/lib/constants/subjects";
 
-
-
+const PROGRESS_STEPS = [
+  "Menginisialisasi parameter matriks asesmen TKA...",
+  "Menyusun prompt berstandar Pusmendik & kaidah HOTS...",
+  "Menghubungkan ke engine Google Gemini AI...",
+  "Menganalisis wacana kontekstual & merancang opsi distraktor...",
+  "Memvalidasi struktur butir soal, kunci & pembahasan...",
+  "Menyimpan butir soal baru ke database sekolah...",
+  "Selesai! Menampilkan hasil butir soal...",
+];
 
 export default function GeneratorSoalPage() {
   const { data: session, status: authStatus } = useSession();
@@ -65,7 +71,10 @@ export default function GeneratorSoalPage() {
   const [stimulusTeks, setStimulusTeks] = useState("");
   const [jenisTeks, setJenisTeks] = useState(GENRE_TEKS_INDONESIA[0]);
   const [topikTeks, setTopikTeks] = useState("Otomatisasi Industri & Keselamatan Kerja Vokasi");
-  const [fokusKebahasaan, setFokusKebahasaan] = useState(FOKUS_KEBAHASAAN_OPTIONS[0]);
+
+  // Progress Bar & Overlay State
+  const [progress, setProgress] = useState(0);
+  const [progressStep, setProgressStep] = useState(PROGRESS_STEPS[0]);
 
   const handleMapelChange = (newMapel: string) => {
     setMapel(newMapel);
@@ -120,6 +129,23 @@ export default function GeneratorSoalPage() {
 
 
 
+  // Kunci navigasi browser / pencegahan reload saat proses generate berlangsung
+  useEffect(() => {
+    const handleBeforeUnload = (e: BeforeUnloadEvent) => {
+      if (isLoading) {
+        e.preventDefault();
+        e.returnValue = "";
+      }
+    };
+
+    if (isLoading) {
+      window.addEventListener("beforeunload", handleBeforeUnload);
+    }
+    return () => {
+      window.removeEventListener("beforeunload", handleBeforeUnload);
+    };
+  }, [isLoading]);
+
   // Real-time constructed prompt preview
   const livePrompt = useMemo(() => {
     return buildGeminiPrompt({
@@ -134,7 +160,6 @@ export default function GeneratorSoalPage() {
       jenisTeks: isLang ? jenisTeks : undefined,
       topikTeks: isLang ? topikTeks : undefined,
       stimulusTeks: isLang && modeStimulus === "CUSTOM_TEKS" ? stimulusTeks : undefined,
-      fokusKebahasaan: isLang ? fokusKebahasaan : undefined,
     });
   }, [
     mapel,
@@ -150,7 +175,6 @@ export default function GeneratorSoalPage() {
     topikTeks,
     modeStimulus,
     stimulusTeks,
-    fokusKebahasaan,
   ]);
 
   const handleCopyPrompt = () => {
@@ -164,6 +188,30 @@ export default function GeneratorSoalPage() {
     setErrorMsg("");
     setSuccessMsg("");
     setIsLoading(true);
+    setProgress(5);
+    setProgressStep(PROGRESS_STEPS[0]);
+
+    // Timer simulasi pergerakan progress bar multi-tahap
+    let currentP = 5;
+    const progressInterval = setInterval(() => {
+      currentP += Math.max(0.4, (92 - currentP) * 0.08);
+      if (currentP > 92) currentP = 92;
+      setProgress(currentP);
+
+      if (currentP < 20) {
+        setProgressStep(PROGRESS_STEPS[0]);
+      } else if (currentP < 38) {
+        setProgressStep(PROGRESS_STEPS[1]);
+      } else if (currentP < 58) {
+        setProgressStep(PROGRESS_STEPS[2]);
+      } else if (currentP < 76) {
+        setProgressStep(PROGRESS_STEPS[3]);
+      } else if (currentP < 88) {
+        setProgressStep(PROGRESS_STEPS[4]);
+      } else {
+        setProgressStep(PROGRESS_STEPS[5]);
+      }
+    }, 200);
 
     try {
       const res = await fetch("/api/admin/generate-soal", {
@@ -181,12 +229,18 @@ export default function GeneratorSoalPage() {
           jenisTeks: isLang ? jenisTeks : undefined,
           topikTeks: isLang ? topikTeks : undefined,
           stimulusTeks: isLang && modeStimulus === "CUSTOM_TEKS" ? stimulusTeks : undefined,
-          fokusKebahasaan: isLang ? fokusKebahasaan : undefined,
         }),
       });
 
       const data = await res.json();
+      clearInterval(progressInterval);
+
       if (data.success) {
+        setProgress(100);
+        setProgressStep(PROGRESS_STEPS[6]);
+        // Tahan 400ms pada 100% sebelum overlay ditutup secara mulus
+        await new Promise((resolve) => setTimeout(resolve, 400));
+
         setGeneratedResults(data.soal);
         setGenerationSource(data.source);
         setGenerationStatusApi(data.statusApi);
@@ -195,14 +249,86 @@ export default function GeneratorSoalPage() {
         setErrorMsg(data.error || "Gagal men-generate soal AI.");
       }
     } catch (err: any) {
+      clearInterval(progressInterval);
       setErrorMsg(err.message || "Terjadi kesalahan jaringan.");
     } finally {
       setIsLoading(false);
+      setProgress(0);
     }
   };
 
   return (
     <div className="space-y-8 max-w-6xl">
+      {/* Fullscreen Overlay & Animated Progress Bar Saat Generate */}
+      {isLoading && (
+        <div
+          role="dialog"
+          aria-modal="true"
+          className="fixed inset-0 z-[99999] bg-slate-950/85 backdrop-blur-md flex flex-col items-center justify-center p-4 sm:p-6 select-none"
+          onClick={(e) => e.stopPropagation()}
+        >
+          <div className="relative w-full max-w-lg bg-slate-900/95 border border-slate-700/80 rounded-3xl p-6 sm:p-8 shadow-2xl text-center backdrop-blur-xl overflow-hidden">
+            {/* Efek Cahaya Latar / Aura Glow */}
+            <div className="absolute -top-24 left-1/2 -translate-x-1/2 w-64 h-64 bg-blue-500/20 rounded-full blur-3xl pointer-events-none" />
+            <div className="absolute -bottom-24 right-0 w-48 h-48 bg-indigo-500/20 rounded-full blur-3xl pointer-events-none" />
+
+            {/* Ikon Animasi Berputar & Berpendar */}
+            <div className="relative mx-auto w-20 h-20 mb-5 flex items-center justify-center">
+              <div className="absolute inset-0 rounded-3xl bg-gradient-to-tr from-blue-600 to-indigo-500 animate-spin opacity-75 blur-md" />
+              <div className="relative w-16 h-16 rounded-2xl bg-slate-950 border border-blue-400/40 flex items-center justify-center shadow-inner">
+                <Sparkles className="w-8 h-8 text-blue-400 animate-pulse" />
+              </div>
+            </div>
+
+            {/* Judul & Penjelasan */}
+            <h3 className="text-xl sm:text-2xl font-black text-white tracking-tight">
+              Memproses Pembuatan Soal AI
+            </h3>
+            <p className="text-xs text-slate-300 mt-2 max-w-sm mx-auto leading-relaxed">
+              Google Gemini AI sedang merangkai butir soal HOTS terstandar Pusmendik Kemendikdasmen berdasarkan matriks asesmen yang ditentukan.
+            </p>
+
+            {/* Metadata Soal yang Sedang Digenerate */}
+            <div className="mt-4 inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full bg-slate-800/90 border border-slate-700 text-xs text-slate-200 font-medium shadow-inner">
+              <span className="w-2 h-2 rounded-full bg-emerald-400 animate-ping" />
+              <span className="font-semibold">{mapel.replace(/_/g, " ")}</span>
+              <span className="text-slate-500">&bull;</span>
+              <span>{jumlahSoal} Butir Soal</span>
+              <span className="text-slate-500">&bull;</span>
+              <span className="text-blue-300 font-mono text-[11px]">{tipeSoal}</span>
+            </div>
+
+            {/* Progress Bar & Status Dinamis */}
+            <div className="mt-6 space-y-2.5 text-left">
+              <div className="flex justify-between items-center text-xs">
+                <div className="flex items-center gap-2 text-blue-400 font-medium truncate max-w-[80%]">
+                  <RefreshCw className="w-3.5 h-3.5 animate-spin shrink-0 text-blue-400" />
+                  <span className="truncate">{progressStep}</span>
+                </div>
+                <span className="text-white font-mono font-bold text-sm shrink-0">
+                  {Math.round(progress)}%
+                </span>
+              </div>
+
+              <div className="w-full h-3.5 bg-slate-800 rounded-full overflow-hidden p-0.5 border border-slate-700 shadow-inner">
+                <div
+                  className="h-full rounded-full bg-gradient-to-r from-blue-500 via-indigo-500 to-emerald-400 transition-all duration-300 ease-out shadow-sm shadow-blue-500/50"
+                  style={{ width: `${progress}%` }}
+                />
+              </div>
+            </div>
+
+            {/* Peringatan Penguncian Halaman */}
+            <div className="mt-6 p-3 rounded-2xl bg-amber-500/10 border border-amber-500/25 text-[11px] text-amber-200 flex items-center justify-center gap-2 text-left">
+              <AlertTriangle className="w-4 h-4 text-amber-400 shrink-0" />
+              <span>
+                <strong>Halaman terkunci sementara:</strong> Mohon tidak menutup tab atau berpindah menu hingga seluruh butir soal selesai dibuat dan disimpan ke bank soal.
+              </span>
+            </div>
+          </div>
+        </div>
+      )}
+
       {/* Header */}
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
         <div>
@@ -483,23 +609,12 @@ export default function GeneratorSoalPage() {
                 </div>
               </div>
 
-              {/* Baris 2: Fokus Aspek Kebahasaan */}
-              <div className="space-y-1.5">
-                <label className="text-xs font-bold text-slate-800 flex items-center justify-between">
-                  <span>Fokus Aspek Kebahasaan yang Diuji</span>
-                  <span className="text-[10px] text-indigo-600 font-semibold">Target Pengukuran HOTS</span>
-                </label>
-                <select
-                  value={fokusKebahasaan}
-                  onChange={(e) => setFokusKebahasaan(e.target.value)}
-                  className="w-full px-3.5 py-2.5 rounded-xl border border-indigo-200 bg-white text-xs font-medium text-slate-800 focus:ring-2 focus:ring-indigo-500 cursor-pointer"
-                >
-                  {FOKUS_KEBAHASAAN_OPTIONS.map((fokus) => (
-                    <option key={fokus} value={fokus}>
-                      {fokus}
-                    </option>
-                  ))}
-                </select>
+              {/* Penjelasan Fokus Aspek Kebahasaan Otomatis */}
+              <div className="p-3.5 bg-white/90 rounded-2xl border border-indigo-200/80 text-[11px] text-indigo-950 flex items-start gap-2.5 shadow-xs">
+                <Sparkles className="w-4 h-4 text-indigo-600 shrink-0 mt-0.5" />
+                <div className="leading-relaxed">
+                  <strong className="text-indigo-900 font-bold">Fokus Aspek Kebahasaan Otomatis:</strong> Sesuai kaidah asesmen rumpun bahasa, aspek kebahasaan yang diuji otomatis berfokus penuh pada pencapaian <strong>Kompetensi</strong> dan <strong>Sub-Kompetensi</strong> yang diisikan pada form di bawah.
+                </div>
               </div>
 
               {/* Baris 3: Teks Wacana Mandiri (Jika mode CUSTOM_TEKS) */}

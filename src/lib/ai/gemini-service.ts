@@ -249,8 +249,12 @@ export function generateContextualSimulatedQuestions(params: GenerateParams): Ge
             ? `The implementation of occupational safety and health (K3) protocols in technical workshops significantly mitigates industrial hazards. Recent research demonstrates that standardized operating procedures (SOP), regular equipment calibration, and mandatory personal protective equipment (PPE) reduce workplace accidents by up to 40%. Vocational technicians who proactively comply with safety guidelines demonstrate higher operational productivity and workplace efficiency.`
             : `Penerapan prosedur keselamatan dan kesehatan kerja (K3) di lingkungan industri dan bengkel kerja vokasi terbukti efektif mereduksi risiko insiden kerja hingga 40%. Seorang teknisi tidak hanya dituntut menguasai keterampilan mengoperasikan mesin, tetapi juga harus cermat menelaah petunjuk teknis (SOP) dan simbol peringatan bahaya. Kepatuhan terhadap standar operasional kerja secara konsisten mampu meminimalkan downtime mesin dan meningkatkan efisiensi operasional secara berkelanjutan.`);
 
+        const targetAspek = params.subKompetensi?.trim()
+          ? `${kompetensi} (${params.subKompetensi.trim()})`
+          : (params.fokusKebahasaan || kompetensi);
+
         if (isEnglish) {
-          pertanyaan = `Read the following text carefully:\n\n"${passage}"\n\nBased on the text above, which of the following statements best reflects the primary focus regarding "${params.fokusKebahasaan || kompetensi}"?`;
+          pertanyaan = `Read the following text carefully:\n\n"${passage}"\n\nBased on the text above, which of the following statements best reflects the primary focus regarding "${targetAspek}"?`;
           opsiJawaban = [
             {
               id: "A",
@@ -274,9 +278,9 @@ export function generateContextualSimulatedQuestions(params: GenerateParams): Ge
             },
           ];
           kunciJawaban = "A";
-          pembahasan = `**Reading Comprehension Analysis:**\n- **Target Competency:** ${params.fokusKebahasaan || kompetensi}\n- **Text Focus:** ${params.jenisTeks || "Analytical/Exposition Text"}\n- **Correct Answer (A):** Statement A accurately captures the main synthesis of the passage that adhering to safety procedures reduces industrial risks while boosting efficiency.\n- **Distractor Analysis:** Options B, C, D, and E contradict explicit facts stated in the reading stimulus.`;
+          pembahasan = `**Reading Comprehension Analysis:**\n- **Target Competency:** ${targetAspek}\n- **Text Focus:** ${params.jenisTeks || "Analytical/Exposition Text"}\n- **Correct Answer (A):** Statement A accurately captures the main synthesis of the passage that adhering to safety procedures reduces industrial risks while boosting efficiency.\n- **Distractor Analysis:** Options B, C, D, and E contradict explicit facts stated in the reading stimulus.`;
         } else {
-          pertanyaan = `Cermatilah wacana bacaan berikut dengan saksama:\n\n"${passage}"\n\nBerdasarkan wacana di atas, berkaitan dengan fokus pengujian *"${params.fokusKebahasaan || kompetensi}"*, gagasan pokok atau simpulan yang paling tepat dan selaras dengan isi teks adalah...`;
+          pertanyaan = `Cermatilah wacana bacaan berikut dengan saksama:\n\n"${passage}"\n\nBerdasarkan wacana di atas, berkaitan dengan fokus pengujian kompetensi *"${targetAspek}"*, gagasan pokok atau simpulan yang paling tepat dan selaras dengan isi teks adalah...`;
           opsiJawaban = [
             {
               id: "A",
@@ -300,7 +304,7 @@ export function generateContextualSimulatedQuestions(params: GenerateParams): Ge
             },
           ];
           kunciJawaban = "A";
-          pembahasan = `**Analisis Literasi Membaca (${mapel}):**\n- **Fokus Kebahasaan:** ${params.fokusKebahasaan || kompetensi}\n- **Genre Wacana:** ${params.jenisTeks || "Teks Eksplanasi/Eksposisi"}\n- **Pembuktian Jawaban Benar (A):** Paragraf menyatakan secara lugas bahwa kepatuhan pada SOP dan K3 mereduksi risiko hingga 40% dan mengoptimalkan efisiensi produksi.\n- **Analisis Pengecoh:** Opsi B, C, D, dan E bertentangan dengan fakta tertulis dalam wacana stimulus.`;
+          pembahasan = `**Analisis Literasi Membaca (${mapel}):**\n- **Target Kompetensi & Aspek:** ${targetAspek}\n- **Genre Wacana:** ${params.jenisTeks || "Teks Eksplanasi/Eksposisi"}\n- **Pembuktian Jawaban Benar (A):** Paragraf menyatakan secara lugas bahwa kepatuhan pada SOP dan K3 mereduksi risiko hingga 40% dan mengoptimalkan efisiensi produksi.\n- **Analisis Pengecoh:** Opsi B, C, D, dan E bertentangan dengan fakta tertulis dalam wacana stimulus.`;
         }
       } else {
         pertanyaan = `Pada pelaksanaan studi kasus di dunia industri terkait mata pelajaran **${mapel}**, peserta didik menganalisis elemen **${elemen}** dengan fokus bahasan **${subElemen}**.
