@@ -609,13 +609,7 @@ export default function GeneratorSoalPage() {
                 </div>
               </div>
 
-              {/* Penjelasan Fokus Aspek Kebahasaan Otomatis */}
-              <div className="p-3.5 bg-white/90 rounded-2xl border border-indigo-200/80 text-[11px] text-indigo-950 flex items-start gap-2.5 shadow-xs">
-                <Sparkles className="w-4 h-4 text-indigo-600 shrink-0 mt-0.5" />
-                <div className="leading-relaxed">
-                  <strong className="text-indigo-900 font-bold">Fokus Aspek Kebahasaan Otomatis:</strong> Sesuai kaidah asesmen rumpun bahasa, aspek kebahasaan yang diuji otomatis berfokus penuh pada pencapaian <strong>Kompetensi</strong> dan <strong>Sub-Kompetensi</strong> yang diisikan pada form di bawah.
-                </div>
-              </div>
+
 
               {/* Baris 3: Teks Wacana Mandiri (Jika mode CUSTOM_TEKS) */}
               {modeStimulus === "CUSTOM_TEKS" ? (
