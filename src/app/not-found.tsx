@@ -1,10 +1,37 @@
 import Link from "next/link";
+import Image from "next/image";
 import { ShieldAlert, Home, LogIn } from "lucide-react";
 
 export default function NotFound() {
   return (
     <div className="min-h-screen bg-slate-950 text-white flex items-center justify-center p-4">
       <div className="max-w-md w-full text-center space-y-6 bg-slate-900/90 border border-slate-800 p-8 sm:p-10 rounded-3xl shadow-2xl backdrop-blur-sm">
+        {/* Brand Logo Header */}
+        <div className="flex items-center justify-center">
+          <div className="bg-white/95 backdrop-blur-sm rounded-2xl px-5 py-2.5 shadow-xl border border-white/10 inline-flex items-center gap-3">
+            <div className="relative w-8 h-8 shrink-0 flex items-center justify-center">
+              <Image
+                src="/logo/icon-only.png"
+                alt="Logo Simbol SiapTKA"
+                width={32}
+                height={32}
+                className="w-full h-full object-contain"
+                priority
+              />
+            </div>
+            <div className="h-6 sm:h-7 flex items-center">
+              <Image
+                src="/logo/horizontal.png"
+                alt="siapTKA"
+                width={120}
+                height={32}
+                className="h-full w-auto object-contain"
+                priority
+              />
+            </div>
+          </div>
+        </div>
+
         <div className="w-16 h-16 rounded-2xl bg-rose-500/10 border border-rose-500/30 flex items-center justify-center mx-auto text-rose-400 shadow-lg shadow-rose-500/10">
           <ShieldAlert className="w-8 h-8" />
         </div>

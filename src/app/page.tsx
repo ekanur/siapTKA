@@ -1,4 +1,5 @@
 import React from "react";
+import Image from "next/image";
 import Link from "next/link";
 import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/auth";
@@ -119,12 +120,26 @@ export default async function LandingPage() {
         <div className="max-w-7xl mx-auto px-4 sm:px-6 py-3 flex items-center justify-between gap-4">
           <div className="flex items-center gap-3 sm:gap-6">
             {/* Brand Logo */}
-            <Link href={session?.user ? destinationHref : "/"} className="flex items-center gap-2.5 group">
-              <div className="w-9 h-9 rounded-xl bg-blue-600 text-white font-extrabold text-lg flex items-center justify-center shadow-md shadow-blue-500/20 group-hover:scale-105 transition-transform">
-                T
+            <Link href={session?.user ? destinationHref : "/"} className="flex items-center gap-2 sm:gap-2.5 group">
+              <div className="relative w-8 h-8 sm:w-9 sm:h-9 shrink-0 group-hover:scale-105 transition-transform flex items-center justify-center">
+                <Image
+                  src="/logo/icon-only.png"
+                  alt="Logo Simbol SiapTKA"
+                  width={36}
+                  height={36}
+                  className="w-full h-full object-contain"
+                  priority
+                />
               </div>
-              <div className="flex items-center gap-1.5">
-                <span className="text-base font-extrabold text-slate-900 tracking-tight">siapTKA</span>
+              <div className="flex items-center gap-1.5 sm:gap-2">
+                <Image
+                  src="/logo/horizontal.png"
+                  alt="siapTKA"
+                  width={140}
+                  height={36}
+                  className="h-7 sm:h-8 w-auto object-contain"
+                  priority
+                />
                 <span className="hidden sm:inline-block text-[10px] px-2 py-0.5 bg-blue-50 text-blue-700 border border-blue-100 font-bold rounded-full">
                   SMKN 2 Depok
                 </span>
@@ -518,11 +533,23 @@ export default async function LandingPage() {
       <footer className="bg-surface-container-high w-full py-12 border-t border-outline-variant/50">
         <div className="grid grid-cols-1 md:grid-cols-4 gap-8 px-6 md:px-12 max-w-7xl mx-auto">
           <div className="md:col-span-2 space-y-3">
-            <div className="flex items-center gap-2">
-              <div className="w-7 h-7 rounded-lg bg-primary text-white font-extrabold text-xs flex items-center justify-center">
-                T
+            <div className="flex items-center gap-2.5">
+              <div className="relative w-7 h-7 shrink-0 flex items-center justify-center">
+                <Image
+                  src="/logo/icon-only.png"
+                  alt="Logo Simbol SiapTKA"
+                  width={28}
+                  height={28}
+                  className="w-full h-full object-contain"
+                />
               </div>
-              <span className="text-base font-bold text-on-surface">Siap TKA</span>
+              <Image
+                src="/logo/horizontal.png"
+                alt="siapTKA"
+                width={110}
+                height={28}
+                className="h-6 w-auto object-contain"
+              />
             </div>
             <p className="text-xs text-on-surface-variant max-w-sm leading-relaxed">
               Platform persiapan mandiri Tes Kemampuan Akademik untuk Siswa SMKN 2 Depok Sleman yang sedang menjalani Praktik Kerja Lapangan (PKL).

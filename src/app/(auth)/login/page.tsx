@@ -1,6 +1,7 @@
 "use client";
 
 import React, { useState, Suspense } from "react";
+import Image from "next/image";
 import { signIn } from "next-auth/react";
 import { useRouter, useSearchParams } from "next/navigation";
 import {
@@ -65,12 +66,31 @@ function LoginForm() {
   return (
     <div className="w-full max-w-md">
       {/* App Logo & Header */}
-      <div className="text-center mb-6">
-        <h1 className="text-3xl font-extrabold text-white tracking-tight">
-          SiapTKA
-        </h1>
-        <p className="text-slate-300 text-xs sm:text-sm mt-1">
-          Platform Latihan dan persiapan TKA
+      <div className="text-center mb-6 flex flex-col items-center">
+        <div className="bg-white/95 backdrop-blur-sm rounded-2xl px-5 py-2.5 shadow-xl border border-white/20 inline-flex items-center gap-3 mb-2.5">
+          <div className="relative w-9 h-9 sm:w-10 sm:h-10 shrink-0 flex items-center justify-center">
+            <Image
+              src="/logo/icon-only.png"
+              alt="Logo Simbol SiapTKA"
+              width={40}
+              height={40}
+              className="w-full h-full object-contain"
+              priority
+            />
+          </div>
+          <div className="h-7 sm:h-8 flex items-center">
+            <Image
+              src="/logo/horizontal.png"
+              alt="siapTKA"
+              width={140}
+              height={36}
+              className="h-full w-auto object-contain"
+              priority
+            />
+          </div>
+        </div>
+        <p className="text-slate-300 text-xs sm:text-sm">
+          Platform Latihan & Persiapan TKA • SMKN 2 Depok Sleman
         </p>
       </div>
 

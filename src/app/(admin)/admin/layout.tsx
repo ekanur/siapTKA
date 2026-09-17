@@ -1,6 +1,7 @@
 "use client";
 
 import React, { useState } from "react";
+import Image from "next/image";
 import Link from "next/link";
 import { usePathname, notFound } from "next/navigation";
 import { useSession, signOut } from "next-auth/react";
@@ -153,21 +154,37 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
       >
         <div>
           {/* Logo */}
-          <div className="p-6 border-b border-slate-800 flex items-center justify-between">
-            <div className="flex items-center gap-3">
-              <div className="w-10 h-10 rounded-2xl bg-gradient-to-tr from-blue-600 to-cyan-500 flex items-center justify-center font-extrabold text-white text-lg shadow-lg shadow-blue-500/25">
-                T
+          <div className="p-5 border-b border-slate-800 flex items-center justify-between">
+            <div className="flex items-center gap-2.5 min-w-0">
+              <div className="relative w-9 h-9 shrink-0 flex items-center justify-center">
+                <Image
+                  src="/logo/icon-only.png"
+                  alt="Logo Simbol SiapTKA"
+                  width={36}
+                  height={36}
+                  className="w-full h-full object-contain"
+                  priority
+                />
               </div>
-              <div>
-                <h1 className="font-extrabold text-lg text-white leading-tight">siapTKA</h1>
-                <p className="text-[11px] text-cyan-400 font-bold uppercase tracking-wider">
+              <div className="min-w-0">
+                <div className="bg-white/95 rounded-lg px-2 py-0.5 inline-block shadow-sm">
+                  <Image
+                    src="/logo/horizontal.png"
+                    alt="siapTKA"
+                    width={110}
+                    height={28}
+                    className="h-5 w-auto object-contain"
+                    priority
+                  />
+                </div>
+                <p className="text-[10px] text-cyan-400 font-bold uppercase tracking-wider mt-1 truncate">
                   {userRole === "GURU" ? `Guru: ${getSubjectDisplayName(userMapel, true)}` : "Portal Administrator"}
                 </p>
               </div>
             </div>
             <button
               onClick={() => setIsSidebarOpen(false)}
-              className="lg:hidden text-slate-400 hover:text-white"
+              className="lg:hidden text-slate-400 hover:text-white shrink-0 p-1"
             >
               <X className="w-5 h-5" />
             </button>
@@ -247,7 +264,22 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
             >
               <Menu className="w-5 h-5" />
             </button>
-            <span className="font-extrabold text-slate-900 text-base">siapTKA</span>
+            <div className="flex items-center gap-2">
+              <Image
+                src="/logo/icon-only.png"
+                alt="Logo Simbol SiapTKA"
+                width={26}
+                height={26}
+                className="w-6 h-6 object-contain"
+              />
+              <Image
+                src="/logo/horizontal.png"
+                alt="siapTKA"
+                width={95}
+                height={24}
+                className="h-5 w-auto object-contain"
+              />
+            </div>
           </div>
         </header>
 
