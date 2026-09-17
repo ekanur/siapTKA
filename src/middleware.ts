@@ -13,6 +13,19 @@ const ADMIN_ONLY_ROUTES = [
 export async function middleware(req: NextRequest) {
   const { pathname } = req.nextUrl;
 
+  // 0. Hardening: Blokir akses langsung via browser ke direktori atau file /templates dan /template
+  if (
+    pathname === "/templates" ||
+    pathname.startsWith("/templates/") ||
+    pathname === "/template" ||
+    pathname.startsWith("/template/")
+  ) {
+    const notFoundUrl = new URL("/not-found", req.url);
+    return NextResponse.rewrite(notFoundUrl, {
+      status: 404,
+    });
+  }
+
   const isAdminOnly = ADMIN_ONLY_ROUTES.some(
     (route) => pathname === route || pathname.startsWith(route + "/")
   );
@@ -43,6 +56,10 @@ export async function middleware(req: NextRequest) {
 
 export const config = {
   matcher: [
+    "/templates/:path*",
+    "/templates",
+    "/template/:path*",
+    "/template",
     "/admin/pengguna/:path*",
     "/admin/pengguna",
     "/admin/siswa/:path*",
