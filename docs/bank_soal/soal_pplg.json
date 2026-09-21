@@ -1,0 +1,233 @@
+[
+  {
+    "num": 1,
+    "tipeSoal": "PILIHAN_GANDA",
+    "pertanyaan": "Di laboratorium komputer sekolah, beberapa murid sedang melakukan praktikum pemrograman. Salah satu komputer mengalami gangguan pada kabel listrik sehingga terlihat sedikit terkelupas.\n\nTindakan yang paling sesuai dengan prinsip K3 dalam situasi tersebut adalah …",
+    "opsiJawaban": "[{\"id\": \"A\", \"label\": \"tetap menggunakan komputer tersebut selama masih dapat menyala\"}, {\"id\": \"B\", \"label\": \"mengganti kabel listrik sendiri tanpa mematikan sumber listrik\"}, {\"id\": \"C\", \"label\": \"melaporkan kondisi tersebut kepada guru atau teknisi\"}, {\"id\": \"D\", \"label\": \"memindahkan komputer ke meja lain agar tidak mengganggu praktikum\"}, {\"id\": \"E\", \"label\": \"menutup bagian kabel yang rusak menggunakan kertas\"}]",
+    "kunciJawaban": "C",
+    "pembahasan": "Kunci Jawaban: C (melaporkan kondisi tersebut kepada guru atau teknisi)\n\nPembahasan:\nBerdasarkan prinsip dasar K3 (Kesehatan dan Keselamatan Kerja) di lingkungan laboratorium komputer:\n1. Kabel listrik yang terkelupas berisiko tinggi menimbulkan bahaya sengatan listrik (electrical shock) serta bahaya korsleting yang dapat memicu kebakaran.\n2. Murid tidak memiliki wewenang atau keahlian teknis bersertifikasi untuk mengganti/memperbaiki instalasi kabel beraliran listrik aktif (Opsi B berbahaya).\n3. Membiarkan komputer tetap menyala atau menutup kabel rusak dengan kertas (Opsi A dan E) sangat membahayakan keselamatan pengguna dan berpotensi kebakaran.\n4. Tindakan prosedural yang paling tepat dan aman adalah segera menghentikan pemakaian dan melaporkan kondisi kerusakan tersebut kepada guru pembimbing atau teknisi laboratorium agar ditangani sesuai standar operasional prosedur K3.",
+    "status": "AKTIF",
+    "source": "IMPORT_EXCEL_PPLG",
+    "mapel": "PPLG"
+  },
+  {
+    "num": 2,
+    "tipeSoal": "PILIHAN_GANDA",
+    "pertanyaan": "Dalam sebuah tim pengembangan aplikasi, terjadi beberapa permasalahan berikut:\n\n1. anggota tim mengerjakan tugas masing-masing tanpa berbagi informasi perkembangan pekerjaan\n2. kesalahan dalam fitur aplikasi baru diketahui setelah digabungkan dengan bagian lain\n3. diskusi tim jarang dilakukan sehingga banyak kendala tidak segera terselesaikan\n\nPermasalahan tersebut terjadi karena belum diterapkannya prinsip …",
+    "opsiJawaban": "[{\"id\": \"A\", \"label\": \"kolaborasi dan komunikasi efektif antar anggota tim dalam proses pengembangan\"}, {\"id\": \"B\", \"label\": \"perencanaan proyek yang terstruktur sebelum proses pengembangan dimulai\"}, {\"id\": \"C\", \"label\": \"penggunaan teknologi yang sesuai dalam pengembangan perangkat lunak\"}, {\"id\": \"D\", \"label\": \"pembagian tugas kerja berdasarkan keahlian masing-masing anggota tim\"}, {\"id\": \"E\", \"label\": \"dokumentasi sistem yang lengkap untuk setiap fitur aplikasi\"}]",
+    "kunciJawaban": "A",
+    "pembahasan": "Kunci Jawaban: A (kolaborasi dan komunikasi efektif antar anggota tim dalam proses pengembangan)\n\nPembahasan:\nKasus pada soal menunjukkan tiga gejala utama kegagalan koordinasi:\n1. Anggota tim bekerja terisolasi tanpa berbagi progres (silo working).\n2. Ketiadaan sinkronisasi berkala sehingga bug/konflik integrasi baru diketahui saat fitur digabungkan di akhir.\n3. Diskusi tim jarang dilakukan sehingga kendala teknis lambat diselesaikan.\n\nDalam metodologi pengembangan perangkat lunak modern (seperti Agile/Scrum), koordinasi rutin (misalnya daily standup meeting dan integrasi berkelanjutan/CI) merupakan fondasi utama. Seluruh kendala tersebut terjadi karena belum diterapkannya prinsip kolaborasi dan komunikasi yang efektif antar anggota tim pengembang.",
+    "status": "AKTIF",
+    "source": "IMPORT_EXCEL_PPLG",
+    "mapel": "PPLG"
+  },
+  {
+    "num": 3,
+    "tipeSoal": "PILIHAN_GANDA",
+    "pertanyaan": "Dalam sebuah perusahaan pengembang perangkat lunak, berbagai sumber daya digunakan untuk mendukung proses kerja tim.\n\nManakah di antara berikut ini yang termasuk aset digital dalam lingkungan kerja tersebut?",
+    "opsiJawaban": "[{\"id\": \"A\", \"label\": \"komputer pengembang yang digunakan untuk menulis kode program\"}, {\"id\": \"B\", \"label\": \"lisensi perangkat lunak pengembangan yang digunakan oleh tim\"}, {\"id\": \"C\", \"label\": \"meja kerja yang digunakan oleh anggota tim pengembang\"}, {\"id\": \"D\", \"label\": \"kabel jaringan yang menghubungkan komputer dengan router\"}, {\"id\": \"E\", \"label\": \"kursi kerja yang digunakan di ruang kerja tim\"}]",
+    "kunciJawaban": "B",
+    "pembahasan": "Kunci Jawaban: B (lisensi perangkat lunak pengembangan yang digunakan oleh tim)\n\nPembahasan:\nKlasifikasi aset dalam lingkungan teknologi informasi terbagi menjadi dua kelompok:\n1. Aset Fisik (Tangible Assets): Sumber daya nyata yang berwujud fisik dan dapat disentuh, seperti komputer/laptop pengembang (A), meja kerja (C), kabel jaringan (D), dan kursi kerja (E).\n2. Aset Digital (Intangible Assets): Sumber daya berbasis data dan sistem elektronik non-fisik, seperti lisensi perangkat lunak (software license), repositori kode program (source code), basis data (database), file media digital, serta sertifikat/kredensial keamanan.\n\nOleh karena itu, lisensi perangkat lunak pengembangan merupakan aset digital.",
+    "status": "AKTIF",
+    "source": "IMPORT_EXCEL_PPLG",
+    "mapel": "PPLG"
+  },
+  {
+    "num": 4,
+    "tipeSoal": "PILIHAN_GANDA",
+    "pertanyaan": "Tim pengembang perangkat lunak sedang mengerjakan proyek aplikasi berbasis web, dalam proyek tersebut terdapat beberapa aset yang disiapkan, antara lain: Laptop/komputer tim developer;  Repository source code di Git; Database pelanggan; Server staging untuk pengujian.\n\nTerjadi masalah saat salah satu developer mengubah souce code langsung di branch utama tanpa prosedur yang benar, serta tidak ada pencatatan penggunaan perangkat kerja.\n\nPertanyaan:\nLangkah prosedural yang paling tepat untuk memperbaiki pengelolaan aset fisik dan digital pada kasus tersebut adalah\n\nPilihan Jawaban:",
+    "opsiJawaban": "[{\"id\": \"A\", \"label\": \"Mengizinkan semua anggota tim mengakses seluruh aset agar pekerjaan lebih cepat selesai\"}, {\"id\": \"B\", \"label\": \"Menghapus seluruh repository dan membuat ulang sistem dari awal\"}, {\"id\": \"C\", \"label\": \"Menerapkan manajemen akses berbasis peran, prosedur version control yang jelas, serta pencatatan penggunaan aset fisik\"}, {\"id\": \"D\", \"label\": \"Menyerahkan seluruh pengelolaan aset hanya kepada satu orang developer senior\"}, {\"id\": \"E\", \"label\": \"Fokus pada penyelesaian aplikasi tanpa perlu memperhatikan prosedur pengelolaan aset\"}]",
+    "kunciJawaban": "C",
+    "pembahasan": "Kunci Jawaban: C (Menerapkan manajemen akses berbasis peran, prosedur version control yang jelas, serta pencatatan penggunaan aset fisik)\n\nPembahasan:\nStudi kasus mencakup dua permasalahan tata kelola aset:\n1. Pengelolaan Aset Digital (Source Code & Database): Developer mengubah kode langsung di branch utama (main) tanpa alur yang benar. Hal ini membutuhkan penerapan prosedur version control yang disiplin (seperti branch protection rules, kewajiban Pull Request/Merge Request, dan code review) serta pembatasan hak akses berbasis peran (Role-Based Access Control / RBAC).\n2. Pengelolaan Aset Fisik (Laptop/Komputer): Ketiadaan pencatatan perangkat kerja diselesaikan melalui prosedur inventarisasi, log serah terima, dan pencatatan penggunaan aset fisik secara berkala.\n\nLangkah perbaikan prosedural yang komprehensif dan tepat adalah menerapkan opsi C.",
+    "status": "AKTIF",
+    "source": "IMPORT_EXCEL_PPLG",
+    "mapel": "PPLG"
+  },
+  {
+    "num": 5,
+    "tipeSoal": "PILIHAN_GANDA",
+    "pertanyaan": "Perhatikan struktur direktori proyek berikut.\n\nproject-app/\n│\n├── src/\n│   ├── main.py\n│   └── helper.py\n│\n├── assets/\n│   └── logo.png\n│\n├── config/\n│   └── app.py\n│\n└── README.md\n\nSeorang murid ingin menambahkan file bernama database.py yang berisi pengaturan koneksi ke sistem penyimpanan data yang digunakan oleh aplikasi.\n\nPengelolaan file yang paling tepat adalah …",
+    "opsiJawaban": "[{\"id\": \"A\", \"label\": \"menempatkan file database.py pada folder config/ agar pengaturan aplikasi tersimpan terpusat\"}, {\"id\": \"B\", \"label\": \"menempatkan file database.py pada folder assets/ agar dapat diakses oleh tampilan aplikasi\"}, {\"id\": \"C\", \"label\": \"menempatkan file database.py pada folder src/ agar dapat diproses sebagai bagian dari kode program\"}, {\"id\": \"D\", \"label\": \"menempatkan file database.py di luar folder proyek agar tidak mempengaruhi aplikasi\"}, {\"id\": \"E\", \"label\": \"menempatkan file database.py bersama README.md agar mudah dibaca pengguna\"}]",
+    "kunciJawaban": "A",
+    "pembahasan": "Kunci Jawaban: A (menempatkan file database.py pada folder config/ agar pengaturan aplikasi tersimpan terpusat)\n\nPembahasan:\nDalam arsitektur struktur direktori proyek perangkat lunak:\n1. Folder config/: Dirancang khusus untuk menyimpan konfigurasi aplikasi, parameter lingkungan, dan berkas pengaturan koneksi basis data (database.py) secara terpusat.\n2. Folder assets/: Khusus untuk menyimpan berkas statis media tampilan antarmuka (gambar, ikon, logo.png, stylesheet).\n3. Folder src/: Untuk menyimpan kode program fungsional logika utama (main.py, helper.py).\n4. File README.md: Dokumentasi pengenalan proyek untuk pengguna/pengembang.\n\nMenempatkan file database.py di dalam folder config/ mematuhi prinsip pemisahan tanggung jawab (separation of concerns), memudahkan pengelolaan kredensial/koneksi, dan mencegah campur aduk antara konfigurasi dan logika program.",
+    "status": "AKTIF",
+    "source": "IMPORT_EXCEL_PPLG",
+    "mapel": "PPLG"
+  },
+  {
+    "num": 6,
+    "tipeSoal": "PILIHAN_GANDA",
+    "pertanyaan": "Seorang system administrator menemukan pesan kesalahan berikut saat mengakses aplikasi web pada server:\n\nPermission denied: /var/www/html/index.php\n\nAgar aplikasi web dapat diakses dengan normal, tindakan yang paling tepat adalah …",
+    "opsiJawaban": "[{\"id\": \"A\", \"label\": \"mengaktifkan layanan web server agar dapat memproses file PHP\"}, {\"id\": \"B\", \"label\": \"mengubah hak akses (permission) pada file atau direktori proyek\"}, {\"id\": \"C\", \"label\": \"memasang bahasa pemrograman PHP pada sistem server\"}, {\"id\": \"D\", \"label\": \"mengatur ulang port yang digunakan oleh web server\"}, {\"id\": \"E\", \"label\": \"memindahkan file aplikasi ke direktori lain pada sistem\"}]",
+    "kunciJawaban": "B",
+    "pembahasan": "Kunci Jawaban: B (mengubah hak akses (permission) pada file atau direktori proyek)\n\nPembahasan:\nPesan kesalahan 'Permission denied: /var/www/html/index.php' pada sistem operasi Linux/Unix menunjukkan bahwa proses layanan web server (misalnya Apache/Nginx dengan user 'www-data') tidak memiliki izin baca (read) atau eksekusi (execute) terhadap berkas index.php.\n\nTindakan yang tepat adalah mengubah izin hak akses (file permission) atau kepemilikan (ownership) pada file/direktori proyek menggunakan perintah sistem operasi:\n- chmod (misal: chmod 644 /var/www/html/index.php) untuk memberikan hak baca pada web server.\n- chown (misal: chown www-data:www-data /var/www/html/index.php) untuk menyesuaikan pemilik berkas agar sesuai dengan akun service web server.",
+    "status": "AKTIF",
+    "source": "IMPORT_EXCEL_PPLG",
+    "mapel": "PPLG"
+  },
+  {
+    "num": 7,
+    "tipeSoal": "PILIHAN_GANDA",
+    "pertanyaan": "Cermati topologi berikut!\n\n\nTopologi tersebut menggambarkan infrastruktur aplikasi web yang terdiri dari server aplikasi, file storage, dan database server.\n\nAgar database server dapat berkomunikasi dengan server aplikasi, alamat IP yang paling tepat digunakan pada titik A adalah …",
+    "opsiJawaban": "[{\"id\": \"A\", \"label\": \"192.168.10.100/24\"}, {\"id\": \"B\", \"label\": \"192.168.100.1/24\"}, {\"id\": \"C\", \"label\": \"192.168.10.20/24\"}, {\"id\": \"D\", \"label\": \"192.168.100.100/24\"}, {\"id\": \"E\", \"label\": \"192.168.100.300/24\"}]",
+    "kunciJawaban": "D",
+    "pembahasan": "Kunci Jawaban: D (192.168.100.100/24)\n\nPembahasan & Analisis Topologi:\nBerdasarkan diagram topologi infrastruktur web yang disajikan:\n1. Segmen File Storage terhubung ke Server App menggunakan subnet 192.168.10.0/24 (File Storage = 192.168.10.2/24, Server App Interface 1 = 192.168.10.1/24).\n2. Segmen DB Server 1 terhubung ke Server App Interface 2 yang menggunakan IP 192.168.100.1/24.\n3. Agar DB Server 1 (titik A) dapat berkomunikasi langsung dengan Server App dalam satu segmen jaringan lokal (LAN):\n   - Alamat IP pada titik A harus berada dalam subnet/network ID yang sama, yaitu 192.168.100.0/24 (rentang host valid: 192.168.100.1 s.d. 192.168.100.254).\n   - Alamat IP tidak boleh bernilai 192.168.100.1 karena alamat tersebut sudah digunakan oleh Server App (menghindari IP conflict).\n   - Nilai oktet harus sah (192.168.100.300 tidak valid karena batas maksimal oktet IPv4 adalah 255).\n   - Subnet 192.168.10.x (opsi A dan C) keliru karena diperuntukkan bagi jalur storage.\n\nMaka alamat IP yang tepat dan valid untuk titik A adalah 192.168.100.100/24.",
+    "status": "AKTIF",
+    "source": "IMPORT_EXCEL_PPLG",
+    "mapel": "PPLG"
+  },
+  {
+    "num": 8,
+    "tipeSoal": "PILIHAN_GANDA",
+    "pertanyaan": "Perhatikan gambar protokol jaringan berikut:\nApplication Layer            →   HTTP, FTP, DNS\nTransport Layer               →  TCP, UDP\nInternet Layer                  →  IP\nNetwork Interface Layer  →  Ethernet, WiFi\n\nDalam suatu jaringan komputer. terdapat sebuah protokol yang berfungsi untuk; memberikan alamat unik pada setiap perangkat; menentukan jalur pengiriman paket data antar jaringan; \n\nPertanyaan:\nProtokol yang dimaksud adalah \n\nPilihan Jawaban",
+    "opsiJawaban": "[{\"id\": \"A\", \"label\": \"Transmission Control Protocol (TCP)\"}, {\"id\": \"B\", \"label\": \"Hypertext Transfer Protocol (HTTP)\"}, {\"id\": \"C\", \"label\": \"File Transfer Protocol (FTP)\"}, {\"id\": \"D\", \"label\": \"Internet Protocol (IP)\"}, {\"id\": \"E\", \"label\": \"User Datagram Protocol (UDP)\"}]",
+    "kunciJawaban": "D",
+    "pembahasan": "Kunci Jawaban: D (Internet Protocol (IP))\n\nPembahasan:\nProtokol jaringan yang bertugas:\n1. Memberikan alamat logis unik pada setiap perangkat dalam jaringan (logical addressing / IP Address).\n2. Menentukan rute dan jalur terbaik pengiriman paket data antar-jaringan yang berbeda (routing/path determination).\n\nAdalah Internet Protocol (IP) yang bekerja pada lapisan Internet Layer (Network Layer pada model OSI).\n\nFungsi protokol lainnya:\n- TCP / UDP: Bekerja di Transport Layer untuk transmisi data end-to-end (TCP andal dan berurutan, UDP cepat tanpa koneksi).\n- HTTP: Protokol Application Layer untuk pertukaran data halaman web.\n- FTP: Protokol Application Layer untuk transfer berkas.",
+    "status": "AKTIF",
+    "source": "IMPORT_EXCEL_PPLG",
+    "mapel": "PPLG"
+  },
+  {
+    "num": 9,
+    "tipeSoal": "MCMA",
+    "pertanyaan": "Seorang pengguna mengakses sebuah aplikasi web melalui browser. Ketika alamat situs dimasukkan, data permintaan dikirim dari komputer pengguna menuju server melalui jaringan internet menggunakan protokol pada model OSI.\n\nBerdasarkan mekanisme komunikasi tersebut, manakah pernyataan berikut yang benar?",
+    "opsiJawaban": "[{\"id\": \"A\", \"label\": \"Protokol IP digunakan untuk menentukan alamat tujuan paket data agar dapat dikirim melalui jaringan.\"}, {\"id\": \"B\", \"label\": \"Protokol TCP memastikan data yang dikirim dapat diterima secara berurutan dan mendeteksi kesalahan selama transmisi.\"}, {\"id\": \"C\", \"label\": \"Protokol HTTP bertugas menentukan jalur paket data antar jaringan agar mencapai tujuan.\"}, {\"id\": \"D\", \"label\": \"Protokol TCP menggunakan mekanisme kontrol untuk mengatur pengiriman data antara pengirim dan penerima.\"}, {\"id\": \"E\", \"label\": \"Protokol IP menjamin seluruh paket data sampai ke tujuan tanpa kehilangan paket.\"}]",
+    "kunciJawaban": "[\"A\", \"B\", \"D\"]",
+    "pembahasan": "Kunci Jawaban: A, B, dan D\n\nPembahasan:\nAnalisis kebenaran setiap pernyataan terkait mekanisme komunikasi web browser - server:\n- Pernyataan A (BENAR): Protokol IP (Network Layer) bertugas menentukan alamat tujuan logis paket data agar dapat dikirim dan diarahkan melalui jaringan internet.\n- Pernyataan B (BENAR): Protokol TCP bersifat connection-oriented dan reliable, memastikan paket data diterima secara utuh berurutan (sequencing) dan melakukan deteksi kesalahan (checksum serta transmisi ulang bila terjadi packet loss).\n- Pernyataan C (SALAH): Menentukan jalur/rute paket data antar-jaringan adalah fungsi protokol IP (routing), sedangkan protokol HTTP bertugas pada Application Layer untuk memformat permintaan dan tanggapan konten web.\n- Pernyataan D (BENAR): Protokol TCP mengimplementasikan mekanisme kontrol aliran (flow control/windowing) dan kontrol kepadatan (congestion control) untuk mengatur kecepatan pertukaran data antara pengirim dan penerima.\n- Pernyataan E (SALAH): Protokol IP bekerja secara 'best-effort delivery' (unreliable), artinya IP sendiri tidak menjamin paket pasti sampai tanpa kehilangan; jaminan keandalan tersebut disediakan oleh protokol TCP di atasnya.",
+    "status": "AKTIF",
+    "source": "IMPORT_EXCEL_PPLG",
+    "mapel": "PPLG"
+  },
+  {
+    "num": 10,
+    "tipeSoal": "MCMA",
+    "pertanyaan": "Perhatikan potongan program berikut.\n\n# Program menghitung nilai akhir murid\n\nnilai_tugas = 80\nnilai_ujian = 90\nstatus_lulus = ?\nnilai_akhir = (nilai_tugas + nilai_ujian) / 2\n\nif nilai_akhir >= 75:\n    status_lulus = ?\nelse:\n    status_lulus = ?\n\nProgram tersebut digunakan untuk menentukan kelulusan murid berdasarkan nilai akhir.\n\nPilih SEMUA pernyataan yang benar terkait tipe data yang tepat untuk variabel pada program tersebut.",
+    "opsiJawaban": "[{\"id\": \"A\", \"label\": \"Variabel nilai_akhir sebaiknya menggunakan tipe data float karena hasil pembagian dapat berupa bilangan desimal\"}, {\"id\": \"B\", \"label\": \"Variabel status_lulus dapat menggunakan tipe data boolean untuk merepresentasikan kondisi lulus atau tidak\"}, {\"id\": \"C\", \"label\": \"Variabel nilai_tugas dan nilai_ujian harus menggunakan tipe data string agar dapat diproses dalam perhitungan\"}, {\"id\": \"D\", \"label\": \"Variabel status_lulus dapat menggunakan tipe data string jika ingin menampilkan keterangan seperti \\u201cLulus\\u201d atau \\u201cTidak Lulus\\u201d\"}, {\"id\": \"E\", \"label\": \"Variabel nilai_akhir lebih tepat menggunakan tipe data boolean karena digunakan dalam proses percabangan\"}]",
+    "kunciJawaban": "[\"A\", \"B\", \"D\"]",
+    "pembahasan": "Kunci Jawaban: A, B, dan D\n\nPembahasan:\nAnalisis tipe data variabel pada program perhitungan nilai akhir:\n- Pernyataan A (BENAR): Variabel nilai_akhir diperoleh dari operasi pembagian '(nilai_tugas + nilai_ujian) / 2'. Operasi pembagian dapat menghasilkan bilangan desimal/pecahan (misal 85.5), sehingga tipe data yang tepat adalah float.\n- Pernyataan B (BENAR): Variabel status_lulus dapat menggunakan tipe data boolean (True/False) untuk merepresentasikan kondisi biner lulus atau tidak lulus.\n- Pernyataan C (SALAH): Variabel nilai_tugas dan nilai_ujian harus berupa tipe numerik (integer atau float) agar dapat dilakukan operasi aritmatika penjumlahan dan pembagian. Jika bertipe string, operasi '+' akan menggabungkan teks (string concatenation).\n- Pernyataan D (BENAR): Variabel status_lulus dapat menggunakan tipe data string jika ingin menampilkan teks keterangan hasil kelulusan, seperti 'Lulus' atau 'Tidak Lulus'.\n- Pernyataan E (SALAH): Nilai akhir menyimpan besaran numerik hasil rata-rata, bukan nilai logika kebenaran (boolean).",
+    "status": "AKTIF",
+    "source": "IMPORT_EXCEL_PPLG",
+    "mapel": "PPLG"
+  },
+  {
+    "num": 11,
+    "tipeSoal": "MCMA",
+    "pertanyaan": "Sebuah program digunakan untuk menghitung rata-rata nilai murid yang disimpan dalam suatu struktur data.\n\nDua pendekatan program berikut digunakan untuk menyelesaikan masalah tersebut.\n\nProgram 1\nnilai_murid = [80, 85, 90, 75]\n\ntotal = 0\nfor nilai in nilai_murid:\n    total += nilai\n\nrata_rata = total / len(nilai_murid)\nprint(rata_rata)\nProgram 2\nnilai_murid = []\n\nnilai_murid.append(80)\nnilai_murid.append(85)\nnilai_murid.append(90)\nnilai_murid.append(75)\n\ntotal = sum(nilai_murid)\nrata_rata = total / len(nilai_murid)\n\nprint(rata_rata)\n\nBerdasarkan kedua program tersebut, manakah pernyataan berikut yang benar?",
+    "opsiJawaban": "[{\"id\": \"A\", \"label\": \"Kedua program menggunakan struktur data yang dapat menyimpan beberapa nilai dalam satu variabel.\"}, {\"id\": \"B\", \"label\": \"Pada kedua program, nilai dalam struktur data dapat diakses secara berurutan untuk dilakukan perhitungan.\"}, {\"id\": \"C\", \"label\": \"Program 1 menggunakan struktur data yang hanya dapat menyimpan satu nilai dalam satu waktu.\"}, {\"id\": \"D\", \"label\": \"Program 2 menambahkan elemen ke dalam struktur data secara bertahap sebelum dilakukan perhitungan.\"}, {\"id\": \"E\", \"label\": \"Struktur data pada kedua program hanya dapat digunakan untuk menyimpan satu jenis nilai saja.\"}]",
+    "kunciJawaban": "[\"A\", \"B\", \"D\"]",
+    "pembahasan": "Kunci Jawaban: A, B, dan D\n\nPembahasan:\nAnalisis perbandingan Program 1 dan Program 2:\n- Pernyataan A (BENAR): Kedua program menggunakan struktur data majemuk berjenis List ('nilai_murid'), yang dapat menyimpan sekumpulan elemen nilai dalam satu nama variabel.\n- Pernyataan B (BENAR): Elemen-elemen list bersifat terurut (ordered) dan dapat diakses/diiterasi secara berurutan untuk perhitungan (Program 1 menggunakan perulangan 'for', Program 2 menggunakan fungsi 'sum()').\n- Pernyataan C (SALAH): Program 1 menggunakan list berisi 4 nilai sekaligus ([80, 85, 90, 75]), bukan variabel tunggal yang hanya menampung satu nilai.\n- Pernyataan D (BENAR): Program 2 menginisialisasi list kosong ([]) lalu menambahkan elemen nilai ke dalam list secara bertahap menggunakan metode append() sebelum dilakukan proses komputasi rata-rata.\n- Pernyataan E (SALAH): Struktur data List dalam bahasa Python bersifat dinamis dan heterogen, dapat menyimpan berbagai tipe data sekaligus, tidak terbatas pada satu jenis nilai saja.",
+    "status": "AKTIF",
+    "source": "IMPORT_EXCEL_PPLG",
+    "mapel": "PPLG"
+  },
+  {
+    "num": 12,
+    "tipeSoal": "PGK_KATEGORI",
+    "pertanyaan": "Perhatikan potongan program berikut.\n\nnilai = [70, 85, 60, 90]\njumlah_lulus = 0\n\nfor n in nilai:\n    if n >= 75:\n        jumlah_lulus += 1\n\nprint(jumlah_lulus)\n\nTentukan kebenaran setiap pernyataan berikut berdasarkan program tersebut.",
+    "opsiJawaban": "{\"categories\": [\"Benar\", \"Salah\"], \"statements\": [{\"id\": 1, \"text\": \"Perulangan digunakan untuk memeriksa setiap nilai dalam daftar nilai.\"}, {\"id\": 2, \"text\": \"Nilai 75 masuk kategori Lulus\"}, {\"id\": 3, \"text\": \"Pada akhir program, isi variabel jumlah_lulus adalah 3\"}]}",
+    "kunciJawaban": "[{\"id\": 1, \"answer\": \"Benar\"}, {\"id\": 2, \"answer\": \"Benar\"}, {\"id\": 3, \"answer\": \"Salah\"}]",
+    "pembahasan": "Kunci Jawaban:\n1. Perulangan digunakan untuk memeriksa setiap nilai dalam daftar nilai: [Benar]\n2. Nilai 75 masuk kategori Lulus: [Benar]\n3. Pada akhir program, isi variabel jumlah_lulus adalah 3: [Salah]\n\nPembahasan:\nPotongan Program:\nnilai = [70, 85, 60, 90]\njumlah_lulus = 0\nfor n in nilai:\n    if n >= 75:\n        jumlah_lulus += 1\nprint(jumlah_lulus)\n\nPenjelasan:\n- Pernyataan 1 (Benar): Konstruksi 'for n in nilai:' mengiterasi seluruh elemen list nilai satu per satu untuk dievaluasi oleh percabangan if.\n- Pernyataan 2 (Benar): Kondisi percabangan menggunakan operator '>=' (lebih besar atau sama dengan 75). Nilai 75 memenuhi kondisi tersebut dan dihitung sebagai lulus.\n- Pernyataan 3 (Salah): Tracing nilai elemen list:\n  * n = 70 -> 70 >= 75 (False)\n  * n = 85 -> 85 >= 75 (True) -> jumlah_lulus = 1\n  * n = 60 -> 60 >= 75 (False)\n  * n = 90 -> 90 >= 75 (True) -> jumlah_lulus = 2\n  Nilai akhir variabel jumlah_lulus adalah 2, bukan 3.",
+    "status": "AKTIF",
+    "source": "IMPORT_EXCEL_PPLG",
+    "mapel": "PPLG"
+  },
+  {
+    "num": 13,
+    "tipeSoal": "PGK_KATEGORI",
+    "pertanyaan": "Berdasarkan dua potongan koding berikut, tentukan kebenaran setiap pernyataan di bawah ini:\n\n```javascript\n// [Koding 1]\nif (jarak > 7) {\n    ongkir = 15000\n} else if (jarak < 7) {\n    ongkir = 8000\n} else if (harga_makanan > 100000 && jarak < 4) {\n    ongkir = 3000\n}\n\n// [Koding 2]\nongkir = 15000\nif (jarak < 7) {\n    ongkir = 8000\n    if (harga_makanan > 100000 && jarak < 4) {\n        ongkir = 5000\n    }\n}\n```",
+    "opsiJawaban": "{\"categories\": [\"Benar\", \"Salah\"], \"statements\": [{\"id\": 1, \"text\": \"Value default variabel ongkir pada koding pertama adalah 15000\"}, {\"id\": 2, \"text\": \"Value default variabel ongkir pada koding kedua adalah 15000\"}, {\"id\": 3, \"text\": \"Dua koding tersebut memiliki hasil akhir sama\"}]}",
+    "kunciJawaban": "[{\"id\": 1, \"answer\": \"Salah\"}, {\"id\": 2, \"answer\": \"Benar\"}, {\"id\": 3, \"answer\": \"Salah\"}]",
+    "pembahasan": "Kunci Jawaban:\n1. Value default variabel ongkir pada koding pertama adalah 15000: [Salah]\n2. Value default variabel ongkir pada koding kedua adalah 15000: [Benar]\n3. Dua koding tersebut memiliki hasil akhir sama: [Salah]\n\nKode Program pada Gambar:\n[Koding 1]\nif (jarak > 7) {\n    ongkir = 15000\n} else if (jarak < 7) {\n    ongkir = 8000\n} else if (harga_makanan > 100000 && jarak < 4) {\n    ongkir = 3000\n}\n\n[Koding 2]\nongkir = 15000\nif (jarak < 7) {\n    ongkir = 8000\n    if (harga_makanan > 100000 && jarak < 4) {\n        ongkir = 5000\n    }\n}\n\nPembahasan:\n- Pernyataan 1 (Salah): Pada koding pertama, nilai 15000 hanya diberikan jika syarat 'jarak > 7' terpenuhi. Tidak ada inisialisasi nilai awal sebelum percabangan, sehingga 15000 bukan nilai default.\n- Pernyataan 2 (Benar): Pada koding kedua, baris pertama langsung mendeklarasikan 'ongkir = 15000'. Ini adalah nilai default yang berlaku jika kondisi di bawahnya tidak terpenuhi.\n- Pernyataan 3 (Salah): Kedua kode menghasilkan nilai akhir berbeda:\n  * Untuk jarak = 3 dan harga_makanan = 150000: Koding 1 menghasilkan ongkir = 8000 (karena terhenti di cabang 'else if (jarak < 7)' dan cabang diskon menjadi dead code), sedangkan Koding 2 menghasilkan ongkir = 5000.\n  * Untuk jarak = 7: Koding 1 tidak memberikan nilai (undefined), sedangkan Koding 2 bernilai 15000.",
+    "status": "AKTIF",
+    "source": "IMPORT_EXCEL_PPLG",
+    "mapel": "PPLG"
+  },
+  {
+    "num": 14,
+    "tipeSoal": "PILIHAN_GANDA",
+    "pertanyaan": "Perhatikan koding berikut:\n\ndef cek(angka):\n    if angka % 2 == 0:\n        return True\n    else:\n        return False\n\nprint(cek(4))\n\nPertanyaan:\nFungsi cek pada koding tersebut digunakan untuk …\n\nPilihan Jawaban:",
+    "opsiJawaban": "[{\"id\": \"A\", \"label\": \"Menampilkan angka genap berdasarkan input yang diberikan\"}, {\"id\": \"B\", \"label\": \"Menghitung jumlah angka ganjil\"}, {\"id\": \"C\", \"label\": \"Menentukan suatu angka bernilai genap atau bukan\"}, {\"id\": \"D\", \"label\": \"Mengubah tipe data angka menjadi integer\"}, {\"id\": \"E\", \"label\": \"Membagi angka dengan bilangan 2\"}]",
+    "kunciJawaban": "C",
+    "pembahasan": "Kunci Jawaban: C (Menentukan suatu angka bernilai genap atau bukan)\n\nPembahasan:\nPotongan kode:\ndef cek(angka):\n    if angka % 2 == 0:\n        return True\n    else:\n        return False\n\nPenjelasan:\n- Operator '%' (modulo) menghasilkan sisa pembagian bilangan bulat.\n- Suatu bilangan merupakan bilangan genap jika habis dibagi 2 tanpa sisa (angka % 2 == 0).\n- Jika angka genap, fungsi mengembalikan True; jika ganjil, fungsi mengembalikan False.\n- Nilai kembalian boolean ini digunakan oleh pemanggil untuk menentukan apakah angka yang diuji bernilai genap atau bukan (Opsi C).",
+    "status": "AKTIF",
+    "source": "IMPORT_EXCEL_PPLG",
+    "mapel": "PPLG"
+  },
+  {
+    "num": 15,
+    "tipeSoal": "PGK_KATEGORI",
+    "pertanyaan": "Seorang murid membuat program yang terdiri dari tiga fungsi sebagai berikut.\n\ndef xxx(data):\n    total = 0\n    for item in data:\n        total += item\n    return total\n\ndef yyy(total, jumlah):\n    return total / jumlah\n\ndef zzz(hasil):\n    print(\"Rata-rata nilai:\", hasil)\n\nnilai = [80, 85, 90, 75]\n\njumlah = len(nilai)\ntotal = xxx(nilai)\nrata = yyy(total, jumlah)\nzzz(rata)\n\nProgram tersebut menggunakan pendekatan pembagian fungsi dalam program.\n\nTentukan kategori setiap pernyataan berikut berdasarkan desain program tersebut.",
+    "opsiJawaban": "{\"categories\": [\"Sesuai prinsip modular\", \"Tidak sesuai\"], \"statements\": [{\"id\": 1, \"text\": \"Fungsi xxx memiliki tanggung jawab untuk mengetahui jumlah total nilai.\"}, {\"id\": 2, \"text\": \"Fungsi yyy memiliki tanggung jawab untuk mecari rata-rata nilai .\"}, {\"id\": 3, \"text\": \"Fungsi zzz memiliki tanggung jawab untuk mencari rata-rata nilai\"}]}",
+    "kunciJawaban": "[{\"id\": 1, \"answer\": \"Sesuai prinsip modular\"}, {\"id\": 2, \"answer\": \"Sesuai prinsip modular\"}, {\"id\": 3, \"answer\": \"Tidak sesuai\"}]",
+    "pembahasan": "Kunci Jawaban:\n1. Fungsi xxx memiliki tanggung jawab untuk mengetahui jumlah total nilai: [Sesuai prinsip modular]\n2. Fungsi yyy memiliki tanggung jawab untuk mecari rata-rata nilai: [Sesuai prinsip modular]\n3. Fungsi zzz memiliki tanggung jawab untuk mencari rata-rata nilai: [Tidak sesuai]\n\nPembahasan:\nPrinsip pemrograman modular (Single Responsibility Principle) menetapkan bahwa setiap fungsi harus memiliki satu tanggung jawab yang spesifik:\n- Fungsi xxx(data): Bertanggung jawab melakukan perulangan pada list data untuk menghitung dan mengembalikan jumlah total nilai. (Pernyataan 1: Sesuai).\n- Fungsi yyy(total, jumlah): Bertanggung jawab menghitung rata-rata nilai dari rumus 'total / jumlah'. (Pernyataan 2: Sesuai).\n- Fungsi zzz(hasil): Menjalankan kode 'print(\"Rata-rata nilai:\", hasil)'. Tanggung jawab fungsi zzz adalah menampilkan/mencetak hasil keluaran (output) ke layar terminal, BUKAN mencari atau menghitung rata-rata nilai. (Pernyataan 3: Tidak sesuai).",
+    "status": "AKTIF",
+    "source": "IMPORT_EXCEL_PPLG",
+    "mapel": "PPLG"
+  },
+  {
+    "num": 16,
+    "tipeSoal": "PILIHAN_GANDA",
+    "pertanyaan": "Perhatikan potongan kode Python berikut:\nclass Enemy:\n    def __init__(self, name, damage):\n        self.name = name\n        self.damage = damage\n\nenemy1 = Enemy(\"Goblin\", 10)\nenemy2 = Enemy(\"Orc\", 20)\n\nPertanyaan:\nBerdasarkan kode di atas, yang merupakan class dan object secara berturut-turut sebagai berikut:\n\nPilihan Jawaban:",
+    "opsiJawaban": "[{\"id\": \"A\", \"label\": \"enemy1 sebagai class, Enemy sebagai object\"}, {\"id\": \"B\", \"label\": \"Enemy sebagai class, enemy1 dan enemy2 sebagai object\"}, {\"id\": \"C\", \"label\": \"name sebagai class, damage sebagai object\"}, {\"id\": \"D\", \"label\": \"Enemy sebagai object, enemy1 sebagai class\"}, {\"id\": \"E\", \"label\": \"damage sebagai class, Enemy sebagai object\"}]",
+    "kunciJawaban": "B",
+    "pembahasan": "Kunci Jawaban: B (Enemy sebagai class, enemy1 dan enemy2 sebagai object)\n\nPembahasan:\nDalam Pemrograman Berorientasi Objek (OOP):\n1. Class: Merupakan cetak biru (blueprint) atau template yang mendefinisikan struktur atribut dan method. Pada kode, dideklarasikan dengan 'class Enemy:'.\n2. Object: Merupakan instansiasi nyata (instance) dari class yang dibuat di memori, yaitu variabel 'enemy1 = Enemy(\"Goblin\", 10)' dan 'enemy2 = Enemy(\"Orc\", 20)'.\n3. 'name' dan 'damage' adalah atribut (properties) dari class Enemy.\n\nMaka secara berturut-turut yang merupakan class dan object adalah Enemy sebagai class, serta enemy1 dan enemy2 sebagai object (Opsi B).",
+    "status": "AKTIF",
+    "source": "IMPORT_EXCEL_PPLG",
+    "mapel": "PPLG"
+  },
+  {
+    "num": 17,
+    "tipeSoal": "PILIHAN_GANDA",
+    "pertanyaan": "Perhatikan potongan program berikut.\n\nclass Data:\n    def __init__(self, nilai):\n        self.nilai = nilai\n\n    def xxx(self):\n        return self.nilai + 10\n\n\na = Data(5)\nb = Data(8)\n\nprint(a.xxx())\nprint(b.xxx())\n\nProgram tersebut menggunakan pendekatan pemrograman berorientasi objek.\n\nPernyataan yang paling tepat mengenai penerapan prinsip OOP pada program tersebut adalah …",
+    "opsiJawaban": "[{\"id\": \"A\", \"label\": \"Class digunakan sebagai cetak biru untuk membuat beberapa objek dengan atribut yang berbeda.\"}, {\"id\": \"B\", \"label\": \"Program hanya dapat membuat satu objek dari sebuah class.\"}, {\"id\": \"C\", \"label\": \"Method dalam class hanya dapat dipanggil dari dalam class itu sendiri.\"}, {\"id\": \"D\", \"label\": \"Objek yang dibuat dari class tidak dapat memiliki nilai atribut yang berbeda.\"}, {\"id\": \"E\", \"label\": \"Class hanya digunakan untuk menyimpan data tanpa melakukan proses.\"}]",
+    "kunciJawaban": "A",
+    "pembahasan": "Kunci Jawaban: A (Class digunakan sebagai cetak biru untuk membuat beberapa objek dengan atribut yang berbeda)\n\nPembahasan:\nPotongan kode:\nclass Data:\n    def __init__(self, nilai):\n        self.nilai = nilai\n    def xxx(self):\n        return self.nilai + 10\na = Data(5)\nb = Data(8)\n\nPenjelasan:\n- Class 'Data' bertindak sebagai cetak biru (blueprint).\n- Dari satu class tersebut, dibentuk dua objek terpisah yaitu 'a' dan 'b' yang masing-masing menyimpan nilai atribut berbeda (a.nilai = 5 dan b.nilai = 8).\n- Ketika method xxx() dieksekusi, a.xxx() menghasilkan 15 dan b.xxx() menghasilkan 18.\n- Hal ini mencerminkan prinsip dasar OOP bahwa class digunakan sebagai cetak biru untuk membuat beberapa objek independen yang memiliki atribut dengan nilai yang berbeda (Opsi A).",
+    "status": "AKTIF",
+    "source": "IMPORT_EXCEL_PPLG",
+    "mapel": "PPLG"
+  },
+  {
+    "num": 18,
+    "tipeSoal": "PGK_KATEGORI",
+    "pertanyaan": "Perhatikan potongan program berikut.\n\nclass Data:\n    def __init__(self):\n        self.nilai = 0\n        self._data = 10\n        self.__info = 20\n\n    def xxx(self):\n        return self.nilai\n\n    def _yyy(self):\n        return self._data\n\n    def __zzz(self):\n        return self.__info\n\nTentukan kategori yang tepat untuk setiap pernyataan berikut.",
+    "opsiJawaban": "{\"categories\": [\"Sesuai\", \"Tidak sesuai\"], \"statements\": [{\"id\": 1, \"text\": \"Atribut nilai dapat diakses secara langsung dari luar class.\"}, {\"id\": 2, \"text\": \"Method _yyy() dirancang untuk penggunaan internal dalam class atau turunannya.\"}, {\"id\": 3, \"text\": \"Method __zzz() dapat diakses secara langsung dari luar class tanpa mekanisme tambahan.\"}]}",
+    "kunciJawaban": "[{\"id\": 1, \"answer\": \"Sesuai\"}, {\"id\": 2, \"answer\": \"Sesuai\"}, {\"id\": 3, \"answer\": \"Tidak sesuai\"}]",
+    "pembahasan": "Kunci Jawaban:\n1. Atribut nilai dapat diakses secara langsung dari luar class: [Sesuai]\n2. Method _yyy() dirancang untuk penggunaan internal dalam class atau turunannya: [Sesuai]\n3. Method __zzz() dapat diakses secara langsung dari luar class tanpa mekanisme tambahan: [Tidak sesuai]\n\nPembahasan:\nPenerapan access modifier dan enkapsulasi pada Python:\n- Pernyataan 1 (Sesuai): Atribut 'self.nilai' dideklarasikan tanpa awalan garis bawah, sehingga berstatus publik (public) dan dapat diakses langsung dari luar class (misal: obj.nilai).\n- Pernyataan 2 (Sesuai): Awalan satu garis bawah ('_yyy') merupakan konvensi standar Python untuk penanda protected/internal use, menandakan method tersebut ditujukan untuk pemakaian internal class dan subclass turunannya.\n- Pernyataan 3 (Tidak sesuai): Awalan dua garis bawah ('__zzz') menerapkan hak akses privat (private) melalui mekanisme name mangling (nama method diubah menjadi '_Data__zzz'). Method tersebut TIDAK dapat diakses langsung dari luar class sebagai 'obj.__zzz()' (akan menyebabkan AttributeError), sehingga pernyataan tersebut tidak sesuai.",
+    "status": "AKTIF",
+    "source": "IMPORT_EXCEL_PPLG",
+    "mapel": "PPLG"
+  },
+  {
+    "num": 19,
+    "tipeSoal": "PILIHAN_GANDA",
+    "pertanyaan": "Perhatikan potongan kode berikut:\nclass Player:\n    def __init__(self, name, score):\n        self.name = name\n        self.__score = score\nPenerapan enkapsulasi pada atribut __score agar: tidak dapat diakses langsung dari luar class dan hanya bisa diakses dan diubah melalui method tertentu \nPertanyaan:\nManakah implementasi getter dan setter yang paling tepat untuk melengkapi class tersebut?\nPilihan Jawaban:",
+    "opsiJawaban": "[{\"id\": \"A\", \"label\": \"def get_score(self):\\nreturn self.score\\n\\ndef set_score(self, score):\\nself.score = score\"}, {\"id\": \"B\", \"label\": \"def get_score(self):\\nreturn self.__score\\n\\ndef set_score(self, score):\\nself.__score = score\"}, {\"id\": \"C\", \"label\": \"def get_score():\\nreturn __score\"}, {\"id\": \"D\", \"label\": \"def set_score(self):\\nprint(self.__score)\"}, {\"id\": \"E\", \"label\": \"def score(self):\\nreturn self.__score\"}]",
+    "kunciJawaban": "B",
+    "pembahasan": "Kunci Jawaban: B\n\nImplementasi Kode:\ndef get_score(self):\n    return self.__score\n\ndef set_score(self, score):\n    self.__score = score\n\nPembahasan:\nPada class Player, atribut private yang didefinisikan adalah 'self.__score' (menggunakan dua garis bawah).\n1. Getter: Method untuk membaca nilai atribut privat, harus menyertakan parameter 'self' dan mengembalikan nilai 'self.__score' (return self.__score).\n2. Setter: Method untuk mengubah nilai atribut privat, harus menerima parameter 'self' dan nilai baru 'score', lalu mengisikannya ke 'self.__score = score'.\n\nImplementasi pada Opsi B adalah yang paling tepat, lengkap, dan sesuai kaidah sintaks Python.",
+    "status": "AKTIF",
+    "source": "IMPORT_EXCEL_PPLG",
+    "mapel": "PPLG"
+  },
+  {
+    "num": 20,
+    "tipeSoal": "PILIHAN_GANDA",
+    "pertanyaan": "Perhatikan potongan kode Python berikut:\nclass Character:\n    def __init__(self, name):\n        self.name = name\n\nclass Hero(Character):\n    def attack(self):\n        return \"Menyerang musuh!\"\n\nclass Mage(Hero):\n    def cast_spell(self):\n        return \"Mengeluarkan sihir!\"\n\nPertanyaan:\nBerdasarkan kode di atas, relasi inheritance yang benar adalah …\n\nPilihan Jawaban:",
+    "opsiJawaban": "[{\"id\": \"A\", \"label\": \"Character mewarisi Hero, dan Hero mewarisi Mage\"}, {\"id\": \"B\", \"label\": \"Hero mewarisi Character, dan Mage mewarisi Hero\"}, {\"id\": \"C\", \"label\": \"Mage mewarisi Character, tanpa melalui Hero\"}, {\"id\": \"D\", \"label\": \"Hero dan Mage tidak memiliki hubungan pewarisan\"}, {\"id\": \"E\", \"label\": \"Semua class saling mewarisi satu sama lain\"}]",
+    "kunciJawaban": "B",
+    "pembahasan": "Kunci Jawaban: B (Hero mewarisi Character, dan Mage mewarisi Hero)\n\nPembahasan:\nDalam sintaks pewarisan (inheritance) bahasa Python:\nclass SubClass(SuperClass):\n1. 'class Hero(Character):' mendefinisikan class Hero sebagai subclass yang mewarisi class Character (Hero mewarisi Character).\n2. 'class Mage(Hero):' mendefinisikan class Mage sebagai subclass yang mewarisi class Hero (Mage mewarisi Hero).\n\nStruktur ini membentuk rantai pewarisan bertingkat (multilevel inheritance) di mana Mage secara tidak langsung juga memiliki sifat dari Character melalui Hero. Maka hubungan relasi pewarisan yang benar adalah Opsi B.",
+    "status": "AKTIF",
+    "source": "IMPORT_EXCEL_PPLG",
+    "mapel": "PPLG"
+  },
+  {
+    "num": 21,
+    "tipeSoal": "MCMA",
+    "pertanyaan": "Perhatikan potongan program berikut.\n\nclass A:\n    def xxx(self):\n        return \"A\"\n\nclass B(A):\n    def xxx(self):\n        return \"B\"\n\nclass C(A):\n    def xxx(self):\n        return \"C\"\n\ndef proses(obj):\n    return obj.xxx()\n\ndata = [A(), B(), C()]\n\nfor item in data:\n    print(proses(item))\n\nProgram tersebut menerapkan konsep polymorphism.\n\nPilih SEMUA pernyataan yang benar terkait program tersebut.",
+    "opsiJawaban": "[{\"id\": \"A\", \"label\": \"Method xxx() pada class B dan C merupakan bentuk method overriding dari class A.\"}, {\"id\": \"B\", \"label\": \"Fungsi proses() dapat menerima objek dari class yang berbeda selama memiliki method xxx().\"}, {\"id\": \"C\", \"label\": \"Output program akan selalu sama untuk setiap objek karena menggunakan fungsi yang sama.\"}, {\"id\": \"D\", \"label\": \"Pemanggilan obj.xxx() akan menyesuaikan dengan class dari objek yang diproses.\"}, {\"id\": \"E\", \"label\": \"Polymorphism pada program hanya dapat terjadi jika semua objek memiliki nilai atribut yang sama.\"}]",
+    "kunciJawaban": "[\"A\", \"B\", \"D\"]",
+    "pembahasan": "Kunci Jawaban: A, B, dan D\n\nPembahasan:\nAnalisis konsep polymorphism pada program:\n- Pernyataan A (BENAR): Method xxx() pada class B dan C mendefinisikan ulang method yang ada pada superclass A. Ini adalah bentuk method overriding.\n- Pernyataan B (BENAR): Fungsi proses(obj) dapat menerima objek dari class mana pun (A, B, atau C) selama objek tersebut menyediakan method interface xxx().\n- Pernyataan C (SALAH): Output program tidak sama; output mencetak 'A', 'B', dan 'C' secara berurutan sesuai implementasi method xxx() masing-masing objek.\n- Pernyataan D (BENAR): Pemanggilan obj.xxx() akan menyesuaikan implementasinya secara dinamis (dynamic dispatch) dengan class dari objek aktual yang sedang diproses.\n- Pernyataan E (SALAH): Polymorphism berfokus pada keseragaman antarmuka/perilaku method (behavior), bukan pada kesamaan nilai atribut objek.",
+    "status": "AKTIF",
+    "source": "IMPORT_EXCEL_PPLG",
+    "mapel": "PPLG"
+  }
+]
