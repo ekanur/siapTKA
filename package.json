@@ -11,6 +11,7 @@
     "prisma:push": "prisma db push",
     "prisma:seed": "tsx prisma/seed.ts",
     "restore:siswa": "node scripts/restore-siswa.js",
+    "import:pplg": "node scripts/import-soal-pplg.js",
     "type-check": "tsc --noEmit"
   },
   "dependencies": {
