@@ -102,9 +102,8 @@ export async function generateSoalWithGemini(params: GenerateParams): Promise<Ge
     const candidateModels = [
       "gemini-3.6-flash",
       "gemini-3.7-flash",
-      "gemini-2.5-flash-lite",
-      "gemini-flash-latest",
-      "gemini-1.5-flash",
+      "gemini-3.8-flash",
+      "gemini-3.5-flash-lite",
     ];
 
     let result = null;
@@ -112,21 +111,41 @@ export async function generateSoalWithGemini(params: GenerateParams): Promise<Ge
     let lastError: any = null;
 
     for (const modelName of candidateModels) {
-      try {
-        const model = genAI.getGenerativeModel({
-          model: modelName,
-          generationConfig: {
-            responseMimeType: "application/json",
-            temperature: 0.7,
-          },
-        });
-        result = await model.generateContent(prompt);
-        successfulModel = modelName;
-        break;
-      } catch (err: any) {
-        lastError = err;
-        console.warn(`Model ${modelName} tidak tersedia/gagal, beralih ke kandidat berikutnya...`, err.message);
+      const maxRetries = 2;
+      for (let attempt = 1; attempt <= maxRetries; attempt++) {
+        try {
+          const model = genAI.getGenerativeModel({
+            model: modelName,
+            generationConfig: {
+              responseMimeType: "application/json",
+              temperature: 0.7,
+            },
+          });
+          result = await model.generateContent(prompt);
+          successfulModel = modelName;
+          break;
+        } catch (err: any) {
+          lastError = err;
+          const msg = err.message || "";
+          const isRetryable =
+            msg.includes("503") ||
+            msg.includes("high demand") ||
+            msg.includes("Service Unavailable") ||
+            msg.includes("429") ||
+            msg.includes("ResourceExhausted");
+
+          if (isRetryable && attempt < maxRetries) {
+            console.warn(
+              `Model ${modelName} sedang sibuk (503/429), mencoba ulang dalam 1.5 detik (percobaan ${attempt}/${maxRetries})...`
+            );
+            await new Promise((resolve) => setTimeout(resolve, 1500));
+            continue;
+          }
+          console.warn(`Model ${modelName} tidak tersedia/gagal, beralih ke kandidat berikutnya...`, err.message);
+          break;
+        }
       }
+      if (result) break;
     }
 
     if (!result) {
@@ -173,6 +192,13 @@ export async function generateSoalWithGemini(params: GenerateParams): Promise<Ge
     ) {
       statusApi = "INVALID_KEY";
       notice = "GEMINI_API_KEY pada file .env tidak valid atau ditolak oleh Google.";
+    } else if (
+      errorMsg.includes("503") ||
+      errorMsg.includes("high demand") ||
+      errorMsg.includes("Service Unavailable")
+    ) {
+      statusApi = "ERROR";
+      notice = "Layanan Google Gemini sedang mengalami antrean trafik tinggi di server Google (503 Service Unavailable).";
     }
 
     // Fallback cerdas agar pengguna tetap mendapatkan soal yang relevan dengan form
