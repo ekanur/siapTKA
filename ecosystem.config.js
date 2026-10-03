@@ -6,8 +6,8 @@ module.exports = {
       // agar PM2 cluster mode dapat membagi port 3000 tanpa tabrakan EADDRINUSE
       script: "node_modules/next/dist/bin/next",
       args: "start",
-      instances: "max", // Memanfaatkan seluruh core CPU server secara seimbang
-      exec_mode: "cluster",
+      instances: 1, // Mode 1 instance stabil untuk VPS 1.7GB RAM, mencegah tabrakan cluster
+      exec_mode: "fork",
       max_memory_restart: "750M",
       env: {
         PORT: 3000,

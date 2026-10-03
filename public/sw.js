@@ -1,4 +1,4 @@
-const CACHE_NAME = 'siaptka-pwa-v3';
+const CACHE_NAME = 'siaptka-pwa-v4';
 
 // Core routes to pre-cache safely during install
 const PRECACHE_URLS = [
@@ -103,8 +103,13 @@ self.addEventListener('fetch', (event) => {
     return;
   }
 
-  // 2. Ignore other API requests (like /api/sync/...) but fail gracefully without crashing
-  if (url.pathname.startsWith('/api/')) {
+  // 2. JANGAN intercept API Admin & Auth - biarkan browser langsung mengakses network
+  if (url.pathname.startsWith('/api/admin/') || url.pathname.startsWith('/api/auth/')) {
+    return;
+  }
+
+  // 3. Tangani API sinkronisasi latihan siswa (/api/sync/...) secara aman saat offline
+  if (url.pathname.startsWith('/api/sync/')) {
     event.respondWith(
       fetch(req).catch(() => {
         return new Response(JSON.stringify({ error: 'Offline', offline: true }), {
