@@ -194,6 +194,51 @@ export function buildGeminiPrompt(params: GeneratePromptParams): string {
     isLanguageSubject(mapel) ||
     Boolean(params.jenisTeks || params.stimulusTeks || params.fokusKebahasaan);
 
+  // Deteksi Mapel Kejuruan PPLG / Rekayasa Perangkat Lunak / Pemrograman
+  const upperMapel = mapel.toUpperCase();
+  const isPPLG =
+    upperMapel === "PPLG" ||
+    upperMapel.includes("PPLG") ||
+    upperMapel.includes("PERANGKAT LUNAK") ||
+    upperMapel.includes("GIM") ||
+    upperMapel.includes("RPL");
+
+  // Deteksi bahasa pemrograman dari input Batasan Konteks jika mapel PPLG
+  let detectedProgrammingLanguage = "Python";
+  let isExplicitLanguage = false;
+
+  if (isPPLG) {
+    const rawBatasan = (params.batasan || "").trim();
+    const langPatterns: { regex: RegExp; name: string }[] = [
+      { regex: /\bpython\b/i, name: "Python" },
+      { regex: /\b(javascript|js|node\.?js|typescript|ts)\b/i, name: "JavaScript" },
+      { regex: /\bphp\b/i, name: "PHP" },
+      { regex: /\bjava\b(?!script)/i, name: "Java" },
+      { regex: /\b(c\+\+|cpp)\b/i, name: "C++" },
+      { regex: /\b(c#|csharp)\b/i, name: "C#" },
+      { regex: /\b(sql|mysql|postgresql|sqlite)\b/i, name: "SQL" },
+      { regex: /\bkotlin\b/i, name: "Kotlin" },
+      { regex: /\b(dart|flutter)\b/i, name: "Dart" },
+      { regex: /\b(html|css)\b/i, name: "HTML/CSS" },
+      { regex: /\b(c)\b/i, name: "C" },
+      { regex: /\b(go|golang)\b/i, name: "Go" },
+      { regex: /\bruby\b/i, name: "Ruby" },
+      { regex: /\brust\b/i, name: "Rust" },
+      { regex: /\bswift\b/i, name: "Swift" },
+    ];
+
+    for (const item of langPatterns) {
+      if (item.regex.test(rawBatasan)) {
+        detectedProgrammingLanguage = item.name;
+        isExplicitLanguage = true;
+        break;
+      }
+    }
+  }
+
+  // Minimal 1/2 dari total butir soal wajib memuat cuplikan kode program
+  const codeSoalCount = isPPLG ? Math.ceil(count / 2) : 0;
+
   const finalSubKompetensi = params.subKompetensi?.trim() || (hasSubElemen ? subElemen : "Menganalisis dan menyimpulkan wacana secara komprehensif");
 
   return `Anda adalah Pakar Asesmen Akademik & Kejuruan serta Pembuat Soal Ujian Nasional / Tes Kemampuan Akademik (TKA) Standar Resmi Pusmendik Kemendikdasmen RI.
@@ -223,7 +268,15 @@ ${
 4. KOMPETENSI / INDIKATOR ASESMEN (UTAMA & WAJIB): ${kompetensi}
 5. ELEMEN / MATERI POKOK: ${hasElemen ? elemen : `Sesuai ruang lingkup mata pelajaran ${mapel} (Tidak ada pembatasan elemen spesifik)`}
 6. SUB-ELEMEN / SUB-MATERI: ${hasSubElemen ? subElemen : "Sesuai topik bahasan terkait indikator kompetensi"}
-7. BATASAN RUANG LINGKUP & KONTEKS: ${hasBatasan ? batasan : "Tidak ada batasan khusus (sesuai standar kurikulum nasional dan konteks wajar jenjang SMA/SMK)"}`
+7. BATASAN RUANG LINGKUP & KONTEKS: ${hasBatasan ? batasan : "Tidak ada batasan khusus (sesuai standar kurikulum nasional dan konteks wajar jenjang SMA/SMK)"}${
+        isPPLG
+          ? `\n8. BAHASA PEMROGRAMAN ACUAN: ${detectedProgrammingLanguage} ${
+              isExplicitLanguage
+                ? `(Diambil secara eksplisit dari Batasan Konteks: "${params.batasan}")`
+                : `(Default Python - karena tidak ada bahasa spesifik yang diinputkan di batasan)`
+            }`
+          : ""
+      }`
 }
 ============================================================
 ${
@@ -261,6 +314,23 @@ ${
 2. KESELARASAN MATERI: ${hasElemen ? `Seluruh stimulus kasus, pertanyaan, opsi, dan pembahasan harus berakar pada Elemen "${elemen}" ${hasSubElemen ? `dan Sub-Elemen "${subElemen}"` : ""}.` : `Seluruh butir soal harus relevan dan selaras dengan cakupan kurikulum mata pelajaran ${mapel}.`}
 3. KEPATUHAN BATASAN RUANG LINGKUP: ${hasBatasan ? `Patuhi secara ketat batasan konteks: "${batasan}". Segala batasan variabel, asumsi, jenis alat, kedalaman rumus, ataupun skenario tidak boleh melampaui batasan ini.` : `Gunakan batasan ruang lingkup wajar sesuai standar kurikulum resmi SMA/SMK tanpa membatasi kreativitas soal kontekstual.`}
 4. STIMULUS REALISTIS & KONTEKSTUAL: Setiap butir soal harus diawali dengan stimulus situasi nyata, permasalahan industri/kehidupan sehari-hari, data teknis/eksperimen, tabel, atau kasus konkret yang relevan bagi siswa.`
+}
+${
+  isPPLG
+    ? `
+ATURAN WAJIB SOAL KEJURUAN SMK PPLG (KODE PROGRAM & ANALISIS SISTEM):
+1. PROPORSI SOAL KODE PROGRAM: Dari total ${count} butir soal, MINIMAL TEPAT ${codeSoalCount} BUTIR SOAL WAJIB MENGANDUNG CUPLIKAN KODE PROGRAM NYATA (CODE SNIPPET). Sisanya (${count - codeSoalCount} butir) berupa analisis konsep arsitektur, basis data/ERD, logika sistem, atau rekayasa perangkat lunak.
+2. BAHASA PEMROGRAMAN: Gunakan bahasa "${detectedProgrammingLanguage}" ${isExplicitLanguage ? `(sesuai instruksi eksplisit Batasan Konteks: "${params.batasan}")` : `(Bahasa Python diterapkan sebagai default karena batasan konteks tidak menyebutkan bahasa spesifik)`}.
+3. FORMAT KODE WAJIB BLOK MARKDOWN: Setiap cuplikan kode program pada properti "pertanyaan" WAJIB dibungkus blok markdown lengkap dengan penanda bahasa huruf kecil, contoh:
+\`\`\`${detectedProgrammingLanguage.toLowerCase().replace(/[^a-z0-9]/g, "")}
+# Kode program yang rapi, ber-indentasi, dan valid
+\`\`\`
+4. FOKUS KOGNITIF SOAL KODE (HOTS): Soal yang memuat kode program harus menguji kemampuan analisis:
+   - Tracing Output: Menganalisis hasil keluaran eksekusi fungsi/kondisi/perulangan.
+   - Debugging / Analisis Bug: Menemukan baris penyebab error logika, runtime exception, atau kesalahan sintaks.
+   - Melengkapi Kode (Code Completion): Mengisi potongan baris program yang rumpang agar berjalan sesuai spesifikasi.
+   - Analisis OOP / Struktur Data: Menganalisis inheritance, enkapsulasi, polimorfisme, atau struktur data list/dictionary/objek.`
+    : ""
 }
 5. NOTASI SAINS & MATEMATIKA: Gunakan notasi LaTeX standar untuk rumus atau persamaan matematika/fisika/kimia ($...$ untuk inline, $$...$$ untuk display blok).
 ${
@@ -321,7 +391,7 @@ ${
 6. PEMBAHASAN: Wajib menyertakan "pembahasan" yang komprehensif, menguraikan langkah rasional atau matematis langkah demi langkah, mengaitkan dengan Elemen "${elemen}", menjelaskan pembuktian jawaban benar, serta alasan mengapa opsi lain tidak tepat.
 
 FORMAT OUTPUT:
-Keluarkan HANYA array JSON valid (tanpa pembungkus markdown seperti \`\`\`json, tanpa komentar di luar JSON).
+Keluarkan HANYA array JSON valid (tanpa pembungkus markdown seperti \`\`\`json di luar array). Cuplikan kode program di dalam string nilai "pertanyaan" atau "pembahasan" tetap WAJIB menggunakan blok markdown \`\`\`[bahasa]... dan \`\`\` agar dapat dirender dengan baik.
 [
   {
     "pertanyaan": "Teks stimulus dan pertanyaan lengkap...",

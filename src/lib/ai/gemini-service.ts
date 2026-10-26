@@ -237,6 +237,25 @@ export function generateContextualSimulatedQuestions(params: GenerateParams): Ge
   const results: GeneratedSoalResult[] = [];
   const isMath = mapel.toUpperCase().includes("MATEMATIKA");
 
+  const upperMapel = mapel.toUpperCase();
+  const isPPLG =
+    upperMapel === "PPLG" ||
+    upperMapel.includes("PPLG") ||
+    upperMapel.includes("PERANGKAT LUNAK") ||
+    upperMapel.includes("GIM") ||
+    upperMapel.includes("RPL");
+
+  let detectedLang = "Python";
+  if (isPPLG) {
+    const rawBatasan = (params.batasan || "").trim();
+    if (/\bphp\b/i.test(rawBatasan)) detectedLang = "PHP";
+    else if (/\b(javascript|js|typescript|ts)\b/i.test(rawBatasan)) detectedLang = "JavaScript";
+    else if (/\bjava\b(?!script)/i.test(rawBatasan)) detectedLang = "Java";
+    else if (/\b(c\+\+|cpp)\b/i.test(rawBatasan)) detectedLang = "C++";
+    else if (/\b(sql|mysql|postgresql)\b/i.test(rawBatasan)) detectedLang = "SQL";
+    else detectedLang = "Python";
+  }
+
   const isLang =
     isLanguageSubject(mapel) ||
     Boolean(params.jenisTeks || params.stimulusTeks || params.fokusKebahasaan);
@@ -332,6 +351,56 @@ export function generateContextualSimulatedQuestions(params: GenerateParams): Ge
           kunciJawaban = "A";
           pembahasan = `**Analisis Literasi Membaca (${mapel}):**\n- **Target Kompetensi & Aspek:** ${targetAspek}\n- **Genre Wacana:** ${params.jenisTeks || "Teks Eksplanasi/Eksposisi"}\n- **Pembuktian Jawaban Benar (A):** Paragraf menyatakan secara lugas bahwa kepatuhan pada SOP dan K3 mereduksi risiko hingga 40% dan mengoptimalkan efisiensi produksi.\n- **Analisis Pengecoh:** Opsi B, C, D, dan E bertentangan dengan fakta tertulis dalam wacana stimulus.`;
         }
+      } else if (isPPLG && i <= Math.ceil(count / 2)) {
+        const langLower = detectedLang.toLowerCase().replace(/[^a-z0-9]/g, "");
+        let codeSnippet = "";
+        let expectedOutput = "";
+        let distractorB = "";
+        let distractorC = "";
+        let distractorD = "";
+        let distractorE = "";
+
+        if (detectedLang === "PHP") {
+          codeSnippet = `<?php\nfunction hitungSkor($nilai, $bobot) {\n    $total = $nilai * $bobot;\n    if ($total >= 80) {\n        return $total + 10;\n    }\n    return $total;\n}\n\necho hitungSkor(25, 3);\n?>`;
+          expectedOutput = "85";
+          distractorB = "75";
+          distractorC = "80";
+          distractorD = "90";
+          distractorE = "Error: Undefined variable";
+        } else if (detectedLang === "JavaScript") {
+          codeSnippet = `function filterData(items) {\n  return items\n    .filter(x => x % 2 === 0)\n    .map(x => x * 2)\n    .reduce((acc, curr) => acc + curr, 0);\n}\n\nconst data = [1, 2, 3, 4, 5];\nconsole.log(filterData(data));`;
+          expectedOutput = "12";
+          distractorB = "6";
+          distractorC = "24";
+          distractorD = "30";
+          distractorE = "NaN";
+        } else if (detectedLang === "Java") {
+          codeSnippet = `public class Main {\n    public static void main(String[] args) {\n        int[] arr = {2, 5, 8, 11};\n        int count = 0;\n        for (int num : arr) {\n            if (num % 2 != 0) count += num;\n        }\n        System.out.println(count);\n    }\n}`;
+          expectedOutput = "16";
+          distractorB = "10";
+          distractorC = "26";
+          distractorD = "2";
+          distractorE = "0";
+        } else {
+          // Default Python
+          codeSnippet = `def proses_antrean(data):\n    hasil = []\n    for x in data:\n        if x > 10:\n            hasil.append(x * 2)\n        else:\n            hasil.append(x + 5)\n    return sum(hasil)\n\nantrean = [8, 12, 5]\nprint(proses_antrean(antrean))`;
+          expectedOutput = "47";
+          distractorB = "37";
+          distractorC = "50";
+          distractorD = "42";
+          distractorE = "SyntaxError: invalid syntax";
+        }
+
+        pertanyaan = `Perhatikan cuplikan kode program **${detectedLang}** berikut yang menerapkan materi **${elemen}** (${subElemen}):\n\n\`\`\`${langLower}\n${codeSnippet}\n\`\`\`\n\nBerdasarkan kode di atas, dengan memperhatikan indikator capaian kompetensi *"${kompetensi}"* dan batasan *"${batasan}"*, berapakah nilai output yang dicetak ke layar setelah program dieksekusi?`;
+        opsiJawaban = [
+          { id: "A", label: expectedOutput },
+          { id: "B", label: distractorB },
+          { id: "C", label: distractorC },
+          { id: "D", label: distractorD },
+          { id: "E", label: distractorE },
+        ];
+        kunciJawaban = "A";
+        pembahasan = `**Analisis Tracing Kode Program (${detectedLang}):**\n1. Pemanggilan fungsi memproses parameter data secara berurutan sesuai alur percabangan dan perulangan.\n2. Berdasarkan penelusuran (tracing) eksekusi nilai variabel per baris kode, akumulator menghasilkan nilai akhir **${expectedOutput}**.\n3. Opsi A adalah jawaban yang benar. Opsi B, C, D, dan E merupakan miskalkulasi umum dalam penelusuran operasi aritmatika atau percabangan logika.`;
       } else {
         pertanyaan = `Pada pelaksanaan studi kasus di dunia industri terkait mata pelajaran **${mapel}**, peserta didik menganalisis elemen **${elemen}** dengan fokus bahasan **${subElemen}**.
 Diberikan skenario kasus: *"Dalam penerapannya di lapangan dengan memperhatikan batasan: '${batasan}', tim teknis perlu mengambil keputusan strategis guna ${kompetensi.toLowerCase()}."*

@@ -769,11 +769,21 @@ export default function GeneratorSoalPage() {
                   rows={2}
                   value={batasan}
                   onChange={(e) => setBatasan(e.target.value)}
-                  placeholder="Opsional mengacu pada Kerangka Asesmen bagian Batasan/Catatan"
+                  placeholder={
+                    mapel.toUpperCase().includes("PPLG")
+                      ? "Tuliskan bahasa pemrograman (misal: Python, PHP, Java, JavaScript, C++, SQL) untuk cuplikan kode. Default: Python."
+                      : "Opsional mengacu pada Kerangka Asesmen bagian Batasan/Catatan"
+                  }
                   className="w-full px-3.5 py-2.5 rounded-xl border border-slate-200 text-xs font-medium text-slate-800 focus:ring-2 focus:ring-blue-500"
                 />
                 <p className="text-[10px] text-slate-400">
-                  Opsional. Boleh dikosongkan jika mata pelajaran (seperti Kimia, PKn, Ekonomi, Geografi, Sosiologi, Sejarah, Antropologi, dsb.) tidak memiliki catatan batasan khusus.
+                  {mapel.toUpperCase().includes("PPLG") ? (
+                    <span className="text-blue-600 font-medium">
+                      💡 <strong>Khusus PPLG:</strong> Minimal 1/2 butir soal akan memuat analisis kode program. Tuliskan bahasa pemrograman spesifik di sini (contoh: <em>PHP & MySQL</em>, <em>Java OOP</em>). Jika dikosongkan, AI otomatis menggunakan <strong>Python</strong> sebagai default.
+                    </span>
+                  ) : (
+                    "Opsional. Boleh dikosongkan jika mata pelajaran (seperti Kimia, PKn, Ekonomi, Geografi, Sosiologi, Sejarah, Antropologi, dsb.) tidak memiliki catatan batasan khusus."
+                  )}
                 </p>
               </div>
             </div>
